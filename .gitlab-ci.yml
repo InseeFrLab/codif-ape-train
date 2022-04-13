@@ -1,4 +1,5 @@
 stages:
+    - static
     - test
 
 unit-test:
@@ -11,19 +12,55 @@ unit-test:
         paths:
             - coverage
         expire_in: 30 days
+    only:
+        - merge_requests
 
-type-test:
-    stage: test
+mypy:
+    stage: static
     image: python:3.9
     script:
         - pip install mypy
         - mypy src
     allow_failure: true
+    only:
+        - merge_requests
 
-lint_test:
-    stage: test
+flake8:
+    stage: static
     image: python:3.9
     script:
         - pip install flake8
         - flake8
     allow_failure: true
+    only:
+        - merge_requests
+
+pylint:
+    stage: static
+    image: python:3.9
+    script:
+        - pip install pylint
+        - find . -type f -name "*.py" | xargs pylint
+    allow_failure: true
+    only:
+        - merge_requests
+
+black:
+    stage: static
+    image: python:3.9
+    script:
+        - pip install black
+        - black --check .
+    allow_failure: true
+    only:
+        - merge_requests
+
+isort:
+    stage: static
+    image: python:3.9
+    script:
+        - pip install isort
+        - isort . --check-only
+    allow_failure: true
+    only:
+        - merge_requests
