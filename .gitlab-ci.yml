@@ -39,6 +39,7 @@ pylint:
     stage: static
     image: python:3.9
     script:
+        - pip install pylint
         - find . -type f -name "*.py" | xargs pylint
     allow_failure: true
     only:
@@ -48,6 +49,7 @@ black:
     stage: static
     image: python:3.9
     script:
+        - pip install black
         - black --check
     allow_failure: true
     only:
@@ -57,6 +59,7 @@ isort:
     stage: static
     image: python:3.9
     script:
+        - pip install isort
         - isort . --check-only
     allow_failure: true
     only:
