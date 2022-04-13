@@ -1,3 +1,8 @@
+"""
+Main script.
+"""
+
+
 def main():
     pass
 
