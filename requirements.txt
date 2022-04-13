@@ -1,0 +1,4 @@
+# Standard Python requirements
+pytest
+mypy
+flake8
