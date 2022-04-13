@@ -11,3 +11,19 @@ unit-test:
         paths: 
             - coverage
         expire_in: 30 days
+
+type-test:
+    stage: test
+    image: python:3.9
+    script:
+        - pip install mypy
+        - mypy src
+    allow_failure: true
+
+lint_test:
+    stage: test
+    image: python:3.9
+    script:
+        - pip install flake8
+        - flake8
+    allow_failure: true
