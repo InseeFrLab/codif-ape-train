@@ -8,7 +8,7 @@ unit-test:
         - pip install pytest pytest-cov
         - python -m pytest --cov-report=html --cov=src .
     artifacts:
-        paths: 
+        paths:
             - coverage
         expire_in: 30 days
 
