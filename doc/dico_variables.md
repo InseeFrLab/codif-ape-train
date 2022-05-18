@@ -187,7 +187,7 @@ La dernière lettre de la modalité indique s'il s'agit d'une personne physique 
 | 28*        | Dissolution suite à décision de l'associé unique Personne Morale                                    |
 | 29*        | Autre modification concernant la personne morale                                                    |
 | 30*        | Modification relative aux membres d’un groupement                                                   |
-| 31*        |                                                                                                     |
+| 31*        | Modification relative aux exploitants de l’indivision ou héritiers                                  |
 | 32*        | Modification relative aux associés non gérants relevant du régime TNS - MSA                         |
 | 33*        | Modification relative aux dirigeants d’un groupement                                                |
 | 34*        | Modification relative aux dirigeants d’une société de personnes                                     |
