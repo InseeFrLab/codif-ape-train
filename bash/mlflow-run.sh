@@ -16,4 +16,4 @@ done <<< "$GET_PODS"
 export MLFLOW_TRACKING_URI="https://projet-ape-$POD_ID.kub.sspcloud.fr"
 export MLFLOW_EXPERIMENT_NAME="test"
 
-mlflow run ../src/ --env-manager=local -P remote_server_uri=$MLFLOW_TRACKING_URI
+mlflow run ~/work/codification-ape/src/ --env-manager=local -P remote_server_uri=$MLFLOW_TRACKING_URI
