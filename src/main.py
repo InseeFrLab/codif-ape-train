@@ -5,11 +5,9 @@ import sys
 
 import fasttext
 import mlflow
-import pandas as pd
-from sklearn.model_selection import train_test_split
-
+import dask.dataframe as dd
 from fast_text_wrapper import FastTextWrapper
-from preprocess import clean_lib
+from preprocess import clean_lib, run_preprocessing
 
 
 def get_pred(lib: str, mod: fasttext.FastText):
@@ -31,7 +29,8 @@ def get_pred(lib: str, mod: fasttext.FastText):
     return [pred, prob]
 
 
-def main(remote_server_uri, experiment_name, run_name, data_url, dim, epoch):
+def main(remote_server_uri, experiment_name, run_name, data_url, dim, epoch,
+         wordNgrams):
     """
     Main method.
     """
@@ -39,23 +38,13 @@ def main(remote_server_uri, experiment_name, run_name, data_url, dim, epoch):
     mlflow.set_experiment(experiment_name)
     with mlflow.start_run(run_name=run_name):
         # load data, assumed to be stored in a .parquet file
-        df = pd.read_parquet(data_url)
-        df["LIB_CLEAN"] = df["LIB_SICORE"].apply(lambda x: clean_lib(x))
+        ddf = dd.read_parquet(data_url, engine='pyarrow')
 
-        # train/test split
-        train, test = train_test_split(df, test_size=0.2)
+        # Preprocess data
+        X_train, X_test, y_train, y_test = run_preprocessing(ddf)
 
-        # train the model with training_data
-        with open("../data/train_text.txt", "w") as f:
-            for item in train.iterrows():
-                formatted_item = "__label__{} {}".format(
-                    item[1]["APE_SICORE"], item[1]["LIB_CLEAN"]
-                )
-                f.write("%s\n" % formatted_item)
-
-        model = fasttext.train_supervised(
-            "../data/train_text.txt", dim=dim, epoch=epoch
-        )
+        # Run training of the model
+        model = run_training(X_train, y_train, dim, epoch, wordNgrams)
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -69,20 +58,61 @@ def main(remote_server_uri, experiment_name, run_name, data_url, dim, epoch):
             artifacts=artifacts,
         )
 
-        # predict testing data
-        test[["PREDICTION", "PROBA"]] = (
-            test["LIB_CLEAN"].apply(lambda x: get_pred(x, model)).to_list()
-        )
+        df_train = X_train.merge(y_train).compute()
+        df_test = X_test.merge(y_test).compute()
 
-        # calculate accuracy
-        accuracy = sum(test["APE_SICORE"] == test["PREDICTION"]) / test.shape[0] * 100
+        # Run training of the model
+        df_test, df_train = run_prediction(df_test, df_train, model)
+
+        # calculate accuracy on test data
+        accuracy_test = sum(df_test['GoodPREDICTION'])/df_test.shape[0] * 100
+        # calculate accuracy on train data
+        accuracy_train = sum(df_train['GoodPREDICTION'])/df_train.shape[0] * 100
 
         # log parameters
         mlflow.log_param("dim", dim)
         mlflow.log_param("epoch", epoch)
+        mlflow.log_param("wordNgrams", wordNgrams)
 
         # log metrics
-        mlflow.log_metric("model_accuracy", accuracy)
+        mlflow.log_metric("model_accuracy_test", accuracy_test)
+        mlflow.log_metric("model_accuracy_train", accuracy_train)
+
+
+def run_training(X_train, y_train, dim, epoch, wordNgrams):
+
+    # train the model with training_data
+    with open("../data/train_text.txt", "w") as f:
+        for x, y in zip(X_train, y_train):
+            formatted_item = "__label__{} {}".format(
+                y, x
+            )
+            f.write("%s\n" % formatted_item)
+
+    model = fasttext.train_supervised(
+        "../data/train_text.txt", dim=dim, epoch=epoch,
+        wordNgrams=wordNgrams
+    )
+    return model
+
+
+def run_prediction(df_test, df_train, mod):
+
+    # predict testing data
+    df_test[['PREDICTION_NIV5', 'PROBA']] = df_test['LIB_CLEAN'].apply(
+        lambda x: get_pred(x, mod)).to_list()
+    df_test['GoodPREDICTION'] = df_test['APE_NIV5'] == df_test['PREDICTION_NIV5']
+    for i in range(2, 5):
+        df_test['PREDICTION_NIV' + str(i)] = df_test['PREDICTION_NIV5'].str[:i]
+
+    # predict training data
+    df_train[['PREDICTION_NIV5', 'PROBA']] = df_train['LIB_CLEAN'].apply(
+        lambda x: get_pred(x, mod)).to_list()
+    df_train['GoodPREDICTION'] = df_train['APE_NIV5'] == df_train['PREDICTION_NIV5']
+    for i in range(2, 5):
+        df_train['PREDICTION_NIV' + str(i)] = df_train['PREDICTION_NIV5'].str[:i]
+
+    return df_test, df_train
 
 
 if __name__ == "__main__":
