@@ -11,14 +11,20 @@ class FileSystem:
     FileSystem class which allows to get a connection to MinIO.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        endpoint: str = os.environ["AWS_S3_ENDPOINT"],
+        key: str = os.environ["AWS_ACCESS_KEY_ID"],
+        secret: str = os.environ["AWS_SECRET_ACCESS_KEY"],
+        token: str = os.environ["AWS_SESSION_TOKEN"]
+    ):
         """
         Constructor for the FileSystem class.
         """
-        self.endpoint = os.environ["AWS_S3_ENDPOINT"]
-        self.key = os.environ["AWS_ACCESS_KEY_ID"]
-        self.secret = os.environ["AWS_SECRET_ACCESS_KEY"]
-        self.token = os.environ["AWS_SESSION_TOKEN"]
+        self.endpoint = endpoint
+        self.key = key
+        self.secret = secret
+        self.token = token
 
     def get_file_system(self) -> S3FileSystem:
         """
