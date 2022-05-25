@@ -9,6 +9,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 from dask_ml.model_selection import train_test_split
+from mlflow.tracking import MlflowClient
 
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from preprocess import clean_lib
@@ -39,9 +40,23 @@ def main(
     """
     Main method.
     """
-    mlflow.set_tracking_uri(remote_server_uri)
-    mlflow.set_experiment(experiment_name)
-    with mlflow.start_run(run_name=run_name):
+    client = MlflowClient(tracking_uri=remote_server_uri)
+    experiments = {
+        experiment.name: experiment.experiment_id
+        for experiment in client.list_experiments()
+    }
+
+    experiment_id = ""
+    for existing_name, existing_id in experiments.items():
+        if experiment_name == existing_name:
+            experiment_id = existing_id
+            break
+    if experiment_id == "":
+        experiment_id = client.create_experiment(experiment_name)
+    run = client.create_run(experiment_id)
+    run_id = run.info.run_id
+
+    with mlflow.start_run(run_id):
         # load data, assumed to be stored in a .parquet file
         ddf = dd.read_parquet(data_url, engine="pyarrow")
 
