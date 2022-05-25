@@ -1,6 +1,9 @@
 """
+FastTextPreprocessor class.
 """
-import numpy as np
+from typing import List, Tuple
+
+import dask.dataframe as dd
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -9,33 +12,41 @@ from preprocess import clean_lib
 
 
 class FastTextPreprocessor(Preprocessor):
-    """ """
+    """
+    FastTextPreprocessor class.
+    """
 
-    def __init__(self):
-        """ """
-        super().__init__()
-
-    def preprocess_for_model(self, df, y_name, X_names):
+    def __init__(self) -> None:
         """
-        Preprocess the input data and return train and test datasets
+        Constructor for the FastTextPreprocessor class.
         """
 
-        df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
-        # On se restreint à nos deux variables d'intérêt
-        df = df[y_name + X_names]
+    @staticmethod
+    def preprocess_for_model(
+        df: pd.DataFrame, y: str, features: List[str]
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Preprocesses data to feed to a classifier of the
+        fasttext library for training and evaluation.
 
-        # On définit les valeurs manquantes comme des NaN
-        df = df.fillna(value=np.nan)
+        Args:
+            df (pd.DataFrame): Text descriptions to classify.
+            y (str): Name of the variable to predict
+            features (List[str]): Names of the features.
 
-        # On supprime les valeurs manquantes
-        df = df.dropna(subset=y_name + [X_names[0]])
+        Returns:
+            pd.DataFrame: Preprocessed DataFrames for training
+                and evaluation.
+        """
+        ddf = dd.from_pandas(df, npartitions=30)
+        ddf["LIB_CLEAN"] = ddf[features[0]].apply(
+            clean_lib, meta=pd.Series(dtype="str", name="LIB_CLEAN")
+        )
 
-        df["LIB_CLEAN"] = [clean_lib(idx, df, X_names) for idx in df.index]
-
-        # train/test split
+        # Train/test split
         X_train, X_test, y_train, y_test = train_test_split(
-            df["LIB_CLEAN"],
-            df["APE_NIV5"],
+            ddf["LIB_CLEAN"],
+            ddf[y],
             test_size=0.2,
             random_state=0,
             shuffle=True,
@@ -43,4 +54,4 @@ class FastTextPreprocessor(Preprocessor):
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
 
-        return df_train, df_test
+        return ddf_train.compute(), ddf_test.compute()
