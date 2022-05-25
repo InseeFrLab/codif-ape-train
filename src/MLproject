@@ -9,5 +9,6 @@ entry_points:
       data_url: {type: str, default: ../data/extraction_sirene_sample.parquet}
       dim: {type: int, default: 30}
       epoch: {type: int, default: 5}
+      wordNgrams: {type: int, default: 3}
 
-    command: "python main.py {remote_server_uri} {experiment_name} {run_name} {data_url} {dim} {epoch}"
+    command: "python main.py {remote_server_uri} {experiment_name} {run_name} {data_url} {dim} {epoch} {wordNgrams}"
