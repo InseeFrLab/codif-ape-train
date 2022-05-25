@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from dask_ml.model_selection import train_test_split
 
-from fast_text_wrapper import FastTextWrapper
+from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from preprocess import clean_lib
 
 
@@ -112,7 +112,7 @@ def run_preprocessing(ddf):
 def run_training(ddf_train, dim, epoch, wordNgrams):
 
     # train the model with training_data
-    with open("../data/train_text.txt", "w") as f:
+    with open("data/train_text.txt", "w") as f:
         for item in ddf_train.iterrows():
             formatted_item = "__label__{} {}".format(
                 item[1]["APE_NIV5"], item[1]["LIB_CLEAN"]
@@ -120,7 +120,7 @@ def run_training(ddf_train, dim, epoch, wordNgrams):
             f.write("%s\n" % formatted_item)
 
     model = fasttext.train_supervised(
-        "../data/train_text.txt", dim=dim, epoch=epoch, wordNgrams=wordNgrams
+        "data/train_text.txt", dim=dim, epoch=epoch, wordNgrams=wordNgrams
     )
     return model
 

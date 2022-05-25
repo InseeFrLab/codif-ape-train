@@ -1,6 +1,7 @@
 """
 FastText wrapper for MLflow.
 """
+import fasttext
 import mlflow
 
 
@@ -17,8 +18,6 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         Args:
             context: MLflow context where the model artifact is stored.
         """
-        import fasttext
-
         self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
 
     def predict(self, context, model_input):
