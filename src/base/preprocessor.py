@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+from nltk.corpus import stopwords as ntlk_stopwords
 
 
 class Preprocessor(ABC):
@@ -13,10 +14,13 @@ class Preprocessor(ABC):
     Preprocessor class.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french") + ["a"])
+    ) -> None:
         """
         Constructor for the Preprocessor class.
         """
+        self.stopwords = stopwords
 
     def preprocess(
         self, df: pd.DataFrame, y: str, features: List[str]
