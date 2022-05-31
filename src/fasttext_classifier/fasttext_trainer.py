@@ -22,6 +22,11 @@ class FastTextTrainer(Trainer):
                 f.write("%s\n" % formatted_item)
 
         model = fasttext.train_supervised(
-            "data/train_text.txt", dim=dim, epoch=epoch, wordNgrams=wordNgrams
+            "data/train_text.txt",
+            dim=dim,
+            epoch=epoch,
+            wordNgrams=wordNgrams,
+            lr=1.0,
+            loss="hs",
         )
         return model

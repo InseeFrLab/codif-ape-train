@@ -3,8 +3,8 @@ Main script.
 """
 import sys
 
-import dask.dataframe as dd
 import mlflow
+import pandas as pd
 from mlflow.tracking import MlflowClient
 
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
@@ -41,15 +41,15 @@ def main(
 
     with mlflow.start_run(run_id):
         # load data, assumed to be stored in a .parquet file
-        ddf = dd.read_parquet(data_url, engine="pyarrow")
+        df = pd.read_parquet(data_url, engine="pyarrow")
 
         # Preprocess data
-        ddf_train, ddf_test = Preprocessor.preprocess_for_model(
-            ddf, ["APE_NIV5"], ["LIB_SICORE"]
+        df_train, df_test = Preprocessor.preprocess_for_model(
+            df, ["APE_NIV5"], ["LIB_SICORE"]
         )
 
         # Run training of the model
-        model = Trainer.train(ddf_train, ["APE_NIV5"], dim, epoch, wordNgrams)
+        model = Trainer.train(df_train, ["APE_NIV5"], dim, epoch, wordNgrams)
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -64,7 +64,7 @@ def main(
         )
 
         # Run training of the model
-        df_train, df_test = Evaluator.evaluate(ddf_train, ddf_test, model)
+        df_train, df_test = Evaluator.evaluate(df_train, df_test, model)
 
         # calculate accuracy on test data
         accuracy_test = sum(df_test["GoodPREDICTION"]) / df_test.shape[0] * 100
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     remote_server_uri = (
         str(sys.argv[1]) if len(sys.argv) > 1 else "https://mlflow.lab.sspcloud.fr/"
     )
-    experiment_name = str(sys.argv[2]) if len(sys.argv) > 2 else "tesst"
+    experiment_name = str(sys.argv[2]) if len(sys.argv) > 2 else "test"
     run_name = str(sys.argv[3]) if len(sys.argv) > 3 else "default"
     data_url = (
         str(sys.argv[4])

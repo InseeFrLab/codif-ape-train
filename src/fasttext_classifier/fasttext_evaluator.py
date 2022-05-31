@@ -30,11 +30,8 @@ class FastTextEvaluator(Evaluator):
         prob = out[1][0]
         return [pred, prob]
 
-    def evaluate(self, ddf_train, ddf_test, model):
+    def evaluate(self, df_train, df_test, model):
         """ """
-        # go back to pandas because dask doesnt support double assignment
-        df_test = ddf_test.compute()
-        df_train = ddf_train.compute()
         # predict testing data
         df_test[["PREDICTION_NIV5", "PROBA"]] = (
             df_test["LIB_CLEAN"].apply(lambda x: self.get_pred(x, model)).to_list()
