@@ -5,16 +5,16 @@ import sys
 
 import mlflow
 import pandas as pd
+import yaml
 
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
 from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from fasttext_classifier.fasttext_trainer import FastTextTrainer
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
+from utils import get_root_path
 
 
-def main(
-    remote_server_uri, experiment_name, run_name, data_path, dim, epoch, word_ngrams
-):
+def main(remote_server_uri, experiment_name, run_name, data_path):
     """
     Main method.
     """
@@ -32,8 +32,12 @@ def main(
             df=df, y="APE_NIV5", features=["LIB_SICORE"]
         )
 
+        with open(get_root_path() / "config/config_fasttext.yaml", "r") as stream:
+            config = yaml.safe_load(stream)
+        params = config["params"]
+
         # Run training of the model
-        model = trainer.train(df_train, "APE_NIV5", dim, epoch, word_ngrams)
+        model = trainer.train(df_train, "APE_NIV5", params)
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -48,9 +52,8 @@ def main(
         )
 
         # Log parameters
-        mlflow.log_param("dim", dim)
-        mlflow.log_param("epoch", epoch)
-        mlflow.log_param("word_ngrams", word_ngrams)
+        for param_name, param_value in params.items():
+            mlflow.log_param(param_name, param_value)
 
         # Evaluation
         evaluator = FastTextEvaluator(model)
@@ -67,12 +70,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(
-        str(sys.argv[1]),
-        str(sys.argv[2]),
-        str(sys.argv[3]),
-        str(sys.argv[4]),
-        int(sys.argv[5]),
-        int(sys.argv[6]),
-        int(sys.argv[7]),
-    )
+    main(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4]))

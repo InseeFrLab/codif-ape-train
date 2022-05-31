@@ -1,6 +1,8 @@
 """
 FastTextTrainer class.
 """
+from typing import Dict
+
 import fasttext
 import pandas as pd
 
@@ -19,18 +21,14 @@ class FastTextTrainer(Trainer):
         """
 
     @staticmethod
-    def train(
-        df: pd.DataFrame, y: str, dim: int, epoch: int, word_ngrams: int
-    ) -> fasttext.FastText:
+    def train(df: pd.DataFrame, y: str, params: Dict) -> fasttext.FastText:
         """
         Trains a fastText classifier.
 
         Args:
             df (pd.DataFrame): Training data.
             y (str): Name of the variable to predict.
-            dim (int): Dimension of the embedding space.
-            epoch (int): Number of epochs.
-            word_ngrams (int): Maximum length of word ngrams.
+            params (Dict): Parameters for the fastText classifier.
 
         Returns:
             fasttext.FastText: Trained fastText model.
@@ -44,9 +42,6 @@ class FastTextTrainer(Trainer):
                 f.write("%s\n" % formatted_item)
 
         model = fasttext.train_supervised(
-            (root_path / "data/train_text.txt").as_posix(),
-            dim=dim,
-            epoch=epoch,
-            word_ngrams=word_ngrams,
+            (root_path / "data/train_text.txt").as_posix(), **params
         )
         return model
