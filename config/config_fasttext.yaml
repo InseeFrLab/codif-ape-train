@@ -1,0 +1,12 @@
+params:
+  dim: 10
+  lr: 0.1
+  epoch: 3
+  wordNgrams: 3
+  minn: 3
+  maxn: 6
+  minCount: 3
+  bucket: 1000
+  thread: 50
+  loss: ova
+  label_prefix: __label__

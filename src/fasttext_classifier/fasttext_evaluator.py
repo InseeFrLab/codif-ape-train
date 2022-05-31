@@ -1,51 +1,35 @@
 """
+FastTextEvaluator class.
 """
-import fasttext
+from typing import List, Tuple
+
+from fasttext import FastText
 
 from base.evaluator import Evaluator
 
 
 class FastTextEvaluator(Evaluator):
-    """ """
+    """
+    FastTextEvaluator class.
+    """
 
-    def __init__(self):
-        """ """
-        super().__init__()
-
-    def get_pred(self, lib: str, mod: fasttext.FastText):
+    def __init__(self, model: FastText) -> None:
         """
-        Returns the prediction of model `mod` on text `lib`
-        along with the output probability.
+        Constructor for the FastTextEvaluator class.
+        """
+        self.model = model
+
+    def get_preds(self, libs: List[str]) -> List[Tuple[str, float]]:
+        """
+        Returns the prediction of the model on texts `libs`
+        along with the output probabilities.
 
         Args:
-            lib: Text description.
-            mod: Model.
+            libs: Text descriptions to classify.
 
         Returns:
             List: List with the prediction and probability for the
                 given text.
         """
-        out = mod.predict(lib)
-        pred = out[0][0].replace("__label__", "")
-        prob = out[1][0]
-        return [pred, prob]
-
-    def evaluate(self, df_train, df_test, model):
-        """ """
-        # predict testing data
-        df_test[["PREDICTION_NIV5", "PROBA"]] = (
-            df_test["LIB_CLEAN"].apply(lambda x: self.get_pred(x, model)).to_list()
-        )
-        df_test["GoodPREDICTION"] = df_test["APE_NIV5"] == df_test["PREDICTION_NIV5"]
-        for i in range(2, 5):
-            df_test["PREDICTION_NIV" + str(i)] = df_test["PREDICTION_NIV5"].str[:i]
-
-        # predict training data
-        df_train[["PREDICTION_NIV5", "PROBA"]] = (
-            df_train["LIB_CLEAN"].apply(lambda x: self.get_pred(x, model)).to_list()
-        )
-        df_train["GoodPREDICTION"] = df_train["APE_NIV5"] == df_train["PREDICTION_NIV5"]
-        for i in range(2, 5):
-            df_train["PREDICTION_NIV" + str(i)] = df_train["PREDICTION_NIV5"].str[:i]
-
-        return df_train, df_test
+        res = self.model.predict(libs)
+        return [(x[0].replace("__label__", ""), y[0]) for x, y in zip(res[0], res[1])]
