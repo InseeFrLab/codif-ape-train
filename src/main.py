@@ -57,16 +57,19 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
 
         # Evaluation
         evaluator = FastTextEvaluator(model)
-        accuracies = evaluator.evaluate(df_test)
+        accuracies, cmatrix = evaluator.evaluate(df_test)
 
         # Log metrics
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
         # On training set
-        train_accuracies = evaluator.evaluate(df_train)
+        train_accuracies, train_cmatrix = evaluator.evaluate(df_train)
         for metric, value in train_accuracies.items():
             mlflow.log_metric(metric + "_train", value)
+
+        # log confusion matrix
+        mlflow.log_figure(cmatrix, "confusion_matrix.png")
 
 
 if __name__ == "__main__":
