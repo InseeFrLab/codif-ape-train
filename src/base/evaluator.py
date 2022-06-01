@@ -2,9 +2,10 @@
 Evaluator base class.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -22,13 +23,23 @@ class Evaluator(ABC):
         """
 
     @abstractmethod
-    def get_preds(self, libs: List[str]) -> List[Tuple[str, float]]:
+    def get_preds(
+        self,
+        df: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]],
+    ) -> List[Tuple[str, float]]:
         """
-        Returns the prediction of the model on texts `libs`
+        Returns the prediction of the model for pd.DataFrame `df`
         along with the output probabilities.
 
         Args:
-            libs: Text descriptions to classify.
+            df (pd.DataFrame): Evaluation DataFrame.
+            y (str): Name of the variable to predict.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
             List: List with the prediction and probability for the
@@ -36,67 +47,94 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
-    def get_aggregated_APE(
-        self, df: pd.DataFrame, naf: pd.DataFrame
-    ) -> Dict[int, Dict[str, list]]:
+    def get_aggregated_APE_dict(
+        self, 
+        df: pd.DataFrame, 
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]],
+    ) -> Dict[int, Dict[str, List]]:
         """
-        Computes the underlying aggregated levels of the NAF classification.
+        Computes the underlying aggregated levels of the NAF classification
+        for ground truth and predictions for pd.DataFrame `df`.
 
         Args:
             df (pd.DataFrame): Evaluation DataFrame.
-            naf (pd.DataFrame): NAF Dictionnary DataFrame
+            y (str): Name of the variable to predict.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
-            Dict: True and predicted values.
+            Dict: Dictionary of true and predicted labels at 
+                each level of the NAF classification.
         """
-        preds = self.get_preds(df["LIB_CLEAN"].tolist())
+        df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
+        df_naf.set_index("NIV5", inplace=True, drop=False)
+
+        preds = self.get_preds(df, y, text_feature, categorical_features)
         predicted_classes = [pred[0] for pred in preds]
         res = {
             level: {
-                "ground_truth": df["APE_NIV5"].str[:level].to_list(),
+                "ground_truth": df[y].str[:level].to_list(),
                 "predictions": [prediction[:level] for prediction in predicted_classes],
             }
             for level in range(2, 6)
         }
         res[1] = {
             "ground_truth": [
-                naf["NIV1"][naf["NIV2"] == x].to_list()[0]
+                df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
                 for x in res[2]["ground_truth"]
             ],
             "predictions": [
-                naf["NIV1"][naf["NIV2"] == x].to_list()[0]
+                df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
                 for x in res[2]["predictions"]
             ],
         }
         return res
 
-    def compute_accuracies(self, Pred: Dict) -> Dict[str, float]:
+    def compute_accuracies(self, aggregated_APE_dict: Dict[int, Dict[str, List]]) -> Dict[str, float]:
         """
         Computes accuracies (for different levels of the NAF classification)
         of the trained model on DataFrame `df`.
 
         Args:
-            Pred (Dict): Dict containing True and predicted values.
+            aggregated_APE_dict (Dict[int, Dict[str, List]]): Dictionary 
+                of true and predicted labels at each level of the NAF 
+                classification.
 
         Returns:
-            float: Accuracy.
+            Dict[str, float]: Accuracies dictionary.
         """
         accuracies = {
             f"accuracy_level_{level}": np.mean(
-                np.array(Pred[level]["ground_truth"])
-                == np.array(Pred[level]["predictions"])
+                np.array(aggregated_APE_dict[level]["ground_truth"])
+                == np.array(aggregated_APE_dict[level]["predictions"])
             )
             for level in range(1, 6)
         }
         return accuracies
 
-    def plot_matrix(self, dic):
-        target_names = sorted(set(dic["ground_truth"]))
+    @staticmethod
+    def plot_matrix(aggregated_APE_dict_level: Dict[str, List]) -> Figure:
+        """
+        Returns plot of the confusion matrix for the aggregated
+        APE dictionary.
+
+        Args:
+            aggregated_APE_dict_level (Dict[str, List]): Dictionary
+                of true and predicted labels at one level of the NAF
+                classification.
+
+        Returns:
+            Figure: Confusion matrix figure.
+        """
+        target_names = sorted(set(aggregated_APE_dict_level["ground_truth"]))
         fig, ax = plt.subplots(figsize=(20, 8))
         plot = sns.heatmap(
             confusion_matrix(
-                dic["ground_truth"],
-                dic["predictions"],
+                aggregated_APE_dict_level["ground_truth"],
+                aggregated_APE_dict_level["predictions"],
                 normalize="true",
             ),
             annot=True,
@@ -107,19 +145,27 @@ class Evaluator(ABC):
         )
         return fig
 
-    def evaluate(self, df: pd.DataFrame) -> Dict[str, float]:
+    def evaluate(
+        self,
+        df: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]],
+    ) -> Dict[str, float]:
         """
         Evaluates the trained model on DataFrame `df`.
 
         Args:
             df (pd.DataFrame): Evaluation DataFrame.
+            y (str): Name of the variable to predict.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
             Dict[str, float]: Dictionary of evaluation metrics.
         """
-        df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
-        df_naf.set_index("NIV5", inplace=True, drop=False)
-        Results = self.get_aggregated_APE(df, df_naf)
-        accuracies = self.compute_accuracies(Results)
-        cmatrix = self.plot_matrix(Results[1])
+        aggregated_APE_dict = self.get_aggregated_APE_dict(df, y, text_feature, categorical_features)
+        accuracies = self.compute_accuracies(aggregated_APE_dict)
+        cmatrix = self.plot_matrix(aggregated_APE_dict[1])
         return accuracies, cmatrix

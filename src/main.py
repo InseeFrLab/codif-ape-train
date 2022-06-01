@@ -7,6 +7,7 @@ import mlflow
 import pandas as pd
 import yaml
 
+from constants import TEXT_FEATURE, Y
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
 from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from fasttext_classifier.fasttext_trainer import FastTextTrainer
@@ -27,17 +28,21 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
-        # Preprocess data
-        df_train, df_test = preprocessor.preprocess(
-            df=df, y="APE_NIV5", features=["LIB_SICORE"]
-        )
-
         with open(get_root_path() / "config/config_fasttext.yaml", "r") as stream:
             config = yaml.safe_load(stream)
         params = config["params"]
+        categorical_features = config["categorical_features"]
+
+        # Preprocess data
+        df_train, df_test = preprocessor.preprocess(
+            df=df,
+            y=Y,
+            text_feature=TEXT_FEATURE,
+            categorical_features=categorical_features,
+        )
 
         # Run training of the model
-        model = trainer.train(df_train, "APE_NIV5", params)
+        model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -57,14 +62,16 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
 
         # Evaluation
         evaluator = FastTextEvaluator(model)
-        accuracies, cmatrix = evaluator.evaluate(df_test)
+        accuracies, cmatrix = evaluator.evaluate(df_test, Y, TEXT_FEATURE, categorical_features)
 
         # Log metrics
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
         # On training set
-        train_accuracies, train_cmatrix = evaluator.evaluate(df_train)
+        train_accuracies, train_cmatrix = evaluator.evaluate(
+            df_train, Y, TEXT_FEATURE, categorical_features
+        )
         for metric, value in train_accuracies.items():
             mlflow.log_metric(metric + "_train", value)
 

@@ -2,7 +2,7 @@
 Preprocessor class.
 """
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,11 @@ class Preprocessor(ABC):
         self.stopwords = stopwords
 
     def preprocess(
-        self, df: pd.DataFrame, y: str, features: List[str]
+        self,
+        df: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]] = None,
     ) -> Tuple[pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -32,7 +36,9 @@ class Preprocessor(ABC):
         Args:
             df (pd.DataFrame): Text descriptions to classify.
             y (str): Name of the variable to predict.
-            features (List[str]): Names of the features.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
@@ -40,16 +46,23 @@ class Preprocessor(ABC):
         """
         # General preprocessing
         df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
-        df = df[[y] + features]
+        variables = [y] + [text_feature]
+        if categorical_features is not None:
+            variables += categorical_features
+        df = df[variables]
         df = df.fillna(value=np.nan)
         df = df.dropna()
 
         # Specific preprocessing for model
-        return self.preprocess_for_model(df, y, features)
+        return self.preprocess_for_model(df, y, text_feature, categorical_features)
 
     @abstractmethod
     def preprocess_for_model(
-        self, df: pd.DataFrame, y: str, features: List[str]
+        self,
+        df: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]] = None,
     ) -> Tuple[pd.DataFrame]:
         """
         Preprocesses data to feed to a specific model for
@@ -57,8 +70,10 @@ class Preprocessor(ABC):
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
-            y (str): Name of the variable to predict
-            features (List[str]): Names of the features.
+            y (str): Name of the variable to predict.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training

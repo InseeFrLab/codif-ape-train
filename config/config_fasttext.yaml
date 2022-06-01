@@ -10,3 +10,6 @@ params:
   thread: 50
   loss: ova
   label_prefix: __label__
+
+categorical_features:
+  null
