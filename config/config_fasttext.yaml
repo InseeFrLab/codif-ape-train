@@ -1,12 +1,12 @@
 params:
-  dim: 10
-  lr: 0.1
-  epoch: 3
+  dim: 150
+  lr: 0.2
+  epoch: 80
   wordNgrams: 3
   minn: 3
-  maxn: 6
+  maxn: 4
   minCount: 3
-  bucket: 1000
+  bucket: 3000000
   thread: 50
   loss: ova
   label_prefix: __label__
