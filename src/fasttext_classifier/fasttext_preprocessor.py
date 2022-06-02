@@ -2,7 +2,7 @@
 FastTextPreprocessor class.
 """
 import string
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -16,7 +16,11 @@ class FastTextPreprocessor(Preprocessor):
     """
 
     def preprocess_for_model(
-        self, df: pd.DataFrame, y: str, features: List[str]
+        self,
+        df: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        categorical_features: Optional[List[str]] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -24,18 +28,23 @@ class FastTextPreprocessor(Preprocessor):
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
-            y (str): Name of the variable to predict
-            features (List[str]): Names of the features.
+            y (str): Name of the variable to predict.
+            text_feature (str): Name of the text feature.
+            categorical_features (Optional[List[str]]): Names of the
+                categorical features.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
                 and evaluation.
         """
-        df["LIB_CLEAN"] = [self.clean_lib(df, idx, features) for idx in df.index]
+        df[text_feature] = [self.clean_lib(df, idx, text_feature) for idx in df.index]
 
         # Train/test split
+        features = [text_feature]
+        if categorical_features is not None:
+            features += categorical_features
         X_train, X_test, y_train, y_test = train_test_split(
-            df["LIB_CLEAN"],
+            df[features],
             df[y],
             test_size=0.2,
             random_state=0,
@@ -46,39 +55,20 @@ class FastTextPreprocessor(Preprocessor):
 
         return df_train, df_test
 
-    @staticmethod
-    def get_features(df: pd.DataFrame, idx: int, features: List[str]) -> str:
-        """_summary_
-
-        Args:
-            df (pd.DataFrame): _description_
-            idx (int): _description_
-            features (List[str]): _description_
-
-        Returns:
-            _type_: _description_
+    def clean_lib(self, df: pd.DataFrame, idx: int, text_feature: str) -> str:
         """
-        dic_features = {
-            feature: df.at[idx, feature]
-            if isinstance(df.at[idx, feature], str)
-            else "NaN"
-            for feature in features
-        }
-        return " ".join([feat + "_" + mod for feat, mod in dic_features.items()])
-
-    def clean_lib(self, df: pd.DataFrame, idx: int, features: List[str]) -> str:
-        """_summary_
+        Cleans a text feature for pd.DataFrame `df` at index idx.
 
         Args:
-            df (pd.DataFrame): _description_
-            idx (int): _description_
-            features (List[str]): _description_
+            df (pd.DataFrame): DataFrame.
+            idx (int): Index.
+            text_feature (str): Name of the text feature.
 
         Returns:
-            _type_: _description_
+            str: Cleaned text.
         """
         # On supprime toutes les ponctuations
-        lib = df.at[idx, features[0]].translate(
+        lib = df.at[idx, text_feature].translate(
             str.maketrans(string.punctuation, " " * len(string.punctuation))
         )
         # On supprime tous les chiffres
@@ -88,8 +78,4 @@ class FastTextPreprocessor(Preprocessor):
         lib_clean = " ".join(
             [x.lower() for x in lib.split() if x.lower() not in self.stopwords]
         )
-
-        if len(features) == 1:
-            return lib_clean
-        else:
-            return lib_clean + " " + self.get_features(df, idx, features[1:])
+        return lib_clean
