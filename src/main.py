@@ -25,6 +25,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         preprocessor = FastTextPreprocessor()
         trainer = FastTextTrainer()
 
+        print("*** Preprocessing the database...\n")
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
@@ -40,8 +41,10 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             text_feature=TEXT_FEATURE,
             categorical_features=categorical_features,
         )
+        print("*** Done!\n")
 
         # Run training of the model
+        print("*** Training the model...\n")
         model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
 
         fasttext_model_path = run_name + ".bin"
@@ -55,12 +58,14 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             python_model=FastTextWrapper(),
             artifacts=artifacts,
         )
+        print("*** Done!\n")
 
         # Log parameters
         for param_name, param_value in params.items():
             mlflow.log_param(param_name, param_value)
 
         # Evaluation
+        print("*** Evaluating the model...\n")
         evaluator = FastTextEvaluator(model)
         accuracies, cmatrix = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features
@@ -87,6 +92,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         # log confusion matrix
         mlflow.log_figure(cmatrix, "confusion_matrix.png")
         mlflow.log_figure(gu_cmatrix, "confusion_matrix_gu.png")
+        print("*** Done!\n")
 
 
 if __name__ == "__main__":
