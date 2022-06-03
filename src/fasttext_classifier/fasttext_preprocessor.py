@@ -34,11 +34,13 @@ class FastTextPreprocessor(Preprocessor):
                 categorical features.
 
         Returns:
-            pd.DataFrame: Preprocessed DataFrames for training
-                and evaluation.
+            pd.DataFrame: Preprocessed DataFrames for training,
+            evaluation and "guichet unique"
         """
-        df[text_feature] = [self.clean_lib(df, idx, text_feature) for idx in df.index]
-
+        df["LIB_CLEAN"] = [self.clean_lib(df, idx, features) for idx in df.index]
+        # Guichet unique split
+        df_gu = df[df.index.str.startswith("J")]
+        df = df[~df.index.str.startswith("J")]
         # Train/test split
         features = [text_feature]
         if categorical_features is not None:
@@ -53,7 +55,7 @@ class FastTextPreprocessor(Preprocessor):
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
 
-        return df_train, df_test
+        return df_train, df_test, df_gu
 
     def clean_lib(self, df: pd.DataFrame, idx: int, text_feature: str) -> str:
         """

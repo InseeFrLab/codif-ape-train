@@ -28,6 +28,11 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
+        # Preprocess data
+        df_train, df_test, df_gu = preprocessor.preprocess(
+            df=df, y="APE_NIV5", features=["LIB_SICORE"]
+        )
+
         with open(get_root_path() / "config/config_fasttext.yaml", "r") as stream:
             config = yaml.safe_load(stream)
         params = config["params"]
@@ -75,8 +80,14 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
         for metric, value in train_accuracies.items():
             mlflow.log_metric(metric + "_train", value)
 
+        # On guichet unique set
+        gu_accuracies, gu_cmatrix = evaluator.evaluate(df_gu)
+        for metric, value in gu_accuracies.items():
+            mlflow.log_metric(metric + "_gu", value)
+
         # log confusion matrix
         mlflow.log_figure(cmatrix, "confusion_matrix.png")
+        mlflow.log_figure(gu_cmatrix, "confusion_matrix_gu.png")
 
 
 if __name__ == "__main__":
