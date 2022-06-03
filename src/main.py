@@ -28,18 +28,13 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
-        # Preprocess data
-        df_train, df_test, df_gu = preprocessor.preprocess(
-            df=df, y="APE_NIV5", features=["LIB_SICORE"]
-        )
-
         with open(get_root_path() / "config/config_fasttext.yaml", "r") as stream:
             config = yaml.safe_load(stream)
         params = config["params"]
         categorical_features = config["categorical_features"]
 
         # Preprocess data
-        df_train, df_test = preprocessor.preprocess(
+        df_train, df_test, df_gu = preprocessor.preprocess(
             df=df,
             y=Y,
             text_feature=TEXT_FEATURE,
@@ -81,7 +76,9 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
             mlflow.log_metric(metric + "_train", value)
 
         # On guichet unique set
-        gu_accuracies, gu_cmatrix = evaluator.evaluate(df_gu)
+        gu_accuracies, gu_cmatrix = evaluator.evaluate(
+            df_gu, Y, TEXT_FEATURE, categorical_features
+        )
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
 

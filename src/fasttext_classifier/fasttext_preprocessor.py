@@ -37,7 +37,7 @@ class FastTextPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df["LIB_CLEAN"] = [self.clean_lib(df, idx, features) for idx in df.index]
+        df[text_feature] = [self.clean_lib(df, idx, text_feature) for idx in df.index]
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
         df = df[~df.index.str.startswith("J")]
