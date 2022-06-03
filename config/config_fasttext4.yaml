@@ -1,0 +1,16 @@
+params:
+  dim: 150
+  lr: 0.2
+  epoch: 50
+  wordNgrams: 3
+  minn: 3
+  maxn: 4
+  minCount: 3
+  bucket: 2000000
+  thread: 50
+  loss: ova
+  label_prefix: __label__
+
+categorical_features:
+  - AUTO
+  - NAT_SICORE

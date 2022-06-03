@@ -7,5 +7,6 @@ entry_points:
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
       data_path: {type: str, default: data/extraction_sirene_sample.parquet}
+      config_path: {type: str, default: config/config_fasttext.yaml}
 
-    command: "python src/main.py {remote_server_uri} {experiment_name} {run_name} {data_path}"
+    command: "python src/main.py {remote_server_uri} {experiment_name} {run_name} {data_path} {config_path}"

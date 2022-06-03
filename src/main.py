@@ -15,7 +15,7 @@ from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from utils import get_root_path
 
 
-def main(remote_server_uri, experiment_name, run_name, data_path):
+def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
     """
     Main method.
     """
@@ -28,7 +28,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
-        with open(get_root_path() / "config/config_fasttext.yaml", "r") as stream:
+        with open(get_root_path() / config_path, "r") as stream:
             config = yaml.safe_load(stream)
         params = config["params"]
         categorical_features = config["categorical_features"]
@@ -62,7 +62,9 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
 
         # Evaluation
         evaluator = FastTextEvaluator(model)
-        accuracies, cmatrix = evaluator.evaluate(df_test, Y, TEXT_FEATURE, categorical_features)
+        accuracies, cmatrix = evaluator.evaluate(
+            df_test, Y, TEXT_FEATURE, categorical_features
+        )
 
         # Log metrics
         for metric, value in accuracies.items():
@@ -88,4 +90,10 @@ def main(remote_server_uri, experiment_name, run_name, data_path):
 
 
 if __name__ == "__main__":
-    main(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4]))
+    main(
+        str(sys.argv[1]),
+        str(sys.argv[2]),
+        str(sys.argv[3]),
+        str(sys.argv[4]),
+        str(sys.argv[5]),
+    )
