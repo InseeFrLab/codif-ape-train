@@ -69,7 +69,10 @@ class Evaluator(ABC):
             Dict: Dictionary of true and predicted labels at 
                 each level of the NAF classification.
         """
+        try:
         df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
+        except FileNotFoundError:
+            df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
         df_naf.set_index("NIV5", inplace=True, drop=False)
 
         preds = self.get_preds(df, y, text_feature, categorical_features)
