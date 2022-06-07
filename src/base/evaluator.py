@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+from tqdm import tqdm
 
 
 class Evaluator(ABC):
@@ -70,19 +71,24 @@ class Evaluator(ABC):
                 each level of the NAF classification.
         """
         try:
-        df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
+            df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
         except FileNotFoundError:
             df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
         df_naf.set_index("NIV5", inplace=True, drop=False)
 
         preds = self.get_preds(df, y, text_feature, categorical_features)
         predicted_classes = [pred[0] for pred in preds]
+        probs_prediction = [prob[1] for prob in preds]
+        liasseNb = df.index
+
         res = {
             level: {
                 "ground_truth": df[y].str[:level].to_list(),
                 "predictions": [prediction[:level] for prediction in predicted_classes],
+                "probabilities": probs_prediction,
+                "liasseNb": liasseNb
             }
-            for level in range(2, 6)
+            for level in tqdm(range(2, 6))
         }
         res[1] = {
             "ground_truth": [
@@ -92,6 +98,12 @@ class Evaluator(ABC):
             "predictions": [
                 df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
                 for x in res[2]["predictions"]
+            ],
+            "probabilities": [
+                prob for prob in res[2]["probabilities"]
+            ],
+            "liasseNb": [
+                liasse for liasse in res[2]["liasseNb"]
             ],
         }
         return res
