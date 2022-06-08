@@ -49,6 +49,7 @@ class Preprocessor(ABC):
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
+            df[categorical_features] = df[categorical_features].fillna(value="NaN")
         df = df[variables]
         df = df.fillna(value=np.nan)
         df = df.dropna()
