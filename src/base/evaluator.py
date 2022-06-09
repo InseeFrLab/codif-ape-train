@@ -5,12 +5,11 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.figure import Figure
 from sklearn.metrics import confusion_matrix
-from tqdm import tqdm
 
 
 class Evaluator(ABC):
@@ -49,8 +48,8 @@ class Evaluator(ABC):
         raise NotImplementedError()
 
     def get_aggregated_APE_dict(
-        self, 
-        df: pd.DataFrame, 
+        self,
+        df: pd.DataFrame,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]],
@@ -67,7 +66,7 @@ class Evaluator(ABC):
                 categorical features.
 
         Returns:
-            Dict: Dictionary of true and predicted labels at 
+            Dict: Dictionary of true and predicted labels at
                 each level of the NAF classification.
         """
         try:
@@ -86,9 +85,9 @@ class Evaluator(ABC):
                 "ground_truth": df[y].str[:level].to_list(),
                 "predictions": [prediction[:level] for prediction in predicted_classes],
                 "probabilities": probs_prediction,
-                "liasseNb": liasseNb
+                "liasseNb": liasseNb,
             }
-            for level in tqdm(range(2, 6))
+            for level in range(2, 6)
         }
         res[1] = {
             "ground_truth": [
@@ -99,23 +98,21 @@ class Evaluator(ABC):
                 df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
                 for x in res[2]["predictions"]
             ],
-            "probabilities": [
-                prob for prob in res[2]["probabilities"]
-            ],
-            "liasseNb": [
-                liasse for liasse in res[2]["liasseNb"]
-            ],
+            "probabilities": res[2]["probabilities"],
+            "liasseNb": res[2]["liasseNb"],
         }
         return res
 
-    def compute_accuracies(self, aggregated_APE_dict: Dict[int, Dict[str, List]]) -> Dict[str, float]:
+    def compute_accuracies(
+        self, aggregated_APE_dict: Dict[int, Dict[str, List]]
+    ) -> Dict[str, float]:
         """
         Computes accuracies (for different levels of the NAF classification)
         of the trained model on DataFrame `df`.
 
         Args:
-            aggregated_APE_dict (Dict[int, Dict[str, List]]): Dictionary 
-                of true and predicted labels at each level of the NAF 
+            aggregated_APE_dict (Dict[int, Dict[str, List]]): Dictionary
+                of true and predicted labels at each level of the NAF
                 classification.
 
         Returns:
@@ -180,7 +177,9 @@ class Evaluator(ABC):
         Returns:
             Dict[str, float]: Dictionary of evaluation metrics.
         """
-        aggregated_APE_dict = self.get_aggregated_APE_dict(df, y, text_feature, categorical_features)
+        aggregated_APE_dict = self.get_aggregated_APE_dict(
+            df, y, text_feature, categorical_features
+        )
         accuracies = self.compute_accuracies(aggregated_APE_dict)
         cmatrix = self.plot_matrix(aggregated_APE_dict[1])
         return accuracies, cmatrix
