@@ -81,26 +81,26 @@ class Evaluator(ABC):
         liasseNb = df.index
 
         res = {
-            level: {
-                "ground_truth": df[y].str[:level].to_list(),
-                "predictions": [prediction[:level] for prediction in predicted_classes],
-                "probabilities": probs_prediction,
-                "liasseNb": liasseNb,
-            }
+            level: pd.DataFrame(
+                {
+                    "ground_truth": df[y].str[:level].to_list(),
+                    "predictions": [
+                        prediction[:level] for prediction in predicted_classes
+                    ],
+                    "probabilities": probs_prediction,
+                    "liasseNb": liasseNb,
+                }
+            )
             for level in range(2, 6)
         }
-        res[1] = {
-            "ground_truth": [
-                df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
-                for x in res[2]["ground_truth"]
-            ],
-            "predictions": [
-                df_naf["NIV1"][df_naf["NIV2"] == x].to_list()[0]
-                for x in res[2]["predictions"]
-            ],
-            "probabilities": res[2]["probabilities"],
-            "liasseNb": res[2]["liasseNb"],
-        }
+
+        res[1] = res[2].copy()
+        for naf2 in pd.unique(df_naf["NIV2"]):
+            for value in ["predictions", "ground_truth"]:
+                res[1].loc[res[1][value] == naf2, value] = df_naf["NIV1"][
+                    (df_naf["NIV2"] == naf2).argmax()
+                ]
+
         return res
 
     def compute_accuracies(
