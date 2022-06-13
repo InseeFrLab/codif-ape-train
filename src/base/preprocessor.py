@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
+from nltk.stem.snowball import SnowballStemmer
 
 
 class Preprocessor(ABC):
@@ -21,6 +22,7 @@ class Preprocessor(ABC):
         Constructor for the Preprocessor class.
         """
         self.stopwords = stopwords
+        self.stemmer = SnowballStemmer(language="french")
 
     def preprocess(
         self,
