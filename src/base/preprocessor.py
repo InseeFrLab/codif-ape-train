@@ -47,7 +47,7 @@ class Preprocessor(ABC):
                 and evaluation.
         """
         # General preprocessing
-        df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
+        df = df.rename(columns={"APE_SICORE": y})
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
@@ -55,6 +55,8 @@ class Preprocessor(ABC):
         df = df[variables]
         df = df.fillna(value=np.nan)
         df = df.dropna()
+        # Temporary for time saving
+        df = df.drop_duplicates(subset=variables)
 
         # Specific preprocessing for model
         return self.preprocess_for_model(df, y, text_feature, categorical_features)
