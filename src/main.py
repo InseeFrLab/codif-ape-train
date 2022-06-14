@@ -63,6 +63,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         # Log parameters
         for param_name, param_value in params.items():
             mlflow.log_param(param_name, param_value)
+        mlflow.log_param("features", categorical_features)
 
         # Evaluation
         print("*** Evaluating the model...\n")
