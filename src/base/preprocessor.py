@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from dico_1 import Words2Remove
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 
@@ -16,7 +17,7 @@ class Preprocessor(ABC):
     """
 
     def __init__(
-        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french") + ["a"])
+        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french") + Words2Remove)
     ) -> None:
         """
         Constructor for the Preprocessor class.

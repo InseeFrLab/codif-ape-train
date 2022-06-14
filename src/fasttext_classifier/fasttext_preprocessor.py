@@ -77,13 +77,12 @@ class FastTextPreprocessor(Preprocessor):
         lib = lib.translate(str.maketrans(string.digits, " " * len(string.digits)))
 
         # On supprime les stopwords, on renvoie les mots en minuscule
-        # et on récupère la racine de chaque mot
-        lib = [
-            self.stemmer.stem(x.lower())
-            for x in lib.split()
-            if x.lower() not in self.stopwords
-        ]
+        lib = [x.lower() for x in lib.split() if x.lower() not in self.stopwords]
 
+        # On récupère la racine de chaque mot
+        lib = [self.stemmer.stem(word) for word in lib]
+
+        # On supprime les mots dupliqués dans un même libellé
         lib_clean = " ".join(sorted(set(lib), key=lib.index))
         return lib_clean
 
