@@ -6,9 +6,10 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from dico_1 import Words2Remove
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
+
+from base.dico_1 import Words2Remove
 
 
 class Preprocessor(ABC):
