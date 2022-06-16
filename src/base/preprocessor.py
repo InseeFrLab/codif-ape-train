@@ -9,7 +9,7 @@ import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 
-from base.dico_1 import Words2Remove
+from base.dico_4 import Words2Remove
 
 
 class Preprocessor(ABC):
