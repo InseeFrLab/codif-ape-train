@@ -1,7 +1,7 @@
 """
 FastTextEvaluator class.
 """
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from fasttext import FastText
@@ -26,7 +26,8 @@ class FastTextEvaluator(Evaluator):
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]],
-    ) -> List[Tuple[str, float]]:
+        k: int,
+    ) -> Dict[int, List[Tuple[str, float]]]:
         """
         Returns the prediction of the model for pd.DataFrame `df`
         along with the output probabilities.
@@ -37,6 +38,7 @@ class FastTextEvaluator(Evaluator):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
+            k (int): Number of predictions.
 
         Returns:
             List: List with the prediction and probability for the
@@ -53,5 +55,11 @@ class FastTextEvaluator(Evaluator):
                 formatted_item += f" {feature}_{item[1][feature]}"
             libs.append(formatted_item)
 
-        res = self.model.predict(libs)
-        return [(x[0].replace("__label__", ""), y[0]) for x, y in zip(res[0], res[1])]
+        res = self.model.predict(libs, k=k)
+        return {
+            rank_pred: [
+                (x[rank_pred].replace("__label__", ""), y[rank_pred])
+                for x, y in zip(res[0], res[1])
+            ]
+            for rank_pred in range(k)
+        }
