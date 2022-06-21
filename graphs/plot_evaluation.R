@@ -106,8 +106,97 @@ PlotAccuracies <- function(data, level, title){
     theme_custom()
   return(plot)
 }
-PlotAccuracies(df, 5, "Accuracy au niveau 5 (aggrégation par moyenne)")
 PlotAccuracies(df, 1, "Accuracy au niveau 1")
+PlotAccuracies(df, 5, "Accuracy au niveau 5 (aggrégation par moyenne)")
+
+##### Aggrégation par moyenne avec proportion ##### 
+PlotAccuracies_with_Shares <- function(data, type, level, title){
+  
+  TotalSize <- data%>%subset(Type %in% type)%>%nrow()
+  sample <- data %>%
+    subset(Type %in% type)%>%
+    mutate(Results = .data[[paste0("predictions_", level)]] == .data[[paste0("ground_truth_", level)]]) %>%
+    group_by(ground_truth_1, Type)%>%
+    summarise(
+      Accuracy = mean(Results),
+      N = n(),
+    )%>%
+    mutate(Share = N/TotalSize*100,
+           NewTitle = paste0(ground_truth_1, "\n(", round(Share, 1), "%)"))
+plot <-ggplot(sample, aes(x=NewTitle, y=Accuracy, fill=Type))+
+  ggtitle(title)+
+  geom_bar(stat = "identity", position = position_dodge())+
+  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+  scale_fill_manual(values=c(Palette_col))+
+  theme_custom()
+return(plot)
+}
+PlotAccuracies_with_Shares(df, "Test", 1, "Accuracy au niveau 1")
+PlotAccuracies_with_Shares(df, "GU", 1, "Accuracy au niveau 1")
+PlotAccuracies_with_Shares(df, "Test", 5, "Accuracy au niveau 5 (aggrégation par moyenne)")
+PlotAccuracies_with_Shares(df, "GU", 5, "Accuracy au niveau 5 (aggrégation par moyenne)")
+
+##### Construction de la base avec reprise des données ##### 
+acc_w_rep <- function(data, q, type, level){
+
+  accuracy <- data %>% 
+    subset(Type %in% type)%>%
+    select(probabilities, probabilities_k2, ends_with(paste0("_", level)))%>%
+    rename_with(~ gsub(paste0("_", level,"$"), "", .x))%>%
+    mutate(Score = probabilities - probabilities_k2,
+           Results = ground_truth == predictions,
+           Revisions = case_when(Score >= quantile(Score, q) ~ Results,
+                                 TRUE ~ TRUE)
+    )%>%
+    pull(Revisions)%>%
+    mean
+  return(accuracy)
+}
+
+df_reprise <- tibble(Rate = character(), Level = character(), Type = character(), Accuracy = numeric())
+for (type in c("GU", "Test")) {
+  for (level in paste(1:5)) {
+    for (rate in paste(seq(0,0.25,0.05))) {
+      df_reprise <- df_reprise %>%
+                        add_row(Rate = rate, 
+                                Level = level,
+                                Type = type,
+                                Accuracy = acc_w_rep(df, 
+                                                     as.double(rate), 
+                                                     type, 
+                                                     as.double(level)
+                                                    )
+                                )
+    }
+  }
+}
+
+PlotReprise <- function(data, type, title){
+  sample <- subset(data, Type %in% type)%>%
+    mutate(Level = factor(Level, levels = paste(seq(5,1,-1))),
+           Rate = paste0(as.double(Rate) * 100, "%"),
+           Rate = factor(Rate, levels = paste0(seq(0,25,5),"%"))
+    )
+  
+  plot<- ggplot(sample , aes(x=Level, y=Accuracy, fill=Rate))+
+    ggtitle(title)+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()
+  return(plot)
+}
+PlotReprise(df_reprise, "Test", "Accuracy en fonction du taux de reprise et du niveau d'aggrégation \n pour la base Test")
+PlotReprise(df_reprise, "GU", "Accuracy en fonction du taux de reprise \n pour la base GU")
+
+# TOP K accuracy 
+
+# Stats desc la ou y a le plus d'erreur
+
+# analyse les metrics de la confusion matrix
+
+
 ##### Stats desc ##### 
 sample <- df %>%
   group_by(Type, ground_truth_1)%>%
@@ -124,108 +213,6 @@ ggplot(data = sample, aes(x=ground_truth_1, y=Share, fill=Type))+
   scale_y_continuous(labels = latex_percent)+
   scale_fill_manual(values=c(Palette_col))+
   theme_custom()
-
-
-##### Aggrégation par moyenne avec proportion GU ##### 
-PlotAccuracies_with_Shares <- function(data, type, level, title){
-  
-  TotalSize <- data%>%subset(Type %in% type)%>%nrow()
-  sample <- data %>%
-    subset(Type %in% type)%>%
-    mutate(Results = .data[[paste0("predictions_", level)]] == .data[[paste0("ground_truth_", level)]]) %>%
-    group_by(ground_truth_1, Type)%>%
-    summarise(
-      Accuracy = mean(Results),
-      N = n(),
-    )%>%
-    mutate(Share = N/TotalSize*100,
-           NewTitle = paste0(ground_truth_1, "\n(", round(Share, 1), "%)"))
-plot <-ggplot(sample, aes(x=NewTitle, y=Accuracy, fill=Type))+
-  ggtitle('Accuracy au niveau 1')+
-  geom_bar(stat = "identity", position = position_dodge())+
-  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_fill_manual(values=c(Palette_col))+
-  theme_custom()
-return(plot)
-}
-PlotAccuracies_with_Shares(df, "Test", 5)
-PlotAccuracies_with_Shares(df, "GU", 5)
-
-##### Aggrégation par moyenne avec proportion Test ##### 
-sample <- df %>%
-  subset(Type =="Test")%>%
-  mutate(Results = predictions_5 == ground_truth_5) %>%
-  group_by(ground_truth_1, Type)%>%
-  summarise(
-    Accuracy = mean(Results),
-    N = n(),
-  )%>%
-  mutate(Share = N/ifelse(Type =="GU", nrow(df_gu), nrow(df_test))*100)
-
-NewTitle <- paste0(sample$ground_truth_1, "\n(", round(sample$Share, 1), "%)")
-names(NewTitle) <- sample$ground_truth_1 
-
-sample <- sample %>%
-  mutate(ground_truth_1 = recode(ground_truth_1, !!!NewTitle)
-  )
-
-ggplot(data = sample, aes(x=ground_truth_1, y=Accuracy, fill=Type))+
-  ggtitle('Accuracy au niveau 1')+
-  geom_bar(stat = "identity", position = position_dodge())+
-  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_fill_manual(values=c(Palette_col))+
-  theme_custom()
-
-##### Accuracy niveau 1 avec proportion GU #####
-sample <- df %>%
-  subset(Type =="GU")%>%
-  mutate(Results = predictions_1 == ground_truth_1) %>%
-  group_by(ground_truth_1, Type)%>%
-  summarise(
-    Accuracy = mean(Results),
-    N = n(),
-  )%>%
-  mutate(Share = N/ifelse(Type =="GU", nrow(df_gu), nrow(df_test))*100)
-
-NewTitle <- paste0(sample$ground_truth_1, "\n(", round(sample$Share, 1), "%)")
-names(NewTitle) <- sample$ground_truth_1 
-
-sample <- sample %>%
-  mutate(ground_truth_1 = recode(ground_truth_1, !!!NewTitle)
-  )
-
-ggplot(data = sample, aes(x=ground_truth_1, y=Accuracy, fill=Type))+
-  ggtitle('Accuracy au niveau 1')+
-  geom_bar(stat = "identity", position = position_dodge())+
-  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_fill_manual(values=c(Palette_col))+
-  theme_custom()
-
-##### Accuracy niveau 1 avec proportion Test #####
-sample <- df %>%
-  subset(Type =="Test")%>%
-  mutate(Results = predictions_1 == ground_truth_1) %>%
-  group_by(ground_truth_1, Type)%>%
-  summarise(
-    Accuracy = mean(Results),
-    N = n(),
-  )%>%
-  mutate(Share = N/ifelse(Type =="GU", nrow(df_gu), nrow(df_test))*100)
-
-NewTitle <- paste0(sample$ground_truth_1, "\n(", round(sample$Share, 1), "%)")
-names(NewTitle) <- sample$ground_truth_1 
-
-sample <- sample %>%
-  mutate(ground_truth_1 = recode(ground_truth_1, !!!NewTitle)
-  )
-
-ggplot(data = sample, aes(x=ground_truth_1, y=Accuracy, fill=Type))+
-  ggtitle('Accuracy au niveau 1')+
-  geom_bar(stat = "identity", position = position_dodge())+
-  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_fill_manual(values=c(Palette_col))+
-  theme_custom()
-
 
 
 ##### Test matrice de confusion niveau 2 GU ##### 
