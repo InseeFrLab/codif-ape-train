@@ -1,9 +1,10 @@
 rm(list = ls())
 setwd("~/codification-ape/graphs")
-library(aws.s3)
-library(dplyr)
 install.packages("tibble")
 install.packages("caret")
+library(aws.s3)
+library(dplyr)
+library(ggplot2)
 library(caret)
 source("theme_custom.R")
 aws.s3::get_bucket("projet-ape", region = "", prefix = "data/preds_test.csv")
@@ -191,7 +192,69 @@ PlotReprise(df_reprise, "Test", "Accuracy en fonction du taux de reprise et du n
 PlotReprise(df_reprise, "GU", "Accuracy en fonction du taux de reprise \n pour la base GU")
 
 # TOP K accuracy 
+level <- 3
+topk <- 2
 
+accuracy <- df %>% 
+  subset(Type %in% "GU")%>%
+  rename_at(vars(paste0("predictions_", level)), ~ paste0("predictions_", level, "_k1"))%>%
+  select(starts_with(paste0("ground_truth_", level)), (starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))))%>%
+  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+  rename_at(vars((starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))) ), ~ paste0("K",1:topk))%>%
+  rowwise() %>%
+  mutate(Results = ifelse(topk == 1, any(TRUTH %in% K1),
+                          ifelse(topk == 2, any(TRUTH %in% c(K1, K2)), 
+                                 ifelse(topk == 3, any(TRUTH %in% c(K1, K2, K3)), 
+                                        ifelse(topk == 4, any(TRUTH %in% c(K1, K2, K3, K4)),
+                                               ifelse(topk == 5, any(TRUTH %in% c(K1, K2, K3, K4, K5))))))))%>%
+  pull(Results)%>%
+  mean
+
+
+top_k_acc <- function(data, topk, type, level){
+  accuracy <- data %>% 
+    subset(Type %in% type)%>%
+    rename_at(vars(paste0("predictions_", level)), ~ paste0("predictions_", level, "_k1"))%>%
+    select(starts_with(paste0("ground_truth_", level)), (starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))))%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars((starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))) ), ~ paste0("K",1:topk))%>%
+    rowwise() %>%
+    mutate(Results = ifelse(topk == 1, any(TRUTH %in% K1),
+                            ifelse(topk == 2, any(TRUTH %in% c(K1, K2)), 
+                                   ifelse(topk == 3, any(TRUTH %in% c(K1, K2, K3)), 
+                                          ifelse(topk == 4, any(TRUTH %in% c(K1, K2, K3, K4)),
+                                                 ifelse(topk == 5, any(TRUTH %in% c(K1, K2, K3, K4, K5))))))))%>%
+    pull(Results)%>%
+    mean
+  return(accuracy)
+}
+
+df_topk <- tibble(Topk = character(), Level = character(), Type = character(), Accuracy = numeric())
+for (type in c("GU", "Test")) {
+  for (level in paste(1:5)) {
+    for (topk in paste(seq(1:5))) {
+      cat(type, level, topk, '\n')
+      df_topk <- df_topk %>%
+        add_row(Topk = topk, 
+                Level = level,
+                Type = type,
+                Accuracy = top_k_acc(df, 
+                                     as.double(topk), 
+                                     type, 
+                                     as.double(level)
+                )
+        )
+    }
+  }
+}
+
+
+
+top_k_acc(df, 
+          3, 
+          "GU", 
+          5)
+  
 # Stats desc la ou y a le plus d'erreur
 
 # analyse les metrics de la confusion matrix
