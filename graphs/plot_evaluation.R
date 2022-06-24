@@ -42,7 +42,6 @@ latex_percent <- function(x){
 
 ##### Matrice de confusion niveau 1 ##### 
 PlotConfusionMatrix <- function(data, type){
-  
   TotalSize <- data%>%subset(Type %in% type)%>%nrow()
   
   Shares <- data%>%
@@ -89,6 +88,47 @@ PlotConfusionMatrix <- function(data, type){
 }
 PlotConfusionMatrix(df, c("GU"))
 PlotConfusionMatrix(df, c("Test"))
+
+##### F1 Score pour le niveau 1 ##### 
+PlotF1 <- function(data, level, title){
+  Factors  <- data %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
+  
+  sample <- data %>% 
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
+  
+  sample_test <- sample %>% subset(Type == "Test")
+  sample_gu <- sample %>% subset(Type == "GU")
+  
+  sample_test <- confusionMatrix(sample_test$TRUTH, sample_test$PRED)$byClass[,7]%>%
+    as_tibble()%>%
+    mutate(Class = Factors,
+           Type = "Test")%>%
+    rename(F1 = value)
+  
+  sample <- confusionMatrix(sample_gu$TRUTH, sample_gu$PRED)$byClass[,7]%>%
+    as_tibble()%>%
+    mutate(Class = Factors,
+           Type = "GU")%>%
+    rename(F1 = value)%>%
+    bind_rows(sample_test)
+  
+  plot <-ggplot(sample, aes(x=Class, y=F1, fill=Type))+
+    ggtitle(title)+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(F1,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    theme_custom()
+  return(plot)
+}
+PlotF1(df, 1, "F1-score au niveau 1")
 
 ##### Aggrégation par moyenne ##### 
 PlotAccuracies <- function(data, level, title){
@@ -145,11 +185,12 @@ acc_w_rep <- function(data, q, type, level){
     select(probabilities, probabilities_k2, ends_with(paste0("_", level)))%>%
     rename_with(~ gsub(paste0("_", level,"$"), "", .x))%>%
     mutate(Score = probabilities - probabilities_k2,
-           Results = ground_truth == predictions,
-           Revisions = case_when(Score >= quantile(Score, q) ~ Results,
-                                 TRUE ~ TRUE)
+           Results = ground_truth == predictions)%>%
+    subset(Score >= quantile(Score, q)
+           #Revisions = case_when(Score >= quantile(Score, q) ~ Results,
+            #                     TRUE ~ TRUE)
     )%>%
-    pull(Revisions)%>%
+    pull(Results)%>%
     mean
   return(accuracy)
 }
@@ -158,6 +199,7 @@ df_reprise <- tibble(Rate = character(), Level = character(), Type = character()
 for (type in c("GU", "Test")) {
   for (level in paste(1:5)) {
     for (rate in paste(seq(0,0.25,0.05))) {
+      cat(type, level, rate, '\n')
       df_reprise <- df_reprise %>%
                         add_row(Rate = rate, 
                                 Level = level,
@@ -174,7 +216,8 @@ for (type in c("GU", "Test")) {
 
 PlotReprise <- function(data, type, title){
   sample <- subset(data, Type %in% type)%>%
-    mutate(Level = factor(Level, levels = paste(seq(5,1,-1))),
+    mutate(Level = paste("Niveau", Level),
+           Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1)))),
            Rate = paste0(as.double(Rate) * 100, "%"),
            Rate = factor(Rate, levels = paste0(seq(0,25,5),"%"))
     )
@@ -188,29 +231,10 @@ PlotReprise <- function(data, type, title){
     theme_custom()
   return(plot)
 }
-PlotReprise(df_reprise, "Test", "Accuracy en fonction du taux de reprise et du niveau d'aggrégation \n pour la base Test")
-PlotReprise(df_reprise, "GU", "Accuracy en fonction du taux de reprise \n pour la base GU")
+PlotReprise(df_reprise, "Test", "Accuracy en fonction du taux de reprise et du niveau d'aggrégation \n (base Test)")
+PlotReprise(df_reprise, "GU", "Accuracy en fonction du taux de reprise et du niveau d'aggrégation \n (base GU)")
 
-# TOP K accuracy 
-level <- 3
-topk <- 2
-
-accuracy <- df %>% 
-  subset(Type %in% "GU")%>%
-  rename_at(vars(paste0("predictions_", level)), ~ paste0("predictions_", level, "_k1"))%>%
-  select(starts_with(paste0("ground_truth_", level)), (starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))))%>%
-  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-  rename_at(vars((starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))) ), ~ paste0("K",1:topk))%>%
-  rowwise() %>%
-  mutate(Results = ifelse(topk == 1, any(TRUTH %in% K1),
-                          ifelse(topk == 2, any(TRUTH %in% c(K1, K2)), 
-                                 ifelse(topk == 3, any(TRUTH %in% c(K1, K2, K3)), 
-                                        ifelse(topk == 4, any(TRUTH %in% c(K1, K2, K3, K4)),
-                                               ifelse(topk == 5, any(TRUTH %in% c(K1, K2, K3, K4, K5))))))))%>%
-  pull(Results)%>%
-  mean
-
-
+##### TOP K accuracy ##### 
 top_k_acc <- function(data, topk, type, level){
   accuracy <- data %>% 
     subset(Type %in% type)%>%
@@ -248,13 +272,26 @@ for (type in c("GU", "Test")) {
   }
 }
 
-
-
-top_k_acc(df, 
-          3, 
-          "GU", 
-          5)
+PlotTopk <- function(data, type, title){
+  sample <- subset(data, Type %in% type)%>%
+    mutate(Level = paste("Niveau", Level),
+           Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1)))),
+           Topk = paste("Top", Topk)
+    )
   
+  plot<- ggplot(sample , aes(x=Level, y=Accuracy, fill=Topk))+
+    ggtitle(title)+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()
+  return(plot)
+}
+PlotTopk(df_topk, "Test", "Top-k accuracy pour chaque niveau d'aggrégation \n (base Test)")
+PlotTopk(df_topk, "GU", "Top-k accuracy pour chaque niveau d'aggrégation \n (base GU)")
+
+
 # Stats desc la ou y a le plus d'erreur
 
 # analyse les metrics de la confusion matrix
@@ -273,10 +310,31 @@ ggplot(data = sample, aes(x=ground_truth_1, y=Share, fill=Type))+
   ggtitle('Proportion des différentes catégories')+
   geom_bar(stat = "identity", position = position_dodge())+
   geom_text(aes(label=round(Share*100,1)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_y_continuous(labels = latex_percent)+
+  scale_y_continuous(labels = scales::percent)+
   scale_fill_manual(values=c(Palette_col))+
   theme_custom()
 
+
+##### Indice de confiance ##### 
+
+data <- df%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+  select(probabilities, probabilities_k2, Results, Type, Score)
+
+thresholds <- df%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+  select(probabilities, probabilities_k2, Results, Type, Score)%>%
+  pull(Score)%>%
+  quantile(seq(0.05, 0.25,0.05))
+
+ggplot(data)+
+  ggtitle("Distribution de l'indice de confiance en fonction du résultat de la prédiction")+
+  geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
+  scale_fill_manual(values=c(Palette_col))+
+  geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
+  theme_custom()
 
 ##### Test matrice de confusion niveau 2 GU ##### 
 sample <- df_gu
@@ -327,98 +385,120 @@ df %>%
 
 ##### 
 
-data <- df
-Type <- c("GU")
-
-TotalSize <- data%>% subset(Type=="GU")
-
-%>%nrow()
-
-Shares <- data%>%
-  subset(Type == Type)%>%
-  group_by(ground_truth_1, Type)%>%
-  summarise(
-    N = n(),
-  )%>%
-  mutate(Share = N/TotalSize*100)
-
-sample <- data%>%
-  subset(Type == Type)%>%
-  mutate(ground_truth_1 = factor(ground_truth_1, levels = Shares$ground_truth_1),
-         predictions_1 = factor(predictions_1, levels = Shares$ground_truth_1))%>%
-  select(ground_truth_1, predictions_1)
-
-cm <- confusionMatrix(sample$ground_truth_1, sample$predictions_1)
-
-sample <- cm$table %>%
-  data.frame() %>% 
-  mutate(Prediction = factor(Prediction, levels = Shares$ground_truth_1)) %>%
-  group_by(Reference) %>% 
-  mutate(
-    total = sum(Freq),
-    perc = Freq / total*100
-  )
-
-
-NewTitle <- paste0(sample$Reference, "\n(", rep(round(Shares$Share, 1), each=length(Shares$ground_truth_1)), "%)")
-names(NewTitle) <- sample$Reference 
-
-sample <- sample %>%
-  mutate(Reference = recode(Reference, !!!NewTitle)
-  )
-
-plot <-  ggplot(sample, aes(x=Reference, y= Prediction)) +
-  geom_tile(aes(fill = perc))+
-  scale_fill_gradient(low = "white", high = Palette_col[1]) +
-  geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
-  theme_custom()+
-  guides(fill = "none")  
-
-
-##### 
-topk_accuracy <- function(k, ground_truth_1, predictions_1, predictions_2, predictions_3, predictions_4, predictions_5){
-  if (k==1) {
-    acc = (ground_truth_1 == predictions_1)
-    
-  }else if(k==2){
-    acc = (ground_truth_1 == predictions_1) | 
-      (ground_truth_1 == predictions_2)
-    
-  }else if(k==3){
-    acc = (ground_truth_1 == predictions_1) | 
-      (ground_truth_1 == predictions_2) | 
-      (ground_truth_1 == predictions_3)
-    
-  }else if(k==4){
-    acc = (ground_truth_1 == predictions_1) | 
-      (ground_truth_1 == predictions_2) | 
-      (ground_truth_1 == predictions_3) | 
-      (ground_truth_1 == predictions_4)
-  }else{
-    acc = (ground_truth_1 == predictions_1) | 
-      (ground_truth_1 == predictions_2) | 
-      (ground_truth_1 == predictions_3) | 
-      (ground_truth_1 == predictions_4) | 
-      (ground_truth_1 == predictions_5)
-  }
-  return(acc)
+##### F1 Score pour le niveau 1 ##### 
+PlotF1 <- function(data, level, title){
+  data <- df
+  level <- 5
+  type <- "Test"
   
+  Factors  <- data %>% 
+    subset(Type == type) %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
+  
+  sample <- data %>% 
+    subset(Type == type) %>% 
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
+  
+  prop <- sample %>%
+    group_by(TRUTH)%>%
+    summarise(
+      N = n()
+    )
+  
+  samplee <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,7]%>%
+    as_tibble()%>%
+    mutate(Class = Factors,
+           N = prop$N)%>%
+    rename(F1 = value)
+
+  w <- samplee %>% 
+    subset(N > quantile(N, 0.80))
+data<-  samplee%>%
+    subset((F1<0.75) & (N>50))
+  
+  plot <-ggplot(w, aes(x=N, y=F1 ))+
+    ggtitle('')+
+    geom_point()+
+    scale_fill_manual(values=c(Palette_col))+
+    theme_custom()
+  return(plot)
 }
-sample <- df %>%
-  mutate(Results0 = predictions_5 == ground_truth_5,
-         Results1 = topk_accuracy(1, ground_truth_1, predictions_1, predictions_2, predictions_3, predictions_4, predictions_5),
-         Results2 = topk_accuracy(2, ground_truth_1, predictions_1, predictions_2, predictions_3, predictions_4, predictions_5),
-         Results3 = topk_accuracy(3, ground_truth_1, predictions_1, predictions_2, predictions_3, predictions_4, predictions_5),
-         Results4 = topk_accuracy(4, ground_truth_1, predictions_1, predictions_2, predictions_3, predictions_4, predictions_5),
-  ) %>%
-  group_by(ground_truth_1, Type)%>%
+PlotF1(df, 5, "F1-score au niveau 1")
+
+
+
+
+data <- df
+level <- 5
+type <- "Test"
+
+Factors  <- data %>% 
+  subset(Type == type) %>% 
+  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+  pull(TRUTH)%>%
+  unique()%>%
+  sort()
+
+sample <- data %>% 
+  subset(Type == type) %>% 
+  select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+  rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+  mutate(TRUTH = factor(TRUTH, levels = Factors),
+         PRED = factor(PRED, levels = Factors))
+
+prop <- sample %>%
+  group_by(TRUTH)%>%
   summarise(
-    Accuracy0 = mean(Results0),
-    Accuracy1 = mean(Results1),
-    Accuracy2 = mean(Results2),
-    Accuracy3 = mean(Results3),
-    Accuracy4 = mean(Results4),
-    
+    N = n()
   )
 
-sample
+cm <- confusionMatrix(sample$TRUTH, sample$PRED)
+
+samplee <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,7]%>%
+  as_tibble()%>%
+  mutate(Class = Factors,
+         N = prop$N)%>%
+  rename(F1 = value)
+
+w <- samplee %>% 
+  subset(N > quantile(N, 0.80))
+data<-  samplee%>%
+  subset((F1<0.75) & (N>50))
+
+plot <-ggplot(w, aes(x=N, y=F1 ))+
+  ggtitle('')+
+  geom_point()+
+  scale_fill_manual(values=c(Palette_col))+
+  theme_custom()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
