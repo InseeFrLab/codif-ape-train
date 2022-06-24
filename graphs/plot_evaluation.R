@@ -476,7 +476,26 @@ ggplot(sample, aes(x=Precision, y=Recall, size = N, alpha=N))+
 
 
 
+violin_df <- samplee %>%
+  arrange(desc(N)) %>%
+  mutate(N_cumulative = cumsum(N)) %>%
+  mutate(cumulative_pct = N_cumulative / sum(samplee$N)) %>%
+  mutate(class = case_when(
+    cumulative_pct < 0.4 ~ "Catégories très représentées",
+    cumulative_pct < 0.7 ~ "Catégories assez représentées",
+    cumulative_pct < 0.9 ~ "Catégories peu représentées",
+    TRUE ~ "Catégories très peu représentées"
+  )) %>%
+  mutate(class = as.factor(class))
 
+violin_df %>%
+  ggplot(aes(x=class, y=F1)) + 
+  geom_violin(draw_quantiles = )
+
+violin_df %>%
+  group_by(class) %>%
+  summarise(N_tot = sum(N),
+            count = n())
 
 
 
