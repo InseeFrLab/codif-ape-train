@@ -494,6 +494,10 @@ violin_df <- samplee %>%
   mutate(class = as.factor(class))
 
 violin_df %>%
+  ggplot(aes(x=class, y=F1)) + 
+  geom_violin(draw_quantiles = )
+
+violin_df %>%
   group_by(class) %>%
   summarise(N_tot = sum(N),
             count = n())
