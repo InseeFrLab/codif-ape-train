@@ -462,23 +462,17 @@ prop <- sample %>%
 
 cm <- confusionMatrix(sample$TRUTH, sample$PRED)
 
-samplee <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,7]%>%
+sample <- cm$byClass[,c(7)]%>%
   as_tibble()%>%
   mutate(Class = Factors,
-         N = prop$N)%>%
-  rename(F1 = value)
+         N = prop$N)
 
-w <- samplee %>% 
-  subset(N > quantile(N, 0.80))
-data<-  samplee%>%
-  subset((F1<0.75) & (N>50))
-
-plot <-ggplot(w, aes(x=N, y=F1 ))+
+ggplot(sample, aes(x=Precision, y=Recall, size = N, alpha=N))+
   ggtitle('')+
-  geom_point()+
-  scale_fill_manual(values=c(Palette_col))+
+  geom_point(color = Palette_col[1])+
+  scale_x_continuous(limits = c(0, 1))+
+  scale_y_continuous(limits = c(0, 1))+
   theme_custom()
-
 
 
 
