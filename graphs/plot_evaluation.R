@@ -4,6 +4,7 @@ install.packages("tibble")
 install.packages("caret")
 library(aws.s3)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(caret)
 source("theme_custom.R")
@@ -185,19 +186,18 @@ acc_w_rep <- function(data, q, type, level){
     select(probabilities, probabilities_k2, ends_with(paste0("_", level)))%>%
     rename_with(~ gsub(paste0("_", level,"$"), "", .x))%>%
     mutate(Score = probabilities - probabilities_k2,
-           Results = ground_truth == predictions)%>%
-    subset(Score >= quantile(Score, q)
-           #Revisions = case_when(Score >= quantile(Score, q) ~ Results,
-            #                     TRUE ~ TRUE)
+           Results = ground_truth == predictions,
+           Revisions = case_when(Score >= quantile(Score, q) ~ Results,
+                                 TRUE ~ TRUE)
     )%>%
-    pull(Results)%>%
+    pull(Revisions)%>%
     mean
   return(accuracy)
 }
 
 df_reprise <- tibble(Rate = character(), Level = character(), Type = character(), Accuracy = numeric())
 for (type in c("GU", "Test")) {
-  for (level in paste(1:5)) {
+  for (level in paste(c(1,3,5))) {
     for (rate in paste(seq(0,0.25,0.05))) {
       cat(type, level, rate, '\n')
       df_reprise <- df_reprise %>%
@@ -228,7 +228,10 @@ PlotReprise <- function(data, type, title){
     geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
     scale_fill_manual(values=c(Palette_col))+
     guides(fill=guide_legend(nrow=1, byrow=TRUE))+
-    theme_custom()
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
   return(plot)
 }
 PlotReprise(df_reprise, "Test", "Accuracy en fonction du taux de reprise et du niveau d'aggrégation \n (base Test)")
@@ -273,7 +276,7 @@ for (type in c("GU", "Test")) {
 }
 
 PlotTopk <- function(data, type, title){
-  sample <- subset(data, Type %in% type)%>%
+  sample <- subset(data, Type %in% type & Level %in% c(1,3,5))%>%
     mutate(Level = paste("Niveau", Level),
            Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1)))),
            Topk = paste("Top", Topk)
@@ -285,7 +288,10 @@ PlotTopk <- function(data, type, title){
     geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
     scale_fill_manual(values=c(Palette_col))+
     guides(fill=guide_legend(nrow=1, byrow=TRUE))+
-    theme_custom()
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
   return(plot)
 }
 PlotTopk(df_topk, "Test", "Top-k accuracy pour chaque niveau d'aggrégation \n (base Test)")
@@ -316,15 +322,17 @@ ggplot(data = sample, aes(x=ground_truth_1, y=Share, fill=Type))+
 
 
 ##### Indice de confiance ##### 
-
+type <- "Test"
 data <- df%>%
+  subset(Type == type)%>%
   mutate(Results = ground_truth_5 == predictions_5,
-         Score = probabilities - probabilities_k2)%>%
+         Score = log(probabilities / probabilities_k2))%>%
   select(probabilities, probabilities_k2, Results, Type, Score)
 
 thresholds <- df%>%
+  subset(Type == type)%>%
   mutate(Results = ground_truth_5 == predictions_5,
-         Score = probabilities - probabilities_k2)%>%
+         Score = log(probabilities / probabilities_k2))%>%
   select(probabilities, probabilities_k2, Results, Type, Score)%>%
   pull(Score)%>%
   quantile(seq(0.05, 0.25,0.05))
@@ -360,37 +368,10 @@ cm$table %>%
   theme_custom()+
   guides(fill = "none")  
 
-##### Graphique de reprise des données ##### 
-
-acc_w_rep <- function(sample, q, level){
-  N <- nrow(sample)
-  model_sample <- sample %>% 
-    subset(probabilities >= quantile(probabilities, q))
-  n <- nrow(model_sample)
-  accuracy <- (sum(model_sample[paste0("ground_truth_",level)] == 
-                     model_sample[paste0("predictions_", level)], na.rm = T) + (N-n))/N
-  return(accuracy)
-}
-
-acc_w_rep(df_gu, 0.1, "2")
 
 
-df %>% 
-  group_by(Type)%>%
-  summarise(
-    Threshold = quantile(probabilities, seq(0.05, 0.25, 0.05))
-  )%>%
-  mutate(Q = seq(0.05, 0.25, 0.05))
-
-
-##### 
-
-##### F1 Score pour le niveau 1 ##### 
-PlotF1 <- function(data, level, title){
-  data <- df
-  level <- 5
-  type <- "Test"
-  
+##### Distribution du F1-score par classe ##### 
+PlotDistribF1 <- function(data, level, type){
   Factors  <- data %>% 
     subset(Type == type) %>% 
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
@@ -412,92 +393,126 @@ PlotF1 <- function(data, level, title){
       N = n()
     )
   
-  samplee <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,7]%>%
+  cm <- confusionMatrix(sample$TRUTH, sample$PRED)
+  
+  sample <- cm$byClass[,c(7)]%>%
     as_tibble()%>%
     mutate(Class = Factors,
-           N = prop$N)%>%
-    rename(F1 = value)
-
-  w <- samplee %>% 
-    subset(N > quantile(N, 0.80))
-data<-  samplee%>%
-    subset((F1<0.75) & (N>50))
+           N = prop$N)
   
-  plot <-ggplot(w, aes(x=N, y=F1 ))+
-    ggtitle('')+
-    geom_point()+
-    scale_fill_manual(values=c(Palette_col))+
-    theme_custom()
-  return(plot)
+  
+  sample <- sample %>%
+    arrange(desc(N)) %>%
+    mutate(N_cumulative = cumsum(N),
+          cumulative_pct = N_cumulative / sum(N),
+          Group = case_when(
+                            cumulative_pct < 0.50 ~ "Catégories très représentées",
+                            cumulative_pct < 0.75 ~ "Catégories assez représentées",
+                            cumulative_pct < 0.95 ~ "Catégories peu représentées",
+                            TRUE ~ "Catégories très peu représentées"
+                          ),
+          Group = factor(Group, levels = c("Catégories très représentées",
+                                           "Catégories assez représentées",
+                                           "Catégories peu représentées",
+                                           "Catégories très peu représentées"
+                                           
+                                           ))
+          )
+  ggplot(sample) + 
+    ggtitle("Distribution du F1-score en fonction de la fréquence de chaque classe")+
+    geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
+    facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
+    theme_custom()+
+    scale_fill_manual(values = Palette_col)+
+    theme(strip.placement = "outside",
+          strip.text.y = element_blank(),
+          text = element_text(size = 16)
+    )+
+    guides(fill=guide_legend(nrow=2, byrow=TRUE))
+    
 }
-PlotF1(df, 5, "F1-score au niveau 1")
+PlotDistribF1(df, 5, "GU")
 
-
-
-
-data <- df
-level <- 5
-type <- "Test"
-
-Factors  <- data %>% 
-  subset(Type == type) %>% 
-  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-  pull(TRUTH)%>%
-  unique()%>%
-  sort()
-
-sample <- data %>% 
-  subset(Type == type) %>% 
-  select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
-  rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-  rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
-  mutate(TRUTH = factor(TRUTH, levels = Factors),
-         PRED = factor(PRED, levels = Factors))
-
-prop <- sample %>%
-  group_by(TRUTH)%>%
+##### Nombre de classe selon un seuil de F1 ##### 
+PlotF1Inf <- function(data, threshold){
+  Factors  <- data %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", 5))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
+  
+  sample <- data %>% 
+    select(starts_with(paste0("ground_truth_", 5)), (ends_with(paste0("predictions_", 5))), Type)%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", 5))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", 5))), ~ "PRED")%>%
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
+  
+  prop <- sample %>%
+    group_by(TRUTH)%>%
+    summarise(
+      N = n()
+    )
+  
+  cm <- confusionMatrix(sample$TRUTH, sample$PRED)
+  
+  sample <- cm$byClass[,c(7)]%>%
+    as_tibble()%>%
+    mutate(Class = Factors,
+           N = prop$N)
+  
+plot <- data%>%
+  select(ground_truth_1, ground_truth_5)%>%
+  distinct(ground_truth_1,ground_truth_5)%>%
+  rename(Class = ground_truth_5)%>%
+  full_join(sample)%>%
+  rename(Class_1 = ground_truth_1)%>%
+  subset(value < threshold)%>%
+  group_by(Class_1)%>%
   summarise(
     N = n()
+  )%>%
+  ggplot(aes(x = Class_1, y= N))+
+  ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
+  geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
+  geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
+  theme_custom()+  
+  theme(
+        text = element_text(size = 16)
+  )
+  return(plot)
+}
+PlotF1Inf(df, 0.3)
+
+q <- 0.15
+# log(probabilities/probabilities_k2)
+sample <- df%>%
+  subset(ground_truth_1 == "E")%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+  select(Results, Type, Score)%>%
+  mutate(IsInf = Score <= quantile(Score, q))%>%
+  group_by(Results, IsInf)%>%
+  summarise(
+    N = n()
+  )%>%
+  group_by(Results)%>%
+  mutate(
+    total = sum(N),
+    perc = N / total*100,
+    IsInf = factor(IsInf, level= c(T,F)),
+    Results = factor(Results, level= c(F,T))
+    
   )
 
-cm <- confusionMatrix(sample$TRUTH, sample$PRED)
-
-sample <- cm$byClass[,c(7)]%>%
-  as_tibble()%>%
-  mutate(Class = Factors,
-         N = prop$N)
-
-ggplot(sample, aes(x=Precision, y=Recall, size = N, alpha=N))+
-  ggtitle('')+
-  geom_point(color = Palette_col[1])+
-  scale_x_continuous(limits = c(0, 1))+
-  scale_y_continuous(limits = c(0, 1))+
-  theme_custom()
-
-
-
-violin_df <- samplee %>%
-  arrange(desc(N)) %>%
-  mutate(N_cumulative = cumsum(N)) %>%
-  mutate(cumulative_pct = N_cumulative / sum(samplee$N)) %>%
-  mutate(class = case_when(
-    cumulative_pct < 0.4 ~ "Catégories très représentées",
-    cumulative_pct < 0.7 ~ "Catégories assez représentées",
-    cumulative_pct < 0.9 ~ "Catégories peu représentées",
-    TRUE ~ "Catégories très peu représentées"
-  )) %>%
-  mutate(class = as.factor(class))
-
-violin_df %>%
-  ggplot(aes(x=class, y=F1)) + 
-  geom_violin(draw_quantiles = )
-
-violin_df %>%
-  group_by(class) %>%
-  summarise(N_tot = sum(N),
-            count = n())
-
-
+ggplot(sample, aes(x=IsInf, y= Results)) +
+    geom_tile(aes(fill = N))+
+    scale_fill_gradient(low = "white", high = Palette_col[1]) +
+    geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
+    #theme_custom()+
+    guides(fill = "none") 
+# Faire un plot avec les différents quantile des matrice de confusion utiliser grid plot
+# Regarder les density pour chaque classe
 
 
 
