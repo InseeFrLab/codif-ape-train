@@ -7,6 +7,8 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(caret)
+library(cowplot)
+
 source("theme_custom.R")
 aws.s3::get_bucket("projet-ape", region = "", prefix = "data/preds_test.csv")
 
@@ -483,40 +485,327 @@ plot <- data%>%
   return(plot)
 }
 PlotF1Inf(df, 0.3)
+##### Matrice pour l'indice de confiance ##### 
+PlotMatConfidence <- function(data, q){
+  
+  plot <- data%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2)%>%
+    select(Results, Type, Score)%>%
+    mutate(IsInf = Score <= quantile(Score, q))%>%
+    group_by(Results, IsInf)%>%
+    summarise(
+      N = n()
+    )%>%
+    group_by(Results)%>%
+    mutate(
+      total = sum(N),
+      perc = N / total*100,
+      IsInf = factor(IsInf, level= c(T,F)),
+      Results = factor(Results, level= c(F,T))
+      
+    )%>%
+    ggplot(aes(x=IsInf, y= Results)) +
+    ggtitle(paste(q*100, "% de reprise"))+
+      geom_tile(aes(fill = N))+
+      scale_fill_gradient(low = "white", high = Palette_col[1]) +
+      geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
+      theme_custom()+
+      guides(fill = "none")+
+      theme(
+        axis.title.x=element_text(color = rgb(83, 83, 83, maxColorValue = 255)),      
+        axis.title.y=element_text(angle=90, color = rgb(83, 83, 83, maxColorValue = 255)),
+  
+      )+
+    xlab("Below threshold")+
+    ylab("Prediction")
 
-q <- 0.15
-# log(probabilities/probabilities_k2)
-sample <- df%>%
-  subset(ground_truth_1 == "E")%>%
+return(plot)
+}
+Plot05 <- PlotMatConfidence(df, 0.05)
+Plot10 <- PlotMatConfidence(df, 0.10)
+Plot15 <- PlotMatConfidence(df, 0.15)
+Plot20 <- PlotMatConfidence(df, 0.20)
+Plot25 <- PlotMatConfidence(df, 0.25)
+plot_grid(Plot05 + theme(plot.margin = unit(c(0,0,0,0), "cm")) ,
+          Plot10 + theme(plot.margin = unit(c(0,0,0,0), "cm")),
+          Plot15 + theme(plot.margin = unit(c(0,0,0,0), "cm")),
+          Plot20 + theme(plot.margin = unit(c(0,0,0,0), "cm")),
+          Plot25 + theme(plot.margin = unit(c(0,0,0,0), "cm")),
+          align = "h", ncol = 2, vjust = -0.8)
+
+
+# Regarder les density pour chaque classe
+df%>%
   mutate(Results = ground_truth_5 == predictions_5,
          Score = probabilities - probabilities_k2)%>%
-  select(Results, Type, Score)%>%
-  mutate(IsInf = Score <= quantile(Score, q))%>%
-  group_by(Results, IsInf)%>%
-  summarise(
-    N = n()
-  )%>%
-  group_by(Results)%>%
-  mutate(
-    total = sum(N),
-    perc = N / total*100,
-    IsInf = factor(IsInf, level= c(T,F)),
-    Results = factor(Results, level= c(F,T))
+  select(Results, Type, Score, predictions_1)%>%
+  ggplot()+
+    ggtitle("Distribution de l'indice de confiance en fonction du résultat de la prédiction")+
+    geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.75, position="identity") +
+    scale_fill_manual(values=c(Palette_col))+
+    facet_wrap(. ~ predictions_1, ncol = 2, strip.position="left", scales = "free") +
+    theme_custom()+
+    theme(strip.placement = "outside"
+          )
+
+
+niv1 <- "K"
+df%>%
+  subset(predictions_1 == niv1)%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+    select(Results, Type, Score, predictions_1)%>%
+    ggplot()+
+    ggtitle(niv1)+
+    geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col))+
+    theme_custom()+
+    theme(strip.placement = "outside"
+    )
+  
+df%>%
+  subset(predictions_1 == niv1)%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+  select(Results, Type, Score, predictions_1)
+
+
+
+step <- 5000
+data <- df
+cat <- "K"
+level <- 1
+gain_recall(df, 5000, "A",1)
+gain_accuracy(df, 5000, "C",1)
+
+gain_recall <- function(data, step, cat, level){
+
+  sample <- data%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    subset(PRED == cat)%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2)%>%
+    select(Results, Score)
+  
+  N <- nrow(data)
+  n <- nrow(sample)
+  
+  old_recall <- sample%>%
+              pull(Results)%>%
+              mean()
     
-  )
+  new_recall <- sample%>%
+    arrange(desc(Score))%>%
+    slice_head(n = ifelse(n - step>0, n - step, n))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( n/N * (new_recall - old_recall) )
+}
+gain_accuracy <- function(data, step, cat, level){
+  
+  sample_full <- data%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2)%>%
+    select(Results, Score, liasseNb, PRED)
+  
+  sample_class <- sample_full%>%
+    subset(PRED == cat)
+  
+  idx2Remove <- sample_class%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  n <- nrow(sample_class)
+  
+  old_accuracy <- sample_full%>%
+    pull(Results)%>%
+    mean()
+  
+  new_accuracy <- sample_full%>%
+    mutate(Results = case_when(
+      liasseNb %in% idx2Remove ~ T,
+      TRUE ~ Results
+    ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( new_accuracy - old_accuracy )
+}
 
-ggplot(sample, aes(x=IsInf, y= Results)) +
-    geom_tile(aes(fill = N))+
-    scale_fill_gradient(low = "white", high = Palette_col[1]) +
-    geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
-    #theme_custom()+
-    guides(fill = "none") 
-# Faire un plot avec les différents quantile des matrice de confusion utiliser grid plot
-# Regarder les density pour chaque classe
+sample <- df%>%
+  select(predictions_1, ground_truth_1, predictions_5, ground_truth_5, probabilities, probabilities_k2, liasseNb)
+step = 5000
+Nrevised = 0 
+iter = 0
+list_New <- c()
+q <- 0.1
+level <- 1
+while (Nrevised < nrow(sample)*q) {
+  AllModalities <- sample[paste0("ground_truth_",level)]%>% pull()%>%unique()%>%sort()
+  results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, level = level, simplify = FALSE)
+  class2revise <- names(results[order(unlist(results),decreasing=TRUE)])[1]
+  
+  n <- sample%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    subset(PRED == class2revise)%>%
+    nrow()
+  
+  idx2Remove <- sample%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    subset(PRED == class2revise)%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2)%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  sample <- sample %>%
+    filter(!(liasseNb %in% idx2Remove))
+  
+  Nrevised <- Nrevised + ifelse(step<n, step, n)
+  iter <- iter + 1
+  list_New <- c(list_New, idx2Remove)
+  cat("*** Iteration ", iter, " : ", ifelse(step<n, step, n), " revised in class : ", class2revise, "\n")
+}
+
+##### Calculer l'accuracy des supprimés #####
+listOld <- df %>% 
+  select(probabilities, probabilities_k2, ends_with(paste0("_", 5)), liasseNb)%>%
+  rename_with(~ gsub(paste0("_", 5,"$"), "", .x))%>%
+  mutate(Score = probabilities - probabilities_k2)%>%
+  subset(Score <= quantile(Score, 0.1))%>%
+  pull(liasseNb)
+
+removed_old <- df %>%
+  filter(liasseNb %in% listOld)%>%
+  select(ground_truth_5, predictions_5)%>%
+  mutate(Results = ground_truth_5 == predictions_5)%>%
+  pull(Results)%>%
+  mean()
+  
+
+removed_new <- df %>%
+  filter(liasseNb %in% list_New)%>%
+  select(ground_truth_5, predictions_5)%>%
+  mutate(Results = ground_truth_5 == predictions_5)%>%
+  pull(Results)%>%
+  mean()
+
+new_accuracy <- df%>%
+  mutate(
+    Results = ground_truth_5 == predictions_5,
+    Results = case_when(
+    liasseNb %in% list_New ~ T,
+    TRUE ~ Results
+  ))%>%
+  pull(Results)%>%
+  mean()
+
+old_accuracy <- df %>%
+  mutate(
+    Results = ground_truth_5 == predictions_5,
+    Results = case_when(
+      liasseNb %in% listOld ~ T,
+      TRUE ~ Results
+    ))%>%
+  pull(Results)%>%
+  mean()
+
+
+## Plot histograms ####
+data <- df
+level <- 2
+modality<-"19"
+get_thresholds <- function(data, listOld, list_New, level){
+  temp <- data %>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    filter(liasseNb %in% listOld)%>%
+    group_by(PRED)%>%
+    summarise(
+      Nold = n()
+    )
+  
+  thresholds <- data %>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    filter(liasseNb %in% list_New)%>%
+    group_by(PRED)%>%
+    summarise(
+      N = n()
+    )%>%
+    full_join(temp)
+  return(thresholds)
+}
+Plot_histograms <- function(data, level, modality, listOld, list_New){
+
+  seuils <- get_thresholds(data, listOld, list_New, level)%>%
+    subset(PRED == modality)%>%
+    replace_na(list(N = 1, Nold = 1))%>%
+    select(N, Nold)%>%
+    as.numeric()
+  
+  sample <- data %>%
+  rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+  rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+  subset(PRED == modality)%>%
+  mutate(Results = ground_truth_5 == predictions_5, # ne va pas marcher si level = 5
+         Score = probabilities - probabilities_k2,
+         Results = factor(Results, level = c(T,F)))%>%
+  select(Results, Type, Score, PRED)
+
+
+  Thresholds <- sample %>% 
+    arrange(Score)%>%
+    slice(seuils)%>%
+    pull(Score) 
+  
+  ypos <- sample%>%
+    count(round(Score, 2))%>%
+    pull(n)%>%
+    max()*7/10
+  
+  if (length(Thresholds)==0) {
+    xpos <- c(NA,NA)
+  }else if (Thresholds[1] < Thresholds[2]) {
+    xpos <- Thresholds + c(-0.05, 0.05)
+  }else{
+    xpos <-Thresholds + c(0.05, -0.05)
+  }
+  
+  plot<- ggplot(sample)+
+    ggtitle(modality)+
+    geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col[2],Palette_col[1]))+
+    geom_vline(xintercept = Thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
+    {if (length(Thresholds)!=0)
+      annotate("text", x = xpos, y = ypos, label = c("New", "Old"))
+    }+
+    theme_custom()+
+    theme(      
+      plot.title=element_text(size=10,face="plain"),
+      )+
+    guides(fill = "none")  
+  
+
+return(plot)
+}
+Plot_histograms(df, 2, "19", listOld, list_New)
+ListPlots <- sapply(sort(unique(df$ground_truth_2)), Plot_histograms, data = df, level = 2, listOld = listOld, list_New = list_New, simplify = FALSE)
+plot_grid(plotlist = ListPlots[1:4], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[5:8], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[9:12], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[13:16], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[17:20], align = "h", ncol = 2, vjust = -0.8)
 
 
 
-
+###Probleme avec la modalité 19 Je comprends pas le grpahique et les données
+### Pourquoi on est pas comparable avec une reprise de 10%???? en nombre de liasse a remove
 
 
 
