@@ -167,13 +167,13 @@ PlotAccuracies_with_Shares <- function(data, type, level, title){
     )%>%
     mutate(Share = N/TotalSize*100,
            NewTitle = paste0(ground_truth_1, "\n(", round(Share, 1), "%)"))
-plot <-ggplot(sample, aes(x=NewTitle, y=Accuracy, fill=Type))+
-  ggtitle(title)+
-  geom_bar(stat = "identity", position = position_dodge())+
-  geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-  scale_fill_manual(values=c(Palette_col))+
-  theme_custom()
-return(plot)
+  plot <-ggplot(sample, aes(x=NewTitle, y=Accuracy, fill=Type))+
+    ggtitle(title)+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    theme_custom()
+  return(plot)
 }
 PlotAccuracies_with_Shares(df, "Test", 1, "Accuracy au niveau 1")
 PlotAccuracies_with_Shares(df, "GU", 1, "Accuracy au niveau 1")
@@ -182,7 +182,7 @@ PlotAccuracies_with_Shares(df, "GU", 5, "Accuracy au niveau 5 (aggrégation par 
 
 ##### Construction de la base avec reprise des données ##### 
 acc_w_rep <- function(data, q, type, level){
-
+  
   accuracy <- data %>% 
     subset(Type %in% type)%>%
     select(probabilities, probabilities_k2, ends_with(paste0("_", level)))%>%
@@ -203,15 +203,15 @@ for (type in c("GU", "Test")) {
     for (rate in paste(seq(0,0.25,0.05))) {
       cat(type, level, rate, '\n')
       df_reprise <- df_reprise %>%
-                        add_row(Rate = rate, 
-                                Level = level,
-                                Type = type,
-                                Accuracy = acc_w_rep(df, 
-                                                     as.double(rate), 
-                                                     type, 
-                                                     as.double(level)
-                                                    )
-                                )
+        add_row(Rate = rate, 
+                Level = level,
+                Type = type,
+                Accuracy = acc_w_rep(df, 
+                                     as.double(rate), 
+                                     type, 
+                                     as.double(level)
+                )
+        )
     }
   }
 }
@@ -406,20 +406,20 @@ PlotDistribF1 <- function(data, level, type){
   sample <- sample %>%
     arrange(desc(N)) %>%
     mutate(N_cumulative = cumsum(N),
-          cumulative_pct = N_cumulative / sum(N),
-          Group = case_when(
-                            cumulative_pct < 0.50 ~ "Catégories très représentées",
-                            cumulative_pct < 0.75 ~ "Catégories assez représentées",
-                            cumulative_pct < 0.95 ~ "Catégories peu représentées",
-                            TRUE ~ "Catégories très peu représentées"
-                          ),
-          Group = factor(Group, levels = c("Catégories très représentées",
-                                           "Catégories assez représentées",
-                                           "Catégories peu représentées",
-                                           "Catégories très peu représentées"
-                                           
-                                           ))
-          )
+           cumulative_pct = N_cumulative / sum(N),
+           Group = case_when(
+             cumulative_pct < 0.50 ~ "Catégories très représentées",
+             cumulative_pct < 0.75 ~ "Catégories assez représentées",
+             cumulative_pct < 0.95 ~ "Catégories peu représentées",
+             TRUE ~ "Catégories très peu représentées"
+           ),
+           Group = factor(Group, levels = c("Catégories très représentées",
+                                            "Catégories assez représentées",
+                                            "Catégories peu représentées",
+                                            "Catégories très peu représentées"
+                                            
+           ))
+    )
   ggplot(sample) + 
     ggtitle("Distribution du F1-score en fonction de la fréquence de chaque classe")+
     geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
@@ -431,7 +431,7 @@ PlotDistribF1 <- function(data, level, type){
           text = element_text(size = 16)
     )+
     guides(fill=guide_legend(nrow=2, byrow=TRUE))
-    
+  
 }
 PlotDistribF1(df, 5, "GU")
 
@@ -463,25 +463,25 @@ PlotF1Inf <- function(data, threshold){
     mutate(Class = Factors,
            N = prop$N)
   
-plot <- data%>%
-  select(ground_truth_1, ground_truth_5)%>%
-  distinct(ground_truth_1,ground_truth_5)%>%
-  rename(Class = ground_truth_5)%>%
-  full_join(sample)%>%
-  rename(Class_1 = ground_truth_1)%>%
-  subset(value < threshold)%>%
-  group_by(Class_1)%>%
-  summarise(
-    N = n()
-  )%>%
-  ggplot(aes(x = Class_1, y= N))+
-  ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
-  geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
-  geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
-  theme_custom()+  
-  theme(
-        text = element_text(size = 16)
-  )
+  plot <- data%>%
+    select(ground_truth_1, ground_truth_5)%>%
+    distinct(ground_truth_1,ground_truth_5)%>%
+    rename(Class = ground_truth_5)%>%
+    full_join(sample)%>%
+    rename(Class_1 = ground_truth_1)%>%
+    subset(value < threshold)%>%
+    group_by(Class_1)%>%
+    summarise(
+      N = n()
+    )%>%
+    ggplot(aes(x = Class_1, y= N))+
+    ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
+    geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
+    geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
+    theme_custom()+  
+    theme(
+      text = element_text(size = 16)
+    )
   return(plot)
 }
 PlotF1Inf(df, 0.3)
@@ -507,20 +507,20 @@ PlotMatConfidence <- function(data, q){
     )%>%
     ggplot(aes(x=IsInf, y= Results)) +
     ggtitle(paste(q*100, "% de reprise"))+
-      geom_tile(aes(fill = N))+
-      scale_fill_gradient(low = "white", high = Palette_col[1]) +
-      geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
-      theme_custom()+
-      guides(fill = "none")+
-      theme(
-        axis.title.x=element_text(color = rgb(83, 83, 83, maxColorValue = 255)),      
-        axis.title.y=element_text(angle=90, color = rgb(83, 83, 83, maxColorValue = 255)),
-  
-      )+
+    geom_tile(aes(fill = N))+
+    scale_fill_gradient(low = "white", high = Palette_col[1]) +
+    geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
+    theme_custom()+
+    guides(fill = "none")+
+    theme(
+      axis.title.x=element_text(color = rgb(83, 83, 83, maxColorValue = 255)),      
+      axis.title.y=element_text(angle=90, color = rgb(83, 83, 83, maxColorValue = 255)),
+      
+    )+
     xlab("Below threshold")+
     ylab("Prediction")
-
-return(plot)
+  
+  return(plot)
 }
 Plot05 <- PlotMatConfidence(df, 0.05)
 Plot10 <- PlotMatConfidence(df, 0.10)
@@ -541,13 +541,13 @@ df%>%
          Score = probabilities - probabilities_k2)%>%
   select(Results, Type, Score, predictions_1)%>%
   ggplot()+
-    ggtitle("Distribution de l'indice de confiance en fonction du résultat de la prédiction")+
-    geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.75, position="identity") +
-    scale_fill_manual(values=c(Palette_col))+
-    facet_wrap(. ~ predictions_1, ncol = 2, strip.position="left", scales = "free") +
-    theme_custom()+
-    theme(strip.placement = "outside"
-          )
+  ggtitle("Distribution de l'indice de confiance en fonction du résultat de la prédiction")+
+  geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.75, position="identity") +
+  scale_fill_manual(values=c(Palette_col))+
+  facet_wrap(. ~ predictions_1, ncol = 2, strip.position="left", scales = "free") +
+  theme_custom()+
+  theme(strip.placement = "outside"
+  )
 
 
 niv1 <- "K"
@@ -555,15 +555,15 @@ df%>%
   subset(predictions_1 == niv1)%>%
   mutate(Results = ground_truth_5 == predictions_5,
          Score = probabilities - probabilities_k2)%>%
-    select(Results, Type, Score, predictions_1)%>%
-    ggplot()+
-    ggtitle(niv1)+
-    geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.5, position="identity") +
-    scale_fill_manual(values=c(Palette_col))+
-    theme_custom()+
-    theme(strip.placement = "outside"
-    )
-  
+  select(Results, Type, Score, predictions_1)%>%
+  ggplot()+
+  ggtitle(niv1)+
+  geom_histogram(aes(x=Score, fill=Results), binwidth=.01, alpha=.5, position="identity") +
+  scale_fill_manual(values=c(Palette_col))+
+  theme_custom()+
+  theme(strip.placement = "outside"
+  )
+
 df%>%
   subset(predictions_1 == niv1)%>%
   mutate(Results = ground_truth_5 == predictions_5,
@@ -571,7 +571,7 @@ df%>%
   select(Results, Type, Score, predictions_1)
 
 
-
+#### Algo ####
 step <- 5000
 data <- df
 cat <- "K"
@@ -580,7 +580,7 @@ gain_recall(df, 5000, "A",1)
 gain_accuracy(df, 5000, "C",1)
 
 gain_recall <- function(data, step, cat, level){
-
+  
   sample <- data%>%
     rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
     subset(PRED == cat)%>%
@@ -592,9 +592,9 @@ gain_recall <- function(data, step, cat, level){
   n <- nrow(sample)
   
   old_recall <- sample%>%
-              pull(Results)%>%
-              mean()
-    
+    pull(Results)%>%
+    mean()
+  
   new_recall <- sample%>%
     arrange(desc(Score))%>%
     slice_head(n = ifelse(n - step>0, n - step, n))%>%
@@ -638,14 +638,18 @@ gain_accuracy <- function(data, step, cat, level){
 }
 
 sample <- df%>%
-  select(predictions_1, ground_truth_1, predictions_5, ground_truth_5, probabilities, probabilities_k2, liasseNb)
-step = 5000
+  select(predictions_2, ground_truth_2, predictions_5, ground_truth_5, probabilities, probabilities_k2, liasseNb)
+N <- nrow(df)
+step = 2500
 Nrevised = 0 
 iter = 0
 list_New <- c()
 q <- 0.1
-level <- 1
-while (Nrevised < nrow(sample)*q) {
+level <- 2
+Traget2Revise <- floor(N*q)
+
+while (Nrevised < Traget2Revise) {
+  step <- ifelse(Nrevised + step > Traget2Revise, Traget2Revise - Nrevised, step)
   AllModalities <- sample[paste0("ground_truth_",level)]%>% pull()%>%unique()%>%sort()
   results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, level = level, simplify = FALSE)
   class2revise <- names(results[order(unlist(results),decreasing=TRUE)])[1]
@@ -676,8 +680,6 @@ while (Nrevised < nrow(sample)*q) {
 
 ##### Calculer l'accuracy des supprimés #####
 listOld <- df %>% 
-  select(probabilities, probabilities_k2, ends_with(paste0("_", 5)), liasseNb)%>%
-  rename_with(~ gsub(paste0("_", 5,"$"), "", .x))%>%
   mutate(Score = probabilities - probabilities_k2)%>%
   subset(Score <= quantile(Score, 0.1))%>%
   pull(liasseNb)
@@ -688,7 +690,6 @@ removed_old <- df %>%
   mutate(Results = ground_truth_5 == predictions_5)%>%
   pull(Results)%>%
   mean()
-  
 
 removed_new <- df %>%
   filter(liasseNb %in% list_New)%>%
@@ -701,9 +702,9 @@ new_accuracy <- df%>%
   mutate(
     Results = ground_truth_5 == predictions_5,
     Results = case_when(
-    liasseNb %in% list_New ~ T,
-    TRUE ~ Results
-  ))%>%
+      liasseNb %in% list_New ~ T,
+      TRUE ~ Results
+    ))%>%
   pull(Results)%>%
   mean()
 
@@ -742,7 +743,7 @@ get_thresholds <- function(data, listOld, list_New, level){
   return(thresholds)
 }
 Plot_histograms <- function(data, level, modality, listOld, list_New){
-
+  
   seuils <- get_thresholds(data, listOld, list_New, level)%>%
     subset(PRED == modality)%>%
     replace_na(list(N = 1, Nold = 1))%>%
@@ -750,15 +751,15 @@ Plot_histograms <- function(data, level, modality, listOld, list_New){
     as.numeric()
   
   sample <- data %>%
-  rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-  rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
-  subset(PRED == modality)%>%
-  mutate(Results = ground_truth_5 == predictions_5, # ne va pas marcher si level = 5
-         Score = probabilities - probabilities_k2,
-         Results = factor(Results, level = c(T,F)))%>%
-  select(Results, Type, Score, PRED)
-
-
+    rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    subset(PRED == modality)%>%
+    mutate(Results = ground_truth_5 == predictions_5, # ne va pas marcher si level = 5
+           Score = probabilities - probabilities_k2,
+           Results = factor(Results, level = c(T,F)))%>%
+    select(Results, Type, Score, PRED)
+  
+  
   Thresholds <- sample %>% 
     arrange(Score)%>%
     slice(seuils)%>%
@@ -788,14 +789,14 @@ Plot_histograms <- function(data, level, modality, listOld, list_New){
     theme_custom()+
     theme(      
       plot.title=element_text(size=10,face="plain"),
-      )+
+    )+
     guides(fill = "none")  
   
-
-return(plot)
+  
+  return(plot)
 }
 Plot_histograms(df, 2, "19", listOld, list_New)
-ListPlots <- sapply(sort(unique(df$ground_truth_2)), Plot_histograms, data = df, level = 2, listOld = listOld, list_New = list_New, simplify = FALSE)
+ListPlots <- sapply(sort(unique(df$ground_truth_1)), Plot_histograms, data = df, level = 1, listOld = listOld, list_New = list_New, simplify = FALSE)
 plot_grid(plotlist = ListPlots[1:4], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[5:8], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[9:12], align = "h", ncol = 2, vjust = -0.8)
@@ -807,9 +808,84 @@ plot_grid(plotlist = ListPlots[17:20], align = "h", ncol = 2, vjust = -0.8)
 ###Probleme avec la modalité 19 Je comprends pas le grpahique et les données
 ### Pourquoi on est pas comparable avec une reprise de 10%???? en nombre de liasse a remove
 
+install.packages("nloptr")
+library(nloptr)
 
+N <- nrow(df)
+q <- 0.1
+level <- 1
+Traget2Revise <- floor(N*q)
 
+ni <- df%>%
+  group_by(ground_truth_1)%>%
+  summarise(
+    N = n()
+  )%>%
+  pull(N)
+# Equality constraints
+eval_g_eq <- function(x){
+  return (as.numeric(Traget2Revise -  floor(x%*%ni)))
+}
 
+data <- df%>%
+  rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+  rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+  mutate(Results = ground_truth_5 == predictions_5,
+         Score = probabilities - probabilities_k2)%>%
+  select(Results, Score, liasseNb, PRED, TRUTH)%>%
+  sample_n(50000) 
+
+# Objective Function
+eval_f <- function(x, data){
+  
+  Number2Remove <- round(x*ni)
+  Liasse2Remove <- c()
+  ListClasses <- data%>% pull(TRUTH)%>%unique()%>%sort()
+  
+  for (i in 1:length(ListClasses)) {
+    idx2Remove <- data%>%
+      subset(PRED == ListClasses[i])%>%
+      arrange(desc(Score))%>%
+      slice_tail(n = Number2Remove[i])%>%
+      pull(liasseNb)
+    Liasse2Remove <- c(Liasse2Remove, idx2Remove)
+  }
+  
+  accuracy <- data %>%
+    mutate(
+      Results = case_when(
+        liasseNb %in% Liasse2Remove ~ T,
+        TRUE ~ Results
+      ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return (accuracy*(-1))
+}
+
+# Lower and upper bounds
+lb <- rep(0, length(ni))
+ub <- rep(0.4, length(ni))
+
+#initial values
+x0 <- rep(0.1, length(ni)) 
+
+# Set optimization options.
+local_opts <- list( "algorithm" = "NLOPT_LD_MMA", "xtol_rel" = 1.0e-15 )
+opts <- list( "algorithm"= "NLOPT_GN_ISRES",
+              "xtol_rel"= 1.0e-15,
+              "maxeval"= 16000,
+              "local_opts" = local_opts,
+              "print_level" = 0 )
+
+res <- nloptr ( x0 = x0,
+                eval_f = eval_f,
+                data = data,
+                lb = lb,
+                ub = ub,
+                eval_g_eq = eval_g_eq,
+                opts = opts
+)
 
 
 
