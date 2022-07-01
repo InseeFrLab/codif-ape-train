@@ -809,3 +809,164 @@ plot_grid(plotlist = ListPlots[17:20], align = "h", ncol = 2, vjust = -0.8)
 ### Pourquoi on est pas comparable avec une reprise de 10%???? en nombre de liasse a remove
 
 
+gain_recall <- function(data, step, cat){
+  sample_class <- data%>%
+    subset(PRED == cat)
+  
+  N <- nrow(data)
+  n <- nrow(sample_class)
+  
+  idx2Remove <- sample_class%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  old_recall <- sample_class%>%
+    pull(Results)%>%
+    mean()
+
+  new_recall <- sample_class%>%
+    mutate(Results = case_when(
+      liasseNb %in% idx2Remove ~ T,
+      TRUE ~ Results
+    ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( n/N * (new_recall - old_recall) )
+}
+get_data <- function(data, level){
+  sample_full <- data%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2,
+           Revised = F)%>%
+    select(Results, Score, liasseNb, PRED, TRUTH, Revised)
+  
+  return(sample_full)
+}
+gain_accuracy <- function(data, step, cat){
+  
+  sample_class <- data%>%
+    subset(PRED == cat)
+  
+  n <- nrow(sample_class)
+  
+  idx2Remove <- sample_class%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  old_accuracy <- data%>%
+    pull(Results)%>%
+    mean()
+  
+  new_accuracy <- data%>%
+    mutate(Results = case_when(
+      liasseNb %in% idx2Remove ~ T,
+      TRUE ~ Results
+    ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( list(Gain = new_accuracy - old_accuracy, Liasses = idx2Remove, Size = n) )
+}
+run_algo <- function(data, method, step, level, q){
+
+  # Initialisation
+  Nrevised = 0 
+  iter = 0
+  sample <- get_data(data, level)
+  N <- nrow(data)
+  Target2Revise <- floor(N*q)
+  list2Revise <- c()
+  
+  while (Nrevised < Target2Revise) {
+    start_time <- Sys.time()
+    step <- ifelse(Nrevised + step > Traget2Revise, Traget2Revise - Nrevised, step)
+    
+    AllModalities <- sample%>% pull(TRUTH)%>%unique()%>%sort()
+    
+    if (method == "Accuracy") {
+      # Compute all gain in accuracy for all classes
+      results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, simplify = FALSE)
+    }else{
+      # Compute all gain in recall for all classes
+      results <- sapply(AllModalities, gain_recall, data = sample, step = step, simplify = FALSE)
+    }
+  
+    # Retrieve the gain accuracies for all classes
+    accuracies <- sapply(results,"[[",1, simplify = FALSE)
+    # Extract the class that has the largest marginal gain in accuracy
+    class2revise <- names(accuracies[order(unlist(accuracies),decreasing=TRUE)])[1]
+    # Extract the indexes that are needed to remove to get this accuracy
+    idx2Remove <- as.vector(sapply(results[class2revise],"[[",2))
+    # Extract the size of the revised class
+    n <- as.vector(sapply(results[class2revise],"[[",3))
+    
+    sample <- sample %>%
+      mutate(Score = case_when(liasseNb %in% idx2Remove ~ 1,
+                               T ~ Score
+                              ),
+             Results = case_when(liasseNb %in% idx2Remove ~ T,
+                               T ~ Results
+                              ),
+             Revised = case_when(liasseNb %in% idx2Remove ~ T,
+                                   T ~ Revised
+                              )
+             )
+    
+    
+    Nrevised <- Nrevised + ifelse(step<n, step, n)
+    iter <- iter + 1
+    list2Revise <- c(list2Revise, idx2Remove)
+    end_time <- Sys.time()
+    cat("*** Iteration ", iter, " : ", ifelse(step<n, step, n), " revised in class : ", class2revise, "in ", end_time - start_time, "sec \n")
+  }
+  
+  return(list2Revise)
+}
+
+list_New <- run_algo(df, "Accuracy", 4000, 1, 0.1)
+
+new_accuracy <- df%>%
+  mutate(
+    Results = ground_truth_5 == predictions_5,
+    Results = case_when(
+      liasseNb %in% list_New ~ T,
+      TRUE ~ Results
+    ))%>%
+  pull(Results)%>%
+  mean()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
