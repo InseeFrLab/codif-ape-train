@@ -93,7 +93,7 @@ PlotConfusionMatrix(df, c("GU"))
 PlotConfusionMatrix(df, c("Test"))
 
 ##### F1 Score pour le niveau 1 ##### 
-PlotF1 <- function(data, level, title){
+get_dataF1 <- function(data, level){
   Factors  <- data %>% 
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
     pull(TRUTH)%>%
@@ -122,8 +122,11 @@ PlotF1 <- function(data, level, title){
            Type = "GU")%>%
     rename(F1 = value)%>%
     bind_rows(sample_test)
-  
-  plot <-ggplot(sample, aes(x=Class, y=F1, fill=Type))+
+  return(sample)
+}
+PlotF1 <- function(data, level, title){
+  data <- get_dataF1(data, level)
+  plot <-ggplot(data, aes(x=Class, y=F1, fill=Type))+
     ggtitle(title)+
     geom_bar(stat = "identity", position = position_dodge())+
     geom_text(aes(label=round(F1,2)), position=position_dodge(width=0.9), vjust=-0.25)+
@@ -718,6 +721,139 @@ old_accuracy <- df %>%
   pull(Results)%>%
   mean()
 
+#### Run algorithm ####
+gain_recall <- function(data, step, cat){
+  sample_class <- data%>%
+    subset(PRED == cat)
+  
+  N <- nrow(data)
+  n <- nrow(sample_class)
+  
+  idx2Remove <- sample_class%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  old_recall <- sample_class%>%
+    pull(Results)%>%
+    mean()
+
+  new_recall <- sample_class%>%
+    mutate(Results = case_when(
+      liasseNb %in% idx2Remove ~ T,
+      TRUE ~ Results
+    ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( n/N * (new_recall - old_recall) )
+}
+get_data <- function(data, level){
+  sample_full <- data%>%
+    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    mutate(Results = ground_truth_5 == predictions_5,
+           Score = probabilities - probabilities_k2,
+           Revised = F)%>%
+    select(Results, Score, liasseNb, PRED, TRUTH, Revised)
+  
+  return(sample_full)
+}
+gain_accuracy <- function(data, step, cat){
+  
+  sample_class <- data%>%
+    subset(PRED == cat)
+  
+  n <- nrow(sample_class)
+  
+  idx2Remove <- sample_class%>%
+    select(liasseNb, Score)%>%
+    arrange(desc(Score))%>%
+    slice_tail(n = ifelse(step<n, step, n))%>%
+    pull(liasseNb)
+  
+  old_accuracy <- data%>%
+    pull(Results)%>%
+    mean()
+  
+  new_accuracy <- data%>%
+    mutate(Results = case_when(
+      liasseNb %in% idx2Remove ~ T,
+      TRUE ~ Results
+    ))%>%
+    pull(Results)%>%
+    mean()
+  
+  return( list(Gain = new_accuracy - old_accuracy, Liasses = idx2Remove, Size = n) )
+}
+run_algo <- function(data, method, step, level, q){
+  
+  # Initialisation
+  Nrevised = 0 
+  iter = 0
+  sample <- get_data(data, level)
+  N <- nrow(data)
+  Target2Revise <- floor(N*q)
+  list2Revise <- c()
+  
+  while (Nrevised < Target2Revise) {
+    start_time <- Sys.time()
+    step <- ifelse(Nrevised + step > Target2Revise, Target2Revise - Nrevised, step)
+    
+    AllModalities <- sample%>% pull(TRUTH)%>%unique()%>%sort()
+    
+    if (method == "Accuracy") {
+      # Compute all gain in accuracy for all classes
+      results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, simplify = FALSE)
+    }else{
+      # Compute all gain in recall for all classes
+      results <- sapply(AllModalities, gain_recall, data = sample, step = step, simplify = FALSE)
+    }
+    
+    # Retrieve the gain accuracies for all classes
+    accuracies <- sapply(results,"[[",1, simplify = FALSE)
+    # Extract the class that has the largest marginal gain in accuracy
+    class2revise <- names(accuracies[order(unlist(accuracies),decreasing=TRUE)])[1]
+    # Extract the indexes that are needed to remove to get this accuracy
+    idx2Remove <- as.vector(sapply(results[class2revise],"[[",2))
+    # Extract the size of the revised class
+    n <- as.vector(sapply(results[class2revise],"[[",3))
+    
+    sample <- sample %>%
+      mutate(Score = case_when(liasseNb %in% idx2Remove ~ 1,
+                               T ~ Score
+      ),
+      Results = case_when(liasseNb %in% idx2Remove ~ T,
+                          T ~ Results
+      ),
+      Revised = case_when(liasseNb %in% idx2Remove ~ T,
+                          T ~ Revised
+      )
+      )
+    
+    
+    Nrevised <- Nrevised + ifelse(step<n, step, n)
+    iter <- iter + 1
+    list2Revise <- c(list2Revise, idx2Remove)
+    end_time <- Sys.time()
+    cat("*** Iteration ", iter, " : ", ifelse(step<n, step, n), " revised in class : ", class2revise, "in ", end_time - start_time, "sec \n")
+  }
+  
+  return(list2Revise)
+}
+
+list_New <- run_algo(df, "Accuracy", 100, 3, 0.1)
+
+new_accuracy <- df%>%
+  mutate(
+    Results = ground_truth_5 == predictions_5,
+    Results = case_when(
+      liasseNb %in% list_New ~ T,
+      TRUE ~ Results
+    ))%>%
+  pull(Results)%>%
+  mean()
 
 ## Plot histograms ####
 data <- df
@@ -796,171 +932,99 @@ Plot_histograms <- function(data, level, modality, listOld, list_New){
   return(plot)
 }
 Plot_histograms(df, 2, "19", listOld, list_New)
-ListPlots <- sapply(sort(unique(df$ground_truth_1)), Plot_histograms, data = df, level = 1, listOld = listOld, list_New = list_New, simplify = FALSE)
+ListPlots <- sapply(sort(unique(df$ground_truth_3)), Plot_histograms, data = df, level = 3, listOld = listOld, list_New = list_New, simplify = FALSE)
 plot_grid(plotlist = ListPlots[1:4], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[5:8], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[9:12], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[13:16], align = "h", ncol = 2, vjust = -0.8)
 plot_grid(plotlist = ListPlots[17:20], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[29:32], align = "h", ncol = 2, vjust = -0.8)
+plot_grid(plotlist = ListPlots[33:36], align = "h", ncol = 2, vjust = -0.8)
 
 
 
 ###Probleme avec la modalité 19 Je comprends pas le grpahique et les données
-### Pourquoi on est pas comparable avec une reprise de 10%???? en nombre de liasse a remove
 
 
-gain_recall <- function(data, step, cat){
-  sample_class <- data%>%
-    subset(PRED == cat)
-  
-  N <- nrow(data)
-  n <- nrow(sample_class)
-  
-  idx2Remove <- sample_class%>%
-    select(liasseNb, Score)%>%
-    arrange(desc(Score))%>%
-    slice_tail(n = ifelse(step<n, step, n))%>%
-    pull(liasseNb)
-  
-  old_recall <- sample_class%>%
-    pull(Results)%>%
-    mean()
 
-  new_recall <- sample_class%>%
-    mutate(Results = case_when(
-      liasseNb %in% idx2Remove ~ T,
-      TRUE ~ Results
-    ))%>%
-    pull(Results)%>%
-    mean()
+w<-df%>%
+    mutate(Score = probabilities - probabilities_k2,
+     Results = ground_truth_5 == predictions_5,
+     Revisions_Old = case_when(Score >= quantile(Score, 0.1) ~ Results,
+                               TRUE ~ TRUE),
+     Revisions_New = case_when(liasseNb %in% list_New ~ TRUE,
+                               TRUE ~ Results)
+    )%>%
+    select(liasseNb, ground_truth_5, predictions_5, Score, Results, Revisions_Old, Revisions_New)
+
+
+df_new <-df%>%
+  mutate(predictions_1 = case_when(liasseNb %in% list_New ~ ground_truth_1,
+                                   TRUE ~ predictions_1),
+         predictions_2 = case_when(liasseNb %in% list_New ~ ground_truth_2,
+                                   TRUE ~ predictions_2),
+         predictions_3 = case_when(liasseNb %in% list_New ~ ground_truth_3,
+                                   TRUE ~ predictions_3),
+         predictions_4 = case_when(liasseNb %in% list_New ~ ground_truth_4,
+                                   TRUE ~ predictions_4),
+         predictions_5 = case_when(liasseNb %in% list_New ~ ground_truth_5,
+                                   TRUE ~ predictions_5),
+  )
+
+
+list_Old <- df %>% 
+  mutate(Score = probabilities - probabilities_k2)%>%
+  subset(Score < quantile(Score, 0.1))%>%
+  pull(liasseNb)
+
+
+df_old <- df%>%
+  mutate(predictions_1 = case_when(liasseNb %in% list_Old ~ ground_truth_1,
+                                   TRUE ~ predictions_1),
+         predictions_2 = case_when(liasseNb %in% list_Old ~ ground_truth_2,
+                                   TRUE ~ predictions_2),
+         predictions_3 = case_when(liasseNb %in% list_Old ~ ground_truth_3,
+                                   TRUE ~ predictions_3),
+         predictions_4 = case_when(liasseNb %in% list_Old ~ ground_truth_4,
+                                   TRUE ~ predictions_4),
+         predictions_5 = case_when(liasseNb %in% list_Old ~ ground_truth_5,
+                                   TRUE ~ predictions_5),
+  )
+
+get_dataF1 <- function(data, level){
+  Factors  <- data %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
   
-  return( n/N * (new_recall - old_recall) )
-}
-get_data <- function(data, level){
-  sample_full <- data%>%
+  sample <- data %>% 
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
     rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
-    rename_at(vars(ends_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-    mutate(Results = ground_truth_5 == predictions_5,
-           Score = probabilities - probabilities_k2,
-           Revised = F)%>%
-    select(Results, Score, liasseNb, PRED, TRUTH, Revised)
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
   
-  return(sample_full)
-}
-gain_accuracy <- function(data, step, cat){
-  
-  sample_class <- data%>%
-    subset(PRED == cat)
-  
-  n <- nrow(sample_class)
-  
-  idx2Remove <- sample_class%>%
-    select(liasseNb, Score)%>%
-    arrange(desc(Score))%>%
-    slice_tail(n = ifelse(step<n, step, n))%>%
-    pull(liasseNb)
-  
-  old_accuracy <- data%>%
-    pull(Results)%>%
-    mean()
-  
-  new_accuracy <- data%>%
-    mutate(Results = case_when(
-      liasseNb %in% idx2Remove ~ T,
-      TRUE ~ Results
-    ))%>%
-    pull(Results)%>%
-    mean()
-  
-  return( list(Gain = new_accuracy - old_accuracy, Liasses = idx2Remove, Size = n) )
-}
-run_algo <- function(data, method, step, level, q){
 
-  # Initialisation
-  Nrevised = 0 
-  iter = 0
-  sample <- get_data(data, level)
-  N <- nrow(data)
-  Target2Revise <- floor(N*q)
-  list2Revise <- c()
+  sample <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,7]%>%
+    as_tibble()%>%
+    mutate(Class = Factors)%>%
+    rename(F1 = value)
   
-  while (Nrevised < Target2Revise) {
-    start_time <- Sys.time()
-    step <- ifelse(Nrevised + step > Traget2Revise, Traget2Revise - Nrevised, step)
-    
-    AllModalities <- sample%>% pull(TRUTH)%>%unique()%>%sort()
-    
-    if (method == "Accuracy") {
-      # Compute all gain in accuracy for all classes
-      results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, simplify = FALSE)
-    }else{
-      # Compute all gain in recall for all classes
-      results <- sapply(AllModalities, gain_recall, data = sample, step = step, simplify = FALSE)
-    }
-  
-    # Retrieve the gain accuracies for all classes
-    accuracies <- sapply(results,"[[",1, simplify = FALSE)
-    # Extract the class that has the largest marginal gain in accuracy
-    class2revise <- names(accuracies[order(unlist(accuracies),decreasing=TRUE)])[1]
-    # Extract the indexes that are needed to remove to get this accuracy
-    idx2Remove <- as.vector(sapply(results[class2revise],"[[",2))
-    # Extract the size of the revised class
-    n <- as.vector(sapply(results[class2revise],"[[",3))
-    
-    sample <- sample %>%
-      mutate(Score = case_when(liasseNb %in% idx2Remove ~ 1,
-                               T ~ Score
-                              ),
-             Results = case_when(liasseNb %in% idx2Remove ~ T,
-                               T ~ Results
-                              ),
-             Revised = case_when(liasseNb %in% idx2Remove ~ T,
-                                   T ~ Revised
-                              )
-             )
-    
-    
-    Nrevised <- Nrevised + ifelse(step<n, step, n)
-    iter <- iter + 1
-    list2Revise <- c(list2Revise, idx2Remove)
-    end_time <- Sys.time()
-    cat("*** Iteration ", iter, " : ", ifelse(step<n, step, n), " revised in class : ", class2revise, "in ", end_time - start_time, "sec \n")
-  }
-  
-  return(list2Revise)
+  return(sample)
 }
 
-list_New <- run_algo(df, "Accuracy", 4000, 1, 0.1)
-
-new_accuracy <- df%>%
-  mutate(
-    Results = ground_truth_5 == predictions_5,
-    Results = case_when(
-      liasseNb %in% list_New ~ T,
-      TRUE ~ Results
-    ))%>%
-  pull(Results)%>%
-  mean()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+w <- get_dataF1(df_new, 3)%>%
+  mutate(F1_old = get_dataF1(df_old, 3)$F1,
+         Diff = F1 - F1_old)%>%
+  full_join(
+    df_new%>%
+      group_by(ground_truth_3)%>%
+      summarise(
+        N = n()
+      )%>%
+      rename(Class = ground_truth_3)
+  )
 
 
 
