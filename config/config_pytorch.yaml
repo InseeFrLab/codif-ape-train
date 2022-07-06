@@ -1,0 +1,13 @@
+params:
+  learning_rate: 0.0003
+  patience: 5
+  num_epochs: 5
+  train_proportion: 0.8
+  batch_size: 64
+  fasttext_bin_path: projet-ape/dummy_model.bin
+
+categorical_features:
+  - AUTO
+  - NAT_SICORE
+  - SURF
+  - EVT_SICORE
