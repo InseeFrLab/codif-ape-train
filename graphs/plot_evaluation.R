@@ -1,7 +1,5 @@
 rm(list = ls())
 setwd("~/codification-ape/graphs")
-install.packages("tibble")
-install.packages("caret")
 library(aws.s3)
 library(dplyr)
 library(tidyr)
@@ -649,10 +647,10 @@ iter = 0
 list_New <- c()
 q <- 0.1
 level <- 2
-Traget2Revise <- floor(N*q)
+Target2Revise <- floor(N*q)
 
-while (Nrevised < Traget2Revise) {
-  step <- ifelse(Nrevised + step > Traget2Revise, Traget2Revise - Nrevised, step)
+while (Nrevised < Target2Revise) {
+  step <- ifelse(Nrevised + step > Target2Revise, Target2Revise - Nrevised, step)
   AllModalities <- sample[paste0("ground_truth_",level)]%>% pull()%>%unique()%>%sort()
   results <- sapply(AllModalities, gain_accuracy, data = sample, step = step, level = level, simplify = FALSE)
   class2revise <- names(results[order(unlist(results),decreasing=TRUE)])[1]
