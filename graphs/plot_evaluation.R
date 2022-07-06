@@ -374,17 +374,15 @@ cm$table %>%
 
 
 ##### Distribution du F1-score par classe ##### 
-PlotDistribF1 <- function(data, level, type){
+PlotDistribF1 <- function(data, level){
   Factors  <- data %>% 
-    subset(Type == type) %>% 
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
     pull(TRUTH)%>%
     unique()%>%
     sort()
   
   sample <- data %>% 
-    subset(Type == type) %>% 
-    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))))%>%
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
     rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
     mutate(TRUTH = factor(TRUTH, levels = Factors),
@@ -434,7 +432,7 @@ PlotDistribF1 <- function(data, level, type){
     guides(fill=guide_legend(nrow=2, byrow=TRUE))
   
 }
-PlotDistribF1(df, 5, "GU")
+PlotDistribF1(df, 5)
 
 ##### Nombre de classe selon un seuil de F1 ##### 
 PlotF1Inf <- function(data, threshold){
