@@ -468,22 +468,28 @@ PlotF1Inf <- function(data, threshold){
     rename(Class = ground_truth_5)%>%
     full_join(sample)%>%
     rename(Class_1 = ground_truth_1)%>%
-    subset(value < threshold)%>%
-    group_by(Class_1)%>%
-    summarise(
-      N = n()
-    )%>%
-    ggplot(aes(x = Class_1, y= N))+
-    ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
-    geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
-    geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
-    theme_custom()+  
-    theme(
-      text = element_text(size = 16)
-    )
+    subset(value < threshold)
+  
+  #%>%
+  #    group_by(Class_1)%>%
+  #    summarise(
+  #      N = n()
+  #    )
+    
+    
+  #    ggplot(data,aes(x = Class_1, y= N))+
+  #    ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
+  #    geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
+  #    geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
+  #    theme_custom()+  
+  #    theme(
+  #      text = element_text(size = 16)
+  #   )
   return(plot)
 }
-PlotF1Inf(df, 0.3)
+xx <- PlotF1Inf(df, 0.5)
+
+
 ##### Matrice pour l'indice de confiance ##### 
 PlotMatConfidence <- function(data, q){
   
@@ -839,7 +845,7 @@ run_algo <- function(data, method, step, level, q){
   return(list2Revise)
 }
 
-list_New <- run_algo(df, "Accuracy", 100, 3, 0.1)
+list_New <- run_algo(df, "Accuracy", 5000, 1, 0.1)
 
 new_accuracy <- df%>%
   mutate(
