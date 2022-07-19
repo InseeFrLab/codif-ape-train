@@ -4,7 +4,6 @@ Preprocessor class.
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
@@ -48,15 +47,29 @@ class Preprocessor(ABC):
             pd.DataFrame: Preprocessed DataFrames for training
                 and evaluation.
         """
+        # Adding APE code at each level
+        df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
+        try:
+            df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
+        except FileNotFoundError:
+            df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
+
+        df_naf[["NIV3", "NIV4", "NIV5"]] = df_naf[["NIV3", "NIV4", "NIV5"]].apply(
+            lambda x: x.str.replace(".", "", regex=False)
+        )
+        df_naf = df_naf[["NIV" + str(i) for i in range(1, 6)]].add_prefix("APE_")
+        df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
+
         # General preprocessing
-        df = df.rename(columns={"APE_SICORE": y})
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
             df[categorical_features] = df[categorical_features].fillna(value="NaN")
-        df = df[variables]
-        df = df.fillna(value=np.nan)
-        df = df.dropna()
+        df = df[
+            variables
+            + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]
+        ]
+        df = df.dropna(subset=[y] + [text_feature])
 
         # Specific preprocessing for model
         return self.preprocess_for_model(df, y, text_feature, categorical_features)

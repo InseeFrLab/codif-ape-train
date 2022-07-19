@@ -1,7 +1,6 @@
 """
 FastTextPreprocessor class.
 """
-import string
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -38,7 +37,7 @@ class FastTextPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df[text_feature] = [self.clean_lib(df, idx, text_feature) for idx in df.index]
+        df = self.clean_lib(df, text_feature)
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
         df = df[~df.index.str.startswith("J")]
@@ -47,7 +46,10 @@ class FastTextPreprocessor(Preprocessor):
         if categorical_features is not None:
             features += categorical_features
         X_train, X_test, y_train, y_test = train_test_split(
-            df[features],
+            df[
+                features
+                + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]
+            ],
             df[y],
             test_size=0.2,
             random_state=0,
@@ -135,45 +137,3 @@ class FastTextPreprocessor(Preprocessor):
         ]
 
         return df
-
-    def get_aggregated_APE(
-        self,
-        df: pd.DataFrame,
-        y: str,
-    ) -> pd.DataFrame:
-        """
-        Computes the underlying aggregated levels of the NAF classification
-        for ground truth for pd.DataFrame `df`.
-
-        Args:
-            df (pd.DataFrame): DataFrame.
-            y (str): Name of the variable to predict.
-
-        Returns:
-            DataFrame: Initial DataFrame including true values at each level
-            of the NAF classification.
-        """
-        try:
-            df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
-        except FileNotFoundError:
-            df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
-        df_naf.set_index("NIV5", inplace=True, drop=False)
-
-        df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
-        res = pd.DataFrame(
-            {
-                "APE_NIV" + str(level): df[y].str[:level].to_list()
-                for level in range(2, 5)
-            }
-        )
-
-        # Determine the most aggregated classification
-        res["APE_NIV1"] = res["APE_NIV2"]
-        for naf2 in pd.unique(df_naf["NIV2"]):
-            res["APE_NIV1"][res["APE_NIV2"] == naf2] = df_naf["NIV1"][
-                (df_naf["NIV2"] == naf2).argmax()
-            ]
-
-        res = res.set_axis(df.index)
-
-        return df.join(res)
