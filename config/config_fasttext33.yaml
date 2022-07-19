@@ -16,3 +16,6 @@ categorical_features:
   - NAT_SICORE
   - SURF
   - EVT_SICORE
+
+Y:
+  - "APE_NIV5"
