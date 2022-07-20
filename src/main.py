@@ -7,7 +7,7 @@ import mlflow
 import pandas as pd
 import yaml
 
-from constants import TEXT_FEATURE, Y
+from constants import TEXT_FEATURE
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
 from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from fasttext_classifier.fasttext_trainer import FastTextTrainer
@@ -33,6 +33,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             config = yaml.safe_load(stream)
         params = config["params"]
         categorical_features = config["categorical_features"]
+        Y = config["Y"][0]
 
         # Preprocess data
         df_train, df_test, df_gu = preprocessor.preprocess(
