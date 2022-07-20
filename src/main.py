@@ -34,6 +34,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         params = config["params"]
         categorical_features = config["categorical_features"]
         Y = config["Y"][0]
+        oversampling = config["oversampling"]
 
         # Preprocess data
         df_train, df_test, df_gu = preprocessor.preprocess(
@@ -41,6 +42,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             y=Y,
             text_feature=TEXT_FEATURE,
             categorical_features=categorical_features,
+            oversampling=oversampling,
         )
         print("*** Done!\n")
 

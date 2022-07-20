@@ -1,6 +1,6 @@
 params:
-  dim: 180
-  lr: 0.2
+  dim: 150
+  lr: 0.275
   epoch: 50
   wordNgrams: 3
   minn: 3
@@ -18,7 +18,7 @@ categorical_features:
   - EVT_SICORE
 
 Y:
-  - "APE_NIV5"
+  - "APE_NIV3"
 
 oversampling:
-  null
+  threshold: 5000

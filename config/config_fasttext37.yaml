@@ -19,3 +19,6 @@ categorical_features:
 
 Y:
   - "APE_NIV1"
+
+oversampling:
+  null

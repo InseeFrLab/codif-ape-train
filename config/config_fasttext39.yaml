@@ -21,4 +21,4 @@ Y:
   - "APE_NIV5"
 
 oversampling:
-  null
+  threshold: 5000

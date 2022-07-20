@@ -2,7 +2,7 @@
 Preprocessor class.
 """
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
@@ -31,7 +31,8 @@ class Preprocessor(ABC):
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
-    ) -> Tuple[pd.DataFrame]:
+        oversampling: Optional[Dict[str, int]] = None,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
         training and evaluation.
@@ -72,7 +73,9 @@ class Preprocessor(ABC):
         df = df.dropna(subset=[y] + [text_feature])
 
         # Specific preprocessing for model
-        return self.preprocess_for_model(df, y, text_feature, categorical_features)
+        return self.preprocess_for_model(
+            df, y, text_feature, categorical_features, oversampling
+        )
 
     @abstractmethod
     def preprocess_for_model(
@@ -81,7 +84,8 @@ class Preprocessor(ABC):
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
-    ) -> Tuple[pd.DataFrame]:
+        oversampling: Optional[Dict[str, int]] = None,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a specific model for
         training and evaluation.

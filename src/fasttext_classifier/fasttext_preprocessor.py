@@ -1,7 +1,7 @@
 """
 FastTextPreprocessor class.
 """
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -21,7 +21,8 @@ class FastTextPreprocessor(Preprocessor):
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        oversampling: Optional[Dict[str, int]] = None,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
         fasttext library for training and evaluation.
@@ -32,12 +33,16 @@ class FastTextPreprocessor(Preprocessor):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
-
+            oversampling (Optional[List[str]]): Parameters for oversampling
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
         df = self.clean_lib(df, text_feature)
+
+        if oversampling is not None:
+            df = self.oversample_df(df, oversampling["threshold"], y)
+
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
         df = df[~df.index.str.startswith("J")]
@@ -137,3 +142,17 @@ class FastTextPreprocessor(Preprocessor):
         ]
 
         return df
+
+    def oversample_df(self, df: pd.DataFrame, threshold: int, Y: str):
+        Code2Oversample = df.value_counts(Y)[
+            df.value_counts(Y) < threshold
+        ].index.to_list()
+        df_oversampled = pd.DataFrame(columns=df.columns)
+
+        for aCode in Code2Oversample:
+            Nb2sample = threshold - df[df[Y] == aCode].shape[0]
+            df_oversampled = pd.concat(
+                [df_oversampled, df[df[Y] == aCode].sample(n=Nb2sample, replace=True)]
+            )
+
+        return pd.concat([df, df_oversampled])
