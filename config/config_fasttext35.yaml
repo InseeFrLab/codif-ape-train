@@ -18,4 +18,4 @@ categorical_features:
   - EVT_SICORE
 
 Y:
-  - "APE_NIV5"
+  - "APE_NIV3"
