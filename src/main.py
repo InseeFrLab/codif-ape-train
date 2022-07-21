@@ -71,7 +71,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         # Evaluation
         print("*** Evaluating the model...\n")
         evaluator = FastTextEvaluator(model)
-        accuracies, cmatrix = evaluator.evaluate(
+        accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
         )
 
@@ -80,22 +80,19 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             mlflow.log_metric(metric, value)
 
         # On training set
-        train_accuracies, train_cmatrix = evaluator.evaluate(
+        train_accuracies = evaluator.evaluate(
             df_train, Y, TEXT_FEATURE, categorical_features, 5
         )
         for metric, value in train_accuracies.items():
             mlflow.log_metric(metric + "_train", value)
 
         # On guichet unique set
-        gu_accuracies, gu_cmatrix = evaluator.evaluate(
+        gu_accuracies = evaluator.evaluate(
             df_gu, Y, TEXT_FEATURE, categorical_features, 5
         )
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
 
-        # log confusion matrix
-        mlflow.log_figure(cmatrix, "confusion_matrix.png")
-        mlflow.log_figure(gu_cmatrix, "confusion_matrix_gu.png")
         print("*** Done!\n")
 
 

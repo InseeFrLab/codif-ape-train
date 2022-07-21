@@ -216,36 +216,6 @@ class Evaluator(ABC):
 
         return accuracies
 
-    @staticmethod
-    def plot_matrix(aggregated_APE_dict_level: Dict[str, List]) -> Figure:
-        """
-        Returns plot of the confusion matrix for the aggregated
-        APE dictionary.
-
-        Args:
-            aggregated_APE_dict_level (Dict[str, List]): Dictionary
-                of true and predicted labels at one level of the NAF
-                classification.
-
-        Returns:
-            Figure: Confusion matrix figure.
-        """
-        target_names = sorted(set(aggregated_APE_dict_level["ground_truth_1"]))
-        fig, ax = plt.subplots(figsize=(20, 8))
-        plot = sns.heatmap(
-            confusion_matrix(
-                aggregated_APE_dict_level["ground_truth_1"],
-                aggregated_APE_dict_level["predictions_1"],
-                normalize="true",
-            ),
-            annot=True,
-            fmt=".2f",
-            cmap="Blues",
-            xticklabels=target_names,
-            yticklabels=target_names,
-        )
-        return fig
-
     def evaluate(
         self,
         df: pd.DataFrame,
@@ -253,7 +223,7 @@ class Evaluator(ABC):
         text_feature: str,
         categorical_features: Optional[List[str]],
         k: int,
-    ) -> Tuple[Dict[str, float], Any]:
+    ) -> Dict[str, float]:
         """
         Evaluates the trained model on DataFrame `df`.
 
@@ -272,5 +242,4 @@ class Evaluator(ABC):
             df, y, text_feature, categorical_features, k
         )
         accuracies = self.compute_accuracies(aggregated_APE_dict, k)
-        cmatrix = self.plot_matrix(aggregated_APE_dict[0])
-        return accuracies, cmatrix
+        return accuracies
