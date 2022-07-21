@@ -2,14 +2,10 @@
 Evaluator base class.
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from matplotlib.figure import Figure
-from sklearn.metrics import confusion_matrix
 
 
 class Evaluator(ABC):
