@@ -1,6 +1,7 @@
 """
 FastTextPreprocessor class.
 """
+import time
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -8,6 +9,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from base.preprocessor import Preprocessor
+
+pd.options.mode.chained_assignment = None
 
 
 class FastTextPreprocessor(Preprocessor):
@@ -40,9 +43,6 @@ class FastTextPreprocessor(Preprocessor):
         """
         df = self.clean_lib(df, text_feature)
 
-        if oversampling is not None:
-            df = self.oversample_df(df, oversampling["threshold"], y)
-
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
         df = df[~df.index.str.startswith("J")]
@@ -62,6 +62,12 @@ class FastTextPreprocessor(Preprocessor):
         )
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
+
+        if oversampling is not None:
+            print("*** Oversampling the train database...\n")
+            t = time.time()
+            df_train = self.oversample_df(df_train, oversampling["threshold"], y)
+            print(f"Oversampling lasted {round(time.time() - t,1)} seconds.\n")
 
         return df_train, df_test, df_gu
 
