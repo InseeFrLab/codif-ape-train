@@ -45,14 +45,14 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
-    def get_aggregated_APE_dict(
+    def get_aggregated_preds(
         self,
         df: pd.DataFrame,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]],
         k: int,
-    ) -> Dict[int, pd.DataFrame]:
+    ) -> pd.DataFrame:
         """
         Computes the underlying aggregated levels of the NAF classification
         for ground truth and predictions for pd.DataFrame `df`.
@@ -66,106 +66,82 @@ class Evaluator(ABC):
             k (int): Number of predictions.
 
         Returns:
-            Dict: Dictionary of true and predicted labels at
+            pd.DataFrame: DataFrame of true and predicted labels at
                 each level of the NAF classification.
         """
+        preds = self.get_preds(df, y, text_feature, categorical_features, k)
+        level = int(y[-1])
+
+        predicted_classes = {
+            f"predictions_{level}_k{rank_pred+1}": [
+                pred[0] for pred in preds[rank_pred]
+            ]
+            for rank_pred in range(k)
+        }
+        probs_prediction = {
+            f"probabilities_k{rank_pred+1}": [prob[1] for prob in preds[rank_pred]]
+            for rank_pred in range(k)
+        }
+        liasseNb = df.index
+
+        preds_df = pd.DataFrame(predicted_classes)
+        preds_df.set_index(liasseNb, inplace=True)
+
+        proba_df = pd.DataFrame(probs_prediction)
+        proba_df.set_index(liasseNb, inplace=True)
+
         try:
             df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
         except FileNotFoundError:
             df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
-        df_naf.set_index("NIV5", inplace=True, drop=False)
 
-        preds = self.get_preds(df, y, text_feature, categorical_features, k)
-        predicted_classes = {
-            rank_pred: [pred[0] for pred in preds[rank_pred]] for rank_pred in range(k)
-        }
-        probs_prediction = {
-            rank_pred: [prob[1] for prob in preds[rank_pred]] for rank_pred in range(k)
-        }
-        liasseNb = df.index
-
-        res = {
-            rank_pred: pd.DataFrame(
-                {
-                    f"ground_truth_{level}": df[y].str[:level].to_list()
-                    for level in range(2, 6)
-                }
-                | {
-                    f"predictions_{level}": [
-                        prediction[:level]
-                        for prediction in predicted_classes[rank_pred]
-                    ]
-                    for level in range(2, 6)
-                }
-                | {"probabilities": probs_prediction[rank_pred], "liasseNb": liasseNb}
-            )
-            for rank_pred in range(k)
-        }
+        df_naf[["NIV3", "NIV4", "NIV5"]] = df_naf[["NIV3", "NIV4", "NIV5"]].apply(
+            lambda x: x.str.replace(".", "", regex=False)
+        )
+        df_naf = df_naf[[f"NIV{i}" for i in range(1, level + 1)]]
 
         for rank_pred in range(k):
-            for naf2 in pd.unique(df_naf["NIV2"]):
-                for value in ["predictions", "ground_truth"]:
-                    res[rank_pred].loc[
-                        res[rank_pred][f"{value}_2"] == naf2, f"{value}_1"
-                    ] = df_naf["NIV1"][(df_naf["NIV2"] == naf2).argmax()]
-            res[rank_pred].set_index("liasseNb", inplace=True)
+            df_naf_renamed = df_naf.rename(
+                columns={
+                    f"NIV{i}": f"predictions_{i}_k{rank_pred+1}"
+                    for i in range(1, level + 1)
+                }
+            )
+            preds_df = preds_df.join(
+                df_naf_renamed.set_index(f"predictions_{level}_k{rank_pred+1}"),
+                on=f"predictions_{level}_k{rank_pred+1}",
+            )
+            preds_df = preds_df[~preds_df.index.duplicated(keep="first")]
 
-        return res
+        df = df.rename(
+            columns={f"APE_NIV{i}": f"ground_truth_{i}" for i in range(1, level + 1)}
+        )
 
-    def compute_accuracies(
-        self, aggregated_APE_dict: Dict[int, pd.DataFrame], k: int
-    ) -> Dict[str, float]:
+        return df.join(preds_df.join(proba_df))
+
+    def compute_accuracies(self, df: pd.DataFrame, y: str) -> Dict[str, float]:
         """
         Computes accuracies (for different levels of the NAF classification)
         of the trained model on DataFrame `df`.
 
         Args:
-            aggregated_APE_dict (Dict[int, pd.DataFrame]): Dictionary
-                of true and predicted labels at each level of the NAF
-                classification.
-            k (int): Number of predictions.
+            pd.DataFrame: DataFrame of true and predicted labels at
+                each level of the NAF classification.
+            y (str): Name of the variable to predict.
 
         Returns:
             Dict[str, float]: Accuracies dictionary.
         """
-        # Standard accuracy
+
+        level = int(y[-1])
         accuracies = {
-            f"accuracy_level_{level}": np.mean(
-                (
-                    aggregated_APE_dict[0][f"predictions_{level}"]
-                    == aggregated_APE_dict[0][f"ground_truth_{level}"]
-                )
+            f"accuracy_level_{aLevel}": np.mean(
+                (df[f"predictions_{aLevel}_k1"] == df[f"ground_truth_{aLevel}"])
             )
-            for level in range(1, 6)
-        }
-        # Manual adjustment based on lowest proba
-        accuracies_manual_proba = self.get_manual_accuracy(aggregated_APE_dict, "proba")
-
-        # Manual adjustment based on lowest gap of proba
-        accuracies_manual_gap = self.get_manual_accuracy(aggregated_APE_dict, "gap")
-
-        # Top k accuracy
-        top_k_accuracies = {
-            f"top_{top}_accuracy_level_{level}": np.mean(
-                pd.concat(
-                    [
-                        aggregated_APE_dict[i][f"predictions_{level}"]
-                        == aggregated_APE_dict[i][f"ground_truth_{level}"]
-                        for i in range(top)
-                    ],
-                    axis=1,
-                ).any(axis=1)
-            )
-            for top in range(2, k + 1)
-            for level in range(1, 6)
+            for aLevel in range(1, level + 1)
         }
 
-        return (
-            accuracies
-            | accuracies_manual_proba
-            | accuracies_manual_gap
-            | top_k_accuracies
-        )
+        return accuracies
 
     @staticmethod
     def get_manual_accuracy(
@@ -234,8 +210,8 @@ class Evaluator(ABC):
         Returns:
             Dict[str, float]: Dictionary of evaluation metrics.
         """
-        aggregated_APE_dict = self.get_aggregated_APE_dict(
+        all_preds_df = self.get_aggregated_preds(
             df, y, text_feature, categorical_features, k
         )
-        accuracies = self.compute_accuracies(aggregated_APE_dict, k)
+        accuracies = self.compute_accuracies(all_preds_df, y)
         return accuracies
