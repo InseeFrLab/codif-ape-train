@@ -2,6 +2,7 @@
 Main script.
 """
 import sys
+import time
 
 import mlflow
 import pandas as pd
@@ -25,7 +26,8 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         preprocessor = FastTextPreprocessor()
         trainer = FastTextTrainer()
 
-        print("*** Preprocessing the database...\n")
+        print("\n\n*** 1- Preprocessing the database...\n")
+        t = time.time()
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
 
@@ -44,11 +46,13 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             categorical_features=categorical_features,
             oversampling=oversampling,
         )
-        print("*** Done!\n")
+        print(f"*** Done! Preprocessing lasted {round(time.time() - t,1)} seconds.\n")
 
         # Run training of the model
-        print("*** Training the model...\n")
+        print("*** 2- Training the model...\n")
+        t = time.time()
         model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
+        print(f"*** Done! Training lasted {round(time.time() - t,1)} seconds.\n")
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -61,7 +65,6 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             python_model=FastTextWrapper(),
             artifacts=artifacts,
         )
-        print("*** Done!\n")
 
         # Log parameters
         for param_name, param_value in params.items():
@@ -70,7 +73,8 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         mlflow.log_param("Y", Y)
 
         # Evaluation
-        print("*** Evaluating the model...\n")
+        print("*** 3- Evaluating the model...\n")
+        t = time.time()
         evaluator = FastTextEvaluator(model)
         accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
@@ -94,7 +98,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
 
-        print("*** Done!\n")
+        print(f"*** Done! Evaluation lasted {round(time.time() - t,1)} seconds.\n")
 
 
 if __name__ == "__main__":

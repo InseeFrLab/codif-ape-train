@@ -1,6 +1,7 @@
 """
 FastTextTrainer class.
 """
+import warnings
 from typing import Dict, List, Optional
 
 import fasttext
@@ -42,6 +43,10 @@ class FastTextTrainer(Trainer):
         Returns:
             fasttext.FastText: Trained fastText model.
         """
+        warnings.filterwarnings(
+            "ignore",
+            "Setuptools is replacing distutils.",
+        )
         root_path = get_root_path()
         iterables_features = (
             categorical_features if categorical_features is not None else []
@@ -56,6 +61,6 @@ class FastTextTrainer(Trainer):
                 f.write("%s\n" % formatted_item)
 
         model = fasttext.train_supervised(
-            (root_path / "data/train_text.txt").as_posix(), **params
+            (root_path / "data/train_text.txt").as_posix(), **params, verbose=0
         )
         return model

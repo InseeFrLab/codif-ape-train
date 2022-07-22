@@ -64,10 +64,12 @@ class FastTextPreprocessor(Preprocessor):
         df_test = pd.concat([X_test, y_test], axis=1)
 
         if oversampling is not None:
-            print("*** Oversampling the train database...\n")
+            print("\t*** Oversampling the train database...\n")
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
-            print(f"Oversampling lasted {round(time.time() - t,1)} seconds.\n")
+            print(
+                f"\t*** Done! Oversampling lasted {round(time.time() - t,1)} seconds.\n"
+            )
 
         return df_train, df_test, df_gu
 
