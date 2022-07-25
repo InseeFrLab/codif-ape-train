@@ -67,6 +67,7 @@ class Preprocessor(ABC):
         Fake_obs = df_naf[df_naf.APE_NIV5.isin(MissingCodes)]
         Fake_obs.loc[:, "LIB_SICORE"] = Fake_obs.LIB_NIV5
         Fake_obs.loc[:, "DATE"] = pd.Timestamp.today()
+        Fake_obs.index = [f"FAKE_{i}" for i in range(Fake_obs.shape[0])]
         df = pd.concat([df, Fake_obs])
 
         # General preprocessing
