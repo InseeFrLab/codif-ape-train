@@ -48,7 +48,7 @@ class Preprocessor(ABC):
             pd.DataFrame: Preprocessed DataFrames for training
                 and evaluation.
         """
-        # Adding APE code at each level
+        # Adding APE codes at each level
         df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
         try:
             df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
@@ -58,8 +58,16 @@ class Preprocessor(ABC):
         df_naf[["NIV3", "NIV4", "NIV5"]] = df_naf[["NIV3", "NIV4", "NIV5"]].apply(
             lambda x: x.str.replace(".", "", regex=False)
         )
-        df_naf = df_naf[["NIV" + str(i) for i in range(1, 6)]].add_prefix("APE_")
+        df_naf = df_naf.rename(columns={f"NIV{i}": f"APE_NIV{i}" for i in range(1, 6)})
+        df_naf = df_naf[[f"APE_NIV{i}" for i in range(1, 6)] + ["LIB_NIV5"]]
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
+
+        # Adding missing APE codes in the database
+        MissingCodes = set(df_naf["APE_NIV5"]) - set(df["APE_NIV5"])
+        Fake_obs = df_naf[df_naf.APE_NIV5.isin(MissingCodes)]
+        Fake_obs.loc[:, "LIB_SICORE"] = Fake_obs.LIB_NIV5
+        Fake_obs.loc[:, "DATE"] = pd.Timestamp.today()
+        df = pd.concat([df, Fake_obs])
 
         # General preprocessing
         variables = [y] + [text_feature]

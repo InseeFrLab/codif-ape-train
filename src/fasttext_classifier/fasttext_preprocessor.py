@@ -52,8 +52,7 @@ class FastTextPreprocessor(Preprocessor):
             features += categorical_features
         X_train, X_test, y_train, y_test = train_test_split(
             df[
-                features
-                + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]
+                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
             ],
             df[y],
             test_size=0.2,
