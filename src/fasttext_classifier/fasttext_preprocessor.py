@@ -50,17 +50,10 @@ class FastTextPreprocessor(Preprocessor):
         features = [text_feature]
         if categorical_features is not None:
             features += categorical_features
-        X_train, X_test, y_train, y_test = train_test_split(
-            df[
-                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
-            ],
-            df[y],
-            test_size=0.2,
-            random_state=0,
-            shuffle=True,
+
+        df_train, df_test = self.train_test_split_by_class(
+            df, y, features, test_size=0.2, random_state=0, shuffle=True
         )
-        df_train = pd.concat([X_train, y_train], axis=1)
-        df_test = pd.concat([X_test, y_test], axis=1)
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
@@ -163,3 +156,48 @@ class FastTextPreprocessor(Preprocessor):
             )
 
         return pd.concat([df, df_oversampled])
+
+    def train_test_split_by_class(
+        self,
+        df: pd.DataFrame,
+        y: str,
+        features: List,
+        test_size: float,
+        random_state: int,
+        shuffle: bool,
+    ):
+
+        df_train = pd.DataFrame(
+            columns=[y]
+            + features
+            + [f"APE_NIV{i}" for i in range(1, 6) if f"{i}" not in [y[-1]]]
+        )
+        df_test = pd.DataFrame(columns=df_train.columns)
+        Code2Split = set(df[y])
+
+        for aCode in Code2Split:
+            df_chunk = df[df[y] == aCode]
+            if df_chunk.shape[0] == 1:
+                df_train_chunk = df_chunk[
+                    [y]
+                    + features
+                    + [f"APE_NIV{i}" for i in range(1, 6) if f"{i}" not in [y[-1]]]
+                ]
+                df_test_chunk = pd.DataFrame(columns=df_train_chunk.columns)
+            else:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    df_chunk[
+                        features
+                        + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
+                    ],
+                    df_chunk[y],
+                    test_size=test_size,
+                    random_state=random_state,
+                    shuffle=shuffle,
+                )
+                df_train_chunk = pd.concat([X_train, y_train], axis=1)
+                df_test_chunk = pd.concat([X_test, y_test], axis=1)
+            df_train = pd.concat([df_train, df_train_chunk])
+            df_test = pd.concat([df_test, df_test_chunk])
+
+        return df_train, df_test
