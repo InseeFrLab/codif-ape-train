@@ -8,8 +8,6 @@ import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 
-from base.dico_4 import Words2Remove
-
 
 class Preprocessor(ABC):
     """
@@ -17,7 +15,7 @@ class Preprocessor(ABC):
     """
 
     def __init__(
-        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french") + Words2Remove)
+        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french"))
     ) -> None:
         """
         Constructor for the Preprocessor class.
