@@ -8,7 +8,8 @@ library(caret)
 library(cowplot)
 
 source("theme_custom.R")
-aws.s3::get_bucket("projet-ape", region = "", prefix = "data/preds_test.csv")
+model = "cdde7a391d0c423499b64ccdf5ec941a"#d59e23a319fe40e0afed1c79172ba9bd"
+aws.s3::get_bucket("projet-ape", region = "", prefix = paste0("data/predictions_test_", model,".csv"))
 
 
 ##### Data importation #####
@@ -16,7 +17,7 @@ df_test <-
   aws.s3::s3read_using(
     FUN = readr::read_csv,
     # Mettre les options de FUN ici
-    object = "/data/preds_test.csv",
+    object = paste0("/data/predictions_test_", model,".csv"),
     bucket = "projet-ape",
     opts = list("region" = "")
   )
@@ -27,7 +28,7 @@ df_gu <-
   aws.s3::s3read_using(
     FUN = readr::read_csv,
     # Mettre les options de FUN ici
-    object = "/data/preds_gu.csv",
+    object = paste0("/data/predictions_GU_", model,".csv"),
     bucket = "projet-ape",
     opts = list("region" = "")
   )
@@ -35,11 +36,6 @@ df_gu <-
 df <- df_gu %>%
   mutate(Type="GU")%>%
   bind_rows(df_test)
-
-latex_percent <- function(x){
-  x <- plyr::round_any(x,scales:::precision(x)/100)
-  stringr::str_c(x * 100, "\\%")
-}
 
 ##### Matrice de confusion niveau 1 ##### 
 PlotConfusionMatrix <- function(data, type){
@@ -56,10 +52,10 @@ PlotConfusionMatrix <- function(data, type){
   sample <- data%>%
     subset(Type %in% type)%>%
     mutate(ground_truth_1 = factor(ground_truth_1, levels = Shares$ground_truth_1),
-           predictions_1 = factor(predictions_1, levels = Shares$ground_truth_1))%>%
-    select(ground_truth_1, predictions_1)
+           predictions_1_k1 = factor(predictions_1_k1, levels = Shares$ground_truth_1))%>%
+    select(ground_truth_1, predictions_1_k1)
   
-  cm <- confusionMatrix(sample$ground_truth_1, sample$predictions_1)
+  cm <- confusionMatrix(sample$ground_truth_1, sample$predictions_1_k1)
   
   sample <- cm$table %>%
     data.frame() %>% 
@@ -99,9 +95,9 @@ get_dataF1 <- function(data, level){
     sort()
   
   sample <- data %>% 
-    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))), Type)%>%
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level, "_k1"))), Type)%>%
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level, "_k1"))), ~ "PRED")%>%
     mutate(TRUTH = factor(TRUTH, levels = Factors),
            PRED = factor(PRED, levels = Factors))
   
@@ -137,7 +133,7 @@ PlotF1(df, 1, "F1-score au niveau 1")
 ##### Aggrégation par moyenne ##### 
 PlotAccuracies <- function(data, level, title){
   sample <- data %>%
-    mutate(Results = .data[[paste0("predictions_", level)]] == .data[[paste0("ground_truth_", level)]]) %>%
+    mutate(Results = .data[[paste0("predictions_", level, "_k1")]] == .data[[paste0("ground_truth_", level)]]) %>%
     group_by(ground_truth_1, Type)%>%
     summarise(
       Accuracy = mean(Results)
@@ -160,7 +156,7 @@ PlotAccuracies_with_Shares <- function(data, type, level, title){
   TotalSize <- data%>%subset(Type %in% type)%>%nrow()
   sample <- data %>%
     subset(Type %in% type)%>%
-    mutate(Results = .data[[paste0("predictions_", level)]] == .data[[paste0("ground_truth_", level)]]) %>%
+    mutate(Results = .data[[paste0("predictions_", level, "_k1")]] == .data[[paste0("ground_truth_", level)]]) %>%
     group_by(ground_truth_1, Type)%>%
     summarise(
       Accuracy = mean(Results),
@@ -183,12 +179,12 @@ PlotAccuracies_with_Shares(df, "GU", 5, "Accuracy au niveau 5 (aggrégation par 
 
 ##### Construction de la base avec reprise des données ##### 
 acc_w_rep <- function(data, q, type, level){
-  
   accuracy <- data %>% 
     subset(Type %in% type)%>%
-    select(probabilities, probabilities_k2, ends_with(paste0("_", level)))%>%
-    rename_with(~ gsub(paste0("_", level,"$"), "", .x))%>%
-    mutate(Score = probabilities - probabilities_k2,
+    select(probabilities_k1, probabilities_k2, ends_with(paste0("_", level, "_k1")), starts_with(paste0("ground_truth_", level)))%>%
+    rename_with(~ gsub(paste0("_", level,"_k1$"), "", .x))%>%
+    rename_with(~ gsub(paste0("_", level, "$"), "", .x))%>%
+    mutate(Score = probabilities_k1 - probabilities_k2,
            Results = ground_truth == predictions,
            Revisions = case_when(Score >= quantile(Score, q) ~ Results,
                                  TRUE ~ TRUE)
@@ -244,7 +240,6 @@ PlotReprise(df_reprise, "GU", "Accuracy en fonction du taux de reprise et du niv
 top_k_acc <- function(data, topk, type, level){
   accuracy <- data %>% 
     subset(Type %in% type)%>%
-    rename_at(vars(paste0("predictions_", level)), ~ paste0("predictions_", level, "_k1"))%>%
     select(starts_with(paste0("ground_truth_", level)), (starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))))%>%
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
     rename_at(vars((starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))) ), ~ paste0("K",1:topk))%>%
@@ -328,15 +323,15 @@ ggplot(data = sample, aes(x=ground_truth_1, y=Share, fill=Type))+
 type <- "Test"
 data <- df%>%
   subset(Type == type)%>%
-  mutate(Results = ground_truth_5 == predictions_5,
-         Score = log(probabilities / probabilities_k2))%>%
-  select(probabilities, probabilities_k2, Results, Type, Score)
+  mutate(Results = ground_truth_5 == predictions_5_k1,
+         Score = probabilities_k1 - probabilities_k2)%>%
+  select(probabilities_k1, probabilities_k2, Results, Type, Score)
 
 thresholds <- df%>%
   subset(Type == type)%>%
-  mutate(Results = ground_truth_5 == predictions_5,
-         Score = log(probabilities / probabilities_k2))%>%
-  select(probabilities, probabilities_k2, Results, Type, Score)%>%
+  mutate(Results = ground_truth_5 == predictions_5_k1,
+         Score = probabilities_k1 - probabilities_k2)%>%
+  select(probabilities_k1, probabilities_k2, Results, Type, Score)%>%
   pull(Score)%>%
   quantile(seq(0.05, 0.25,0.05))
 
@@ -347,32 +342,6 @@ ggplot(data)+
   geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
   theme_custom()
 
-##### Test matrice de confusion niveau 2 GU ##### 
-sample <- df_gu
-
-sample <- sample%>%
-  mutate(ground_truth_2 =factor(ground_truth_2,levels = sort(unique(sample$ground_truth_2))),
-         predictions_2 =factor(predictions_2, levels = sort(unique(sample$ground_truth_2))))
-
-cm <- confusionMatrix(sample$ground_truth_2, df_gu$predictions_2)
-
-cm$table %>%
-  data.frame() %>% 
-  mutate(Prediction = factor(Prediction, levels =sort(unique(sample$ground_truth_2)))) %>%
-  group_by(Reference) %>% 
-  mutate(
-    total = sum(Freq),
-    perc = Freq / total*100
-  )%>%  
-  ggplot(aes(Prediction, Reference)) +
-  geom_tile(aes(fill = perc))+
-  scale_fill_gradient(low = "white", high = Palette_col[1]) +
-  # geom_text(aes(label = paste0(round(perc,0), "%")), size = 3)+
-  theme_custom()+
-  guides(fill = "none")  
-
-
-
 ##### Distribution du F1-score par classe ##### 
 PlotDistribF1 <- function(data, level){
   Factors  <- data %>% 
@@ -382,9 +351,9 @@ PlotDistribF1 <- function(data, level){
     sort()
   
   sample <- data %>% 
-    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level))))%>%
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level, "_k1"))))%>%
     rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
-    rename_at(vars(ends_with(paste0("predictions_", level))), ~ "PRED")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level, "_k1"))), ~ "PRED")%>%
     mutate(TRUTH = factor(TRUTH, levels = Factors),
            PRED = factor(PRED, levels = Factors))
   
@@ -443,9 +412,9 @@ PlotF1Inf <- function(data, threshold){
     sort()
   
   sample <- data %>% 
-    select(starts_with(paste0("ground_truth_", 5)), (ends_with(paste0("predictions_", 5))), Type)%>%
+    select(starts_with(paste0("ground_truth_", 5)), (ends_with(paste0("predictions_", 5, "_k1"))), Type)%>%
     rename_at(vars(starts_with(paste0("ground_truth_", 5))), ~ "TRUTH")%>%
-    rename_at(vars(ends_with(paste0("predictions_", 5))), ~ "PRED")%>%
+    rename_at(vars(ends_with(paste0("predictions_", 5, "_k1"))), ~ "PRED")%>%
     mutate(TRUTH = factor(TRUTH, levels = Factors),
            PRED = factor(PRED, levels = Factors))
   
@@ -468,34 +437,30 @@ PlotF1Inf <- function(data, threshold){
     rename(Class = ground_truth_5)%>%
     full_join(sample)%>%
     rename(Class_1 = ground_truth_1)%>%
-    subset(value < threshold)
-  
-  #%>%
-  #    group_by(Class_1)%>%
-  #    summarise(
-  #      N = n()
-  #    )
-    
-    
-  #    ggplot(data,aes(x = Class_1, y= N))+
-  #    ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
-  #    geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
-  #    geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
-  #    theme_custom()+  
-  #    theme(
-  #      text = element_text(size = 16)
-  #   )
+    subset(value < threshold)%>%
+      group_by(Class_1)%>%
+      summarise(
+        N = n()
+      )%>%
+    ggplot(aes(x = Class_1, y= N))+
+     ggtitle(paste("Nombre de classe dont le F1 score est inférieur à", threshold))+
+     geom_bar(stat = "identity", position = position_dodge(), fill=Palette_col[1])+
+     geom_text(aes(label=N), position=position_dodge(width=0.9), vjust=-0.25)+
+     theme_custom()+
+     theme(
+       text = element_text(size = 16)
+    )
   return(plot)
 }
-xx <- PlotF1Inf(df, 0.5)
+PlotF1Inf(df, 0.5)
 
 
 ##### Matrice pour l'indice de confiance ##### 
 PlotMatConfidence <- function(data, q){
   
   plot <- data%>%
-    mutate(Results = ground_truth_5 == predictions_5,
-           Score = probabilities - probabilities_k2)%>%
+    mutate(Results = ground_truth_5 == predictions_5_k1,
+           Score = probabilities_k1 - probabilities_k2)%>%
     select(Results, Type, Score)%>%
     mutate(IsInf = Score <= quantile(Score, q))%>%
     group_by(Results, IsInf)%>%
