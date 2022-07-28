@@ -60,7 +60,9 @@ class FastTextTrainer(Trainer):
                     formatted_item += f" {feature}_{item[1][feature]}"
                 f.write("%s\n" % formatted_item)
 
+        print(f"\t*** Training over {df.shape[0]} observations\n")
+
         model = fasttext.train_supervised(
-            (root_path / "data/train_text.txt").as_posix(), **params, verbose=0
+            (root_path / "data/train_text.txt").as_posix(), **params, verbose=2
         )
         return model

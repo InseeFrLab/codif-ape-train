@@ -46,13 +46,15 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             categorical_features=categorical_features,
             oversampling=oversampling,
         )
-        print(f"*** Done! Preprocessing lasted {round(time.time() - t,1)} seconds.\n")
+        print(
+            f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n"
+        )
 
         # Run training of the model
         print("*** 2- Training the model...\n")
         t = time.time()
         model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
-        print(f"*** Done! Training lasted {round(time.time() - t,1)} seconds.\n")
+        print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         fasttext_model_path = run_name + ".bin"
         model.save_model(fasttext_model_path)
@@ -98,7 +100,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
 
-        print(f"*** Done! Evaluation lasted {round(time.time() - t,1)} seconds.\n")
+        print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
 
 
 if __name__ == "__main__":

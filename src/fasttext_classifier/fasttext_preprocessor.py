@@ -94,7 +94,7 @@ class FastTextPreprocessor(Preprocessor):
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(
-                f"\t*** Done! Oversampling lasted {round(time.time() - t,1)} seconds.\n"
+                f"\t*** Done! Oversampling lasted {round((time.time() - t)/60,1)} minutes.\n"
             )
 
         return df_train, df_test, df_gu
