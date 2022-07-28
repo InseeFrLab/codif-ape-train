@@ -21,6 +21,7 @@ class FastTextPreprocessor(Preprocessor):
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
+        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
@@ -32,6 +33,7 @@ class FastTextPreprocessor(Preprocessor):
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
+            df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
@@ -41,7 +43,19 @@ class FastTextPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
+
         df = self.clean_lib(df, text_feature)
+
+        # Adding missing APE codes in the database
+        MissingCodes = set(df_naf[y]) - set(df[y])
+        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
+        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
+        Fake_obs.index = [f"FAKE_{i}" for i in range(Fake_obs.shape[0])]
+        Fake_obs = self.clean_lib(Fake_obs, text_feature)
+        df = pd.concat([df, Fake_obs])
+        print(
+            f"\t*** {len(MissingCodes)} missing codes have been added in the database.\n"
+        )
 
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
@@ -63,6 +77,17 @@ class FastTextPreprocessor(Preprocessor):
 
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
+
+        # Adding missing APE codes in the train database
+        MissingCodes = set(df_naf[y]) - set(df_train[y])
+        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
+        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
+        Fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(Fake_obs.shape[0])]
+        Fake_obs = self.clean_lib(Fake_obs, text_feature)
+        df_train = pd.concat([df_train, Fake_obs])
+        print(
+            f"\t*** {len(MissingCodes)} missing codes have been added in the train database...\n"
+        )
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
