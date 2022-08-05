@@ -21,6 +21,7 @@ class FastTextPreprocessor(Preprocessor):
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
+        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
@@ -32,6 +33,7 @@ class FastTextPreprocessor(Preprocessor):
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
+            df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
@@ -41,7 +43,19 @@ class FastTextPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
+
         df = self.clean_lib(df, text_feature)
+
+        # Adding missing APE codes in the database
+        MissingCodes = set(df_naf[y]) - set(df[y])
+        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
+        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
+        Fake_obs.index = [f"FAKE_{i}" for i in range(Fake_obs.shape[0])]
+        Fake_obs = self.clean_lib(Fake_obs, text_feature)
+        df = pd.concat([df, Fake_obs])
+        print(
+            f"\t*** {len(MissingCodes)} missing codes have been added in the database.\n"
+        )
 
         # Guichet unique split
         df_gu = df[df.index.str.startswith("J")]
@@ -51,8 +65,28 @@ class FastTextPreprocessor(Preprocessor):
         if categorical_features is not None:
             features += categorical_features
 
-        df_train, df_test = self.train_test_split_by_class(
-            df, y, features, test_size=0.2, random_state=0, shuffle=True
+        X_train, X_test, y_train, y_test = train_test_split(
+            df[
+                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
+            ],
+            df[y],
+            test_size=0.2,
+            random_state=0,
+            shuffle=True,
+        )
+
+        df_train = pd.concat([X_train, y_train], axis=1)
+        df_test = pd.concat([X_test, y_test], axis=1)
+
+        # Adding missing APE codes in the train database
+        MissingCodes = set(df_naf[y]) - set(df_train[y])
+        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
+        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
+        Fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(Fake_obs.shape[0])]
+        Fake_obs = self.clean_lib(Fake_obs, text_feature)
+        df_train = pd.concat([df_train, Fake_obs])
+        print(
+            f"\t*** {len(MissingCodes)} missing codes have been added in the train database...\n"
         )
 
         if oversampling is not None:
@@ -60,7 +94,7 @@ class FastTextPreprocessor(Preprocessor):
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(
-                f"\t*** Done! Oversampling lasted {round(time.time() - t,1)} seconds.\n"
+                f"\t*** Done! Oversampling lasted {round((time.time() - t)/60,1)} minutes.\n"
             )
 
         return df_train, df_test, df_gu
@@ -156,48 +190,3 @@ class FastTextPreprocessor(Preprocessor):
             )
 
         return pd.concat([df, df_oversampled])
-
-    def train_test_split_by_class(
-        self,
-        df: pd.DataFrame,
-        y: str,
-        features: List,
-        test_size: float,
-        random_state: int,
-        shuffle: bool,
-    ):
-
-        df_train = pd.DataFrame(
-            columns=[y]
-            + features
-            + [f"APE_NIV{i}" for i in range(1, 6) if f"{i}" not in [y[-1]]]
-        )
-        df_test = pd.DataFrame(columns=df_train.columns)
-        Code2Split = set(df[y])
-
-        for aCode in Code2Split:
-            df_chunk = df[df[y] == aCode]
-            if df_chunk.shape[0] == 1:
-                df_train_chunk = df_chunk[
-                    [y]
-                    + features
-                    + [f"APE_NIV{i}" for i in range(1, 6) if f"{i}" not in [y[-1]]]
-                ]
-                df_test_chunk = pd.DataFrame(columns=df_train_chunk.columns)
-            else:
-                X_train, X_test, y_train, y_test = train_test_split(
-                    df_chunk[
-                        features
-                        + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
-                    ],
-                    df_chunk[y],
-                    test_size=test_size,
-                    random_state=random_state,
-                    shuffle=shuffle,
-                )
-                df_train_chunk = pd.concat([X_train, y_train], axis=1)
-                df_test_chunk = pd.concat([X_test, y_test], axis=1)
-            df_train = pd.concat([df_train, df_train_chunk])
-            df_test = pd.concat([df_test, df_test_chunk])
-
-        return df_train, df_test

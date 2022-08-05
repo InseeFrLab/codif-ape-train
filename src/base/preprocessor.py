@@ -8,8 +8,6 @@ import pandas as pd
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 
-from base.dico_4 import Words2Remove
-
 
 class Preprocessor(ABC):
     """
@@ -17,7 +15,7 @@ class Preprocessor(ABC):
     """
 
     def __init__(
-        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french") + Words2Remove)
+        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french"))
     ) -> None:
         """
         Constructor for the Preprocessor class.
@@ -62,14 +60,6 @@ class Preprocessor(ABC):
         df_naf = df_naf[[f"APE_NIV{i}" for i in range(1, 6)] + ["LIB_NIV5"]]
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
-        # Adding missing APE codes in the database
-        MissingCodes = set(df_naf["APE_NIV5"]) - set(df["APE_NIV5"])
-        Fake_obs = df_naf[df_naf.APE_NIV5.isin(MissingCodes)]
-        Fake_obs.loc[:, "LIB_SICORE"] = Fake_obs.LIB_NIV5
-        Fake_obs.loc[:, "DATE"] = pd.Timestamp.today()
-        Fake_obs.index = [f"FAKE_{i}" for i in range(Fake_obs.shape[0])]
-        df = pd.concat([df, Fake_obs])
-
         # General preprocessing
         variables = [y] + [text_feature]
         if categorical_features is not None:
@@ -83,31 +73,33 @@ class Preprocessor(ABC):
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
-            df, y, text_feature, categorical_features, oversampling
+            df, df_naf, y, text_feature, categorical_features, oversampling
         )
 
     @abstractmethod
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
+        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Preprocesses data to feed to a specific model for
-        training and evaluation.
+        Preprocesses data to feed to a classifier of the
+        fasttext library for training and evaluation.
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
+            df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
-
+            oversampling (Optional[List[str]]): Parameters for oversampling
         Returns:
-            pd.DataFrame: Preprocessed DataFrames for training
-                and evaluation.
+            pd.DataFrame: Preprocessed DataFrames for training,
+            evaluation and "guichet unique"
         """
         raise NotImplementedError()
