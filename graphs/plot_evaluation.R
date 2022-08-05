@@ -393,6 +393,7 @@ PlotDistribF1 <- function(data, level){
     geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
     facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
     theme_custom()+
+    xlim(c(0,1))+
     scale_fill_manual(values = Palette_col)+
     theme(strip.placement = "outside",
           strip.text.y = element_blank(),
