@@ -30,6 +30,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         t = time.time()
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
+        df = df.sample(frac=0.001)
 
         with open(get_root_path() / config_path, "r") as stream:
             config = yaml.safe_load(stream)

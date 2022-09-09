@@ -2,3 +2,4 @@ fasttext
 nltk
 torch
 seaborn
+mlflow
