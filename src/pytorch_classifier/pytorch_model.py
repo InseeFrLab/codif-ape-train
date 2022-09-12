@@ -18,7 +18,8 @@ class PytorchModel(nn.Module):
                  num_classes: int,
                  y: str,
                  categorical_features: List[str],
-                 padding_idx: int = 0):
+                 padding_idx: int = 0,
+                 sparse: bool = False):
         """
         Constructor for the PytorchModel class.
 
@@ -29,6 +30,7 @@ class PytorchModel(nn.Module):
             categorical_features (List[str]): List of categorical features.
             padding_idx (int, optional): Padding index for the text
                 descriptions. Defaults to 0.
+            sparse (bool): Indicates if Embedding layer is sparse.
         """
         super(PytorchModel, self).__init__()
         self.categorical_features = categorical_features
@@ -39,6 +41,7 @@ class PytorchModel(nn.Module):
             embedding_dim=embedding_dim,
             num_embeddings=vocab_size,
             padding_idx=padding_idx,
+            sparse=sparse
         )
         self.categorical_embeddings = {}
         for variable in categorical_features:

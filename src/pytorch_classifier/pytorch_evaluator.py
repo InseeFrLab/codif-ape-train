@@ -96,3 +96,20 @@ class PytorchEvaluator(Evaluator):
             ]
             for rank_pred in range(k)
         }
+
+    @staticmethod
+    def remap_labels(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remap labels to the NAF classification
+
+        Args:
+            df (pd.DataFrame): Results DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame with remaped outputs.
+        """
+        reverse_mappings = {v: k for (k, v) in mappings["APE_NIV5"].items()}
+        df["APE_NIV5"] = [
+            reverse_mappings.get(pred) for pred in df["APE_NIV5"]
+        ]
+        return df

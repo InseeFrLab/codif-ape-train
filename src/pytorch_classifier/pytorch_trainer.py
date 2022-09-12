@@ -6,7 +6,7 @@ from typing import List, Optional, Dict
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -75,11 +75,6 @@ class PytorchTrainer:
 
             # Cumulative Metrics
             loss += (J.detach().item() - loss) / (i + 1)
-
-        print(f"Moving GPU: {moving_gpu}")
-        print(f"Forward: {forward_pass}")
-        print(f"Backward: {backward_pass}")
-        print(f"Update: {update}")
 
         return loss
 
@@ -167,6 +162,7 @@ class PytorchTrainer:
         min_n = params["min_n"]
         max_n = params["max_n"]
         word_ngrams = params["word_ngrams"]
+        sparse = params["sparse"]
         num_classes = len(mappings.get("APE_NIV5"))
 
         # Train/val split
@@ -216,11 +212,15 @@ class PytorchTrainer:
             num_classes=num_classes,
             y=y,
             categorical_features=categorical_features,
-            padding_idx=buckets+self.tokenizer.get_nwords()
+            padding_idx=buckets+self.tokenizer.get_nwords(),
+            sparse=sparse
         ).to(self.device)
 
         # Define optimizer & scheduler
-        self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
+        if sparse:
+            self.optimizer = SGD(self.model.parameters(), lr=learning_rate)
+        else:
+            self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer, mode="min", factor=0.1, patience=patience)
 
