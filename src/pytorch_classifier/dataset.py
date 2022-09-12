@@ -1,7 +1,6 @@
 """
 Torch Dataset class without fastText dependency.
 """
-import time
 from typing import List, Tuple
 import torch
 import numpy as np
@@ -80,7 +79,6 @@ class TorchDataset(torch.utils.data.Dataset):
         Returns:
             Tuple[torch.LongTensor]: Observation with given index.
         """
-        start_time = time.time()
         # Get inputs
         batch = np.array(batch)
         text = batch[:, 1].tolist()
