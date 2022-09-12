@@ -63,3 +63,16 @@ class FastTextEvaluator(Evaluator):
             ]
             for rank_pred in range(k)
         }
+
+    @staticmethod
+    def remap_labels(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remap labels to the NAF classification
+
+        Args:
+            df (pd.DataFrame): Results DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame with remaped outputs.
+        """
+        return df

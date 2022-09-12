@@ -113,11 +113,26 @@ class Evaluator(ABC):
             )
             preds_df = preds_df[~preds_df.index.duplicated(keep="first")]
 
+        df = self.remap_labels(df)
         df = df.rename(
             columns={f"APE_NIV{i}": f"ground_truth_{i}" for i in range(1, level + 1)}
         )
 
         return df.join(preds_df.join(proba_df))
+
+    @staticmethod
+    @abstractmethod
+    def remap_labels(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remap labels to the NAF classification
+
+        Args:
+            df (pd.DataFrame): Results DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame with remaped outputs.
+        """
+        raise NotImplementedError()
 
     def compute_accuracies(self, df: pd.DataFrame, y: str) -> Dict[str, float]:
         """
