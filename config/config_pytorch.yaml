@@ -1,13 +1,26 @@
+model_type: pytorch
+
 params:
-  learning_rate: 0.0003
+  epoch: 3
   patience: 5
-  num_epochs: 5
+  lr: 0.0003
   train_proportion: 0.8
   batch_size: 64
-  fasttext_bin_path: projet-ape/dummy_model.bin
+  dim: 120
+  wordNgrams: 3
+  minn: 3
+  maxn: 4
+  minCount: 3
+  bucket: 2000000
+  sparse: False
 
 categorical_features:
   - AUTO
   - NAT_SICORE
   - SURF
   - EVT_SICORE
+
+Y:
+  - "APE_NIV5"
+
+oversampling:

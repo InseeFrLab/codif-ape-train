@@ -8,10 +8,7 @@ import mlflow
 import pandas as pd
 import yaml
 
-from constants import TEXT_FEATURE
-from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
-from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
-from fasttext_classifier.fasttext_trainer import FastTextTrainer
+from constants import TEXT_FEATURE, FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from utils import get_root_path
 
@@ -23,17 +20,19 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
     with mlflow.start_run(run_name=run_name):
-        preprocessor = FastTextPreprocessor()
-        trainer = FastTextTrainer()
+        with open(get_root_path() / config_path, "r") as stream:
+            config = yaml.safe_load(stream)
+        model_type = config["model_type"]
+        framework_classes = FRAMEWORK_CLASSES[model_type]
+
+        preprocessor = framework_classes["preprocessor"]()
+        trainer = framework_classes["trainer"]()
 
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
-        df = df.sample(frac=0.001)
 
-        with open(get_root_path() / config_path, "r") as stream:
-            config = yaml.safe_load(stream)
         params = config["params"]
         categorical_features = config["categorical_features"]
         Y = config["Y"][0]
@@ -57,17 +56,23 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        fasttext_model_path = run_name + ".bin"
-        model.save_model(fasttext_model_path)
+        if model_type == "fasttext":
+            fasttext_model_path = run_name + ".bin"
+            model.save_model(fasttext_model_path)
 
-        artifacts = {"fasttext_model_path": fasttext_model_path}
-        mlflow_pyfunc_model_path = run_name
+            artifacts = {"fasttext_model_path": fasttext_model_path}
 
-        mlflow.pyfunc.log_model(
-            artifact_path=mlflow_pyfunc_model_path,
-            python_model=FastTextWrapper(),
-            artifacts=artifacts,
-        )
+            mlflow.pyfunc.log_model(
+                artifact_path=run_name,
+                python_model=FastTextWrapper(),
+                artifacts=artifacts,
+            )
+        elif model_type == "pytorch":
+            mlflow.pytorch.log_model(
+                pytorch_model=model,
+                artifact_path=run_name)
+        else:
+            raise KeyError("Model type is not valid.")
 
         # Log parameters
         for param_name, param_value in params.items():
@@ -78,7 +83,16 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         # Evaluation
         print("*** 3- Evaluating the model...\n")
         t = time.time()
-        evaluator = FastTextEvaluator(model)
+        if model_type == "fasttext":
+            evaluator = framework_classes["evaluator"](model)
+        if model_type == "pytorch":
+            evaluator = framework_classes["evaluator"](
+                model,
+                trainer.tokenizer
+            )
+        else:
+            raise KeyError("Model type is not valid.")
+
         accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
         )

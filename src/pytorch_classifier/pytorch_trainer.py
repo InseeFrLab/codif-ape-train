@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
+import mlflow
 
 from pytorch_classifier.pytorch_model import PytorchModel
 from pytorch_classifier.dataset import TorchDataset
@@ -151,17 +152,17 @@ class PytorchTrainer:
         Returns:
             PytorchModel: Trained model.
         """
-        num_epochs = params["num_epochs"]
+        num_epochs = params["epoch"]
         patience = params["patience"]
         train_proportion = params["train_proportion"]
         batch_size = params["batch_size"]
-        learning_rate = params["learning_rate"]
-        buckets = params["buckets"]
-        embedding_dim = params["embedding_dim"]
-        min_count = params["min_count"]
-        min_n = params["min_n"]
-        max_n = params["max_n"]
-        word_ngrams = params["word_ngrams"]
+        learning_rate = params["lr"]
+        buckets = params["bucket"]
+        embedding_dim = params["dim"]
+        min_count = params["minCount"]
+        min_n = params["minn"]
+        max_n = params["maxn"]
+        word_ngrams = params["wordNgrams"]
         sparse = params["sparse"]
         num_classes = len(mappings.get("APE_NIV5"))
 
@@ -258,12 +259,12 @@ class PytorchTrainer:
                 f"_patience: {_patience}"
             )
 
+        fig = plt.figure()
         plt.plot(epochs, train_losses, 'r', label='train loss')
         plt.plot(epochs, val_losses, 'b', label='validation loss')
         plt.legend()
         plt.xlabel('Epoch')
         plt.xticks(epochs)
-        plt.savefig('losses.png')
-        plt.close()
+        mlflow.log_figure(fig, "losses.png")
 
         return best_model
