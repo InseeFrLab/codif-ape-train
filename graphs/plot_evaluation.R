@@ -8,7 +8,7 @@ library(caret)
 library(cowplot)
 
 source("theme_custom.R")
-model = "cdde7a391d0c423499b64ccdf5ec941a"#d59e23a319fe40e0afed1c79172ba9bd"
+model = "5490ebb3b62a43e494517f819cf20322"
 aws.s3::get_bucket("projet-ape", region = "", prefix = paste0("data/predictions_test_", model,".csv"))
 
 
