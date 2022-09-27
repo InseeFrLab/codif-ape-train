@@ -52,7 +52,10 @@ class FastTextEvaluator(Evaluator):
         for item in df.iterrows():
             formatted_item = item[1][text_feature]
             for feature in iterables_features:
-                formatted_item += f" {feature}_{item[1][feature]}"
+                if f"{item[1][feature]}".endswith(".0"):
+                    formatted_item += f" {feature}_{item[1][feature]}"[:-2]
+                else:
+                    formatted_item += f" {feature}_{item[1][feature]}"
             libs.append(formatted_item)
 
         res = self.model.predict(libs, k=k)
