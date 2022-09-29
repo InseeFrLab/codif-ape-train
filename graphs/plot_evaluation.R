@@ -8,9 +8,8 @@ library(caret)
 library(cowplot)
 
 source("theme_custom.R")
-model = "5490ebb3b62a43e494517f819cf20322"
+model = "cdde7a391d0c423499b64ccdf5ec941a"
 aws.s3::get_bucket("projet-ape", region = "", prefix = paste0("data/predictions_test_", model,".csv"))
-
 
 ##### Data importation #####
 df_test <- 
@@ -24,7 +23,7 @@ df_test <-
 df_test <- df_test %>%
   mutate(Type="Test")
 
-df_gu <- 
+df_gu<- 
   aws.s3::s3read_using(
     FUN = readr::read_csv,
     # Mettre les options de FUN ici
@@ -36,6 +35,179 @@ df_gu <-
 df <- df_gu %>%
   mutate(Type="GU")%>%
   bind_rows(df_test)
+
+##############################################################################################
+##############################################################################################
+##############################################################################################
+
+#### IC distribution #### 
+get_data_IC_distrib <- function(data){
+  sample <- data%>%
+    mutate(Results = ground_truth_5 == predictions_5_k1,
+           Score = probabilities_k1 - probabilities_k2)%>%
+    select(probabilities_k1, probabilities_k2, Results, Score)
+  return(sample)
+}
+get_thresholds_IC_distrib <- function(data, quantiles){
+  thresholds <- data%>%
+    mutate(Results = ground_truth_5 == predictions_5_k1,
+           Score = probabilities_k1 - probabilities_k2)%>%
+    select(probabilities_k1, probabilities_k2, Results,Score)%>%
+    pull(Score)%>%
+    quantile(quantiles)
+  return(thresholds)
+}
+plot_IC_distrib <- function(data, thresholds, ypos){
+  plot <- ggplot(data)+
+    ggtitle("")+
+    geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col),labels=c("Mauvaise prédiction", "Bonne prédiction"))+
+    geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
+    theme_custom()+ 
+    annotate("text", x = thresholds+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
+  
+  return(plot)
+  
+}
+plot_IC_distrib(get_data_IC_distrib(df), get_thresholds_IC_distrib(df, seq(0.05, 0.25,0.05)), 51)
+#### Distribution GU/TEST #### 
+get_data_GU_TEST_distrib <- function(data){
+  sample <- data %>%
+    group_by(Type, ground_truth_1)%>%
+    summarise(
+      N = n()
+    )%>%
+    mutate(Share = N/ifelse(Type =="GU", nrow(df_gu), nrow(df_test)))
+  return(sample)
+}
+plot_GU_TEST_distrib <- function(data){
+  plot <- ggplot(data, aes(x=ground_truth_1, y=Share, fill=Type))+
+    ggtitle('')+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Share*100,1)), position=position_dodge(width=0.9), vjust=-0.25, size=3)+
+    scale_y_continuous(labels = scales::percent)+
+    scale_fill_manual(values=c(Palette_col), labels=c("Données guichet unique", "Données test"))+
+    theme_custom()
+  
+  return(plot)
+  
+}
+plot_GU_TEST_distrib(get_data_GU_TEST_distrib(df))
+#### Accuracy GU/TEST #### 
+acc_w_rep <- function(data, q, type, level){
+  accuracy <- data %>% 
+    subset(Type %in% type)%>%
+    select(probabilities_k1, probabilities_k2, ends_with(paste0("_", level, "_k1")), starts_with(paste0("ground_truth_", level)))%>%
+    rename_with(~ gsub(paste0("_", level,"_k1$"), "", .x))%>%
+    rename_with(~ gsub(paste0("_", level, "$"), "", .x))%>%
+    mutate(Score = probabilities_k1 - probabilities_k2,
+           Results = ground_truth == predictions,
+           Revisions = case_when(Score >= quantile(Score, q) ~ Results,
+                                 TRUE ~ TRUE)
+    )%>%
+    pull(Revisions)%>%
+    mean
+  return(accuracy)
+}
+get_data_Accuracy_lvl <- function(data){
+  sample <- tibble(Level = character(), Type = character(), Accuracy = numeric())
+  for (type in c("GU", "Test")) {
+    for (level in paste(1:5)) {
+      sample <- sample %>%
+          add_row(Level = level,
+                  Type = type,
+                  Accuracy = acc_w_rep(data, 
+                                       0, 
+                                       type, 
+                                       as.double(level)
+                  )
+          )
+      }
+  }
+  
+  sample <- sample%>%
+    mutate(Level = paste("Niveau", Level),
+           Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1))))
+    )
+  
+  return(sample)
+}
+plot_Accuracy_lvl <- function(data){
+  plot<- ggplot(data , aes(x=Level, y=Accuracy, fill=Type))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col), labels=c("Données guichet unique", "Données test"))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+plot_Accuracy_lvl(get_data_Accuracy_lvl(df))
+#### Top-K Accuracy GU/TEST #### 
+top_k_acc <- function(data, topk, type, level){
+  accuracy <- data %>% 
+    subset(Type %in% type)%>%
+    select(starts_with(paste0("ground_truth_", level)), (starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))))%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars((starts_with(paste0("predictions_", level)) & ends_with(paste(1:topk))) ), ~ paste0("K",1:topk))%>%
+    rowwise() %>%
+    mutate(Results = ifelse(topk == 1, any(TRUTH %in% K1),
+                            ifelse(topk == 2, any(TRUTH %in% c(K1, K2)), 
+                                   ifelse(topk == 3, any(TRUTH %in% c(K1, K2, K3)), 
+                                          ifelse(topk == 4, any(TRUTH %in% c(K1, K2, K3, K4)),
+                                                 ifelse(topk == 5, any(TRUTH %in% c(K1, K2, K3, K4, K5))))))))%>%
+    pull(Results)%>%
+    mean
+  return(accuracy)
+}
+get_data_TOPK_Accuracy <- function(data){
+  sample <- tibble(Topk = character(), Type = character(), Accuracy = numeric())
+  for (type in c("GU", "Test")) {
+      for (topk in paste(seq(1:5))) {
+        cat(type, topk)
+        sample <- sample %>%
+          add_row(Topk = topk, 
+                  Type = type,
+                  Accuracy = top_k_acc(data, 
+                                       as.double(topk), 
+                                       type, 
+                                       5
+                  )
+          )
+      }
+  }
+  
+  sample <- sample%>%
+    mutate(Topk = paste("Top", Topk),
+           Type = case_when(Type %in% c("GU") ~ "Données guichet unique",
+                                   TRUE ~ "Données test"
+           )
+           
+    )
+return(sample)
+}
+plot_TOPK_Accuracy <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Topk))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+plot_TOPK_Accuracy(get_data_TOPK_Accuracy(df))
+
+##############################################################################################
+##############################################################################################
+##############################################################################################
+
 
 ##### Matrice de confusion niveau 1 ##### 
 PlotConfusionMatrix <- function(data, type){
@@ -402,8 +574,8 @@ PlotDistribF1 <- function(data, level){
     guides(fill=guide_legend(nrow=2, byrow=TRUE))
   
 }
-PlotDistribF1(df, 5)
-
+PlotDistribF1(df3, 5)
+a
 ##### Nombre de classe selon un seuil de F1 ##### 
 PlotF1Inf <- function(data, threshold){
   Factors  <- data %>% 
