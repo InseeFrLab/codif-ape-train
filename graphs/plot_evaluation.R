@@ -8,7 +8,7 @@ library(caret)
 library(cowplot)
 
 source("theme_custom.R")
-model = "cdde7a391d0c423499b64ccdf5ec941a"
+model = "d59e23a319fe40e0afed1c79172ba9bd"
 aws.s3::get_bucket("projet-ape", region = "", prefix = paste0("data/predictions_test_", model,".csv"))
 
 ##### Data importation #####
@@ -61,7 +61,7 @@ plot_IC_distrib <- function(data, thresholds, ypos){
   plot <- ggplot(data)+
     ggtitle("")+
     geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
-    scale_fill_manual(values=c(Palette_col),labels=c("Mauvaise prédiction", "Bonne prédiction"))+
+    scale_fill_manual(values=c(Palette_col),labels=c("Mauvaises prédictions", "Bonnes prédictions"))+
     geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
     theme_custom()+ 
     annotate("text", x = thresholds+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
@@ -203,7 +203,158 @@ plot_TOPK_Accuracy <- function(data){
   return(plot)
 }
 plot_TOPK_Accuracy(get_data_TOPK_Accuracy(df))
+#### F1-score distrib #### 
+get_data_F1_distrib <- function(data){
+  level = 5
+  Factors  <- data %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
+  
+  sample <- data %>% 
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level, "_k1"))))%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level, "_k1"))), ~ "PRED")%>%
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
+  
+  sample <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,c(7)]%>%
+    as_tibble()%>%
+    mutate(Class = Factors)
+  return(sample)  
+}
+plot_F1_distrib <- function(data){
+  ggplot(data) + 
+    ggtitle("")+
+    geom_histogram(aes(x=value),binwidth=.05, position="identity", fill = Palette_col[1]) +
+    theme_custom()+
+    xlim(c(0,1))+
+    theme(strip.placement = "outside",
+          strip.text.y = element_blank(),
+          text = element_text(size = 16)
+    )
+}
+plot_F1_distrib(get_data_F1_distrib(df))
+#### F1-score distrib par catégorie #### 
+get_data_F1_distrib_by_cat <- function(data){
+  level = 5
+  Factors  <- data %>% 
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    pull(TRUTH)%>%
+    unique()%>%
+    sort()
+  
+  sample <- data %>% 
+    select(starts_with(paste0("ground_truth_", level)), (ends_with(paste0("predictions_", level, "_k1"))))%>%
+    rename_at(vars(starts_with(paste0("ground_truth_", level))), ~ "TRUTH")%>%
+    rename_at(vars(ends_with(paste0("predictions_", level, "_k1"))), ~ "PRED")%>%
+    mutate(TRUTH = factor(TRUTH, levels = Factors),
+           PRED = factor(PRED, levels = Factors))
+  
+  prop <- sample %>%
+    group_by(TRUTH)%>%
+    summarise(
+      N = n()
+    )
+  
+  sample <- confusionMatrix(sample$TRUTH, sample$PRED)$byClass[,c(7)]%>%
+    as_tibble()%>%
+    mutate(Class = Factors,
+           N = prop$N)%>%
+    arrange(desc(N)) %>%
+    mutate(N_cumulative = cumsum(N),
+           cumulative_pct = N_cumulative / sum(N),
+           Group = case_when(
+             cumulative_pct < 0.50 ~ "Catégories représentant 50% des données",
+             cumulative_pct < 0.75 ~ "Catégories représentant 25% des données",
+             cumulative_pct < 0.95 ~ "Catégories représentant 20% des données",
+             TRUE ~ "Catégories représentant 5% des données"
+           ),
+           Group = factor(Group, levels = c("Catégories représentant 50% des données",
+                                            "Catégories représentant 25% des données",
+                                            "Catégories représentant 20% des données",
+                                            "Catégories représentant 5% des données"
+                                            
+           ))
+    )
+  return(sample)  
+}
+plot_F1_distrib_by_cat <- function(data){
+  ggplot(data) + 
+    ggtitle("")+
+    geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
+    facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
+    theme_custom()+
+    xlim(c(0,1))+
+    scale_fill_manual(values = Palette_col)+
+    theme(strip.placement = "outside",
+          strip.text.y = element_blank(),
+          text = element_text(size = 16)
+    )+
+    guides(fill=guide_legend(nrow=2, byrow=TRUE))
+  
+}
+plot_F1_distrib_by_cat(get_data_F1_distrib_by_cat(df))
+#### Accuracy reprise GU/TEST #### 
+acc_w_rep <- function(data, q, type, level){
+  accuracy <- data %>% 
+    subset(Type %in% type)%>%
+    select(probabilities_k1, probabilities_k2, ends_with(paste0("_", level, "_k1")), starts_with(paste0("ground_truth_", level)))%>%
+    rename_with(~ gsub(paste0("_", level,"_k1$"), "", .x))%>%
+    rename_with(~ gsub(paste0("_", level, "$"), "", .x))%>%
+    mutate(Score = probabilities_k1 - probabilities_k2,
+           Results = ground_truth == predictions,
+           Revisions = case_when(Score >= quantile(Score, q) ~ Results,
+                                 TRUE ~ TRUE)
+    )%>%
+    pull(Revisions)%>%
+    mean
+  return(accuracy)
+}
+get_data_Accuracy_reprise <- function(data){
+  
+  sample <- tibble(Rate = character(), Type = character(), Accuracy = numeric())
+  for (type in c("GU", "Test")) {
+    for (rate in paste(seq(0,0.25,0.05))) {
+      sample <- sample %>%
+        add_row(Rate = rate,
+                Type = type,
+                Accuracy = acc_w_rep(data, 
+                                     as.double(rate), 
+                                     type, 
+                                     5
+                )
+        )
+    }
+  }
+  
+  sample <- sample%>%
+    mutate(Rate = paste0(as.double(Rate)*100, "%"),
+           Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%")),
+           Type = case_when(Type %in% c("GU") ~ "Données guichet unique",
+                            TRUE ~ "Données test")
+    )
+  
+  return(sample)
+}
+plot_Accuracy_reprise <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+plot_Accuracy_reprise(get_data_Accuracy_reprise(df))
 
+
+xx <- get_data_F1_distrib_by_cat(df) 
 ##############################################################################################
 ##############################################################################################
 ##############################################################################################
