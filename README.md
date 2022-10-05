@@ -10,4 +10,4 @@ Ce projet est une expérimentation autour de la codification automatique de l'AP
 
 # Séminaire DMS 7 Octobre 2022
 
-Version déployée des slides sur internet: https://formation.pages.lab.sspcloud.fr/
+Version déployée des slides sur internet: https://ssplab.pages.lab.sspcloud.fr/codification-ape/
