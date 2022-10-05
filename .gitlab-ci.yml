@@ -71,8 +71,9 @@ pages:
   image: inseefrlab/onyxia-base
   script:
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
-    - quarto render index.qmd
-    - mv doc/seminaire-dms-oct-2022/slides public
+    - cd doc/seminaire-dms-oct-2022/
+    - quarto render slides/index.qmd
+    - mv slides public
   artifacts:
     paths:
       - public
