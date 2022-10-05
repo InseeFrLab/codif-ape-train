@@ -70,6 +70,7 @@ pages:
   stage: deploy
   image: alpine
   script:
+    - quarto render index.qmd
     - mv doc/seminaire-dms-oct-2022/slides public
   artifacts:
     paths:
