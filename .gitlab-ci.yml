@@ -1,6 +1,7 @@
 stages:
     - static
     - test
+    - deploy
 
 unit-test:
     stage: test
