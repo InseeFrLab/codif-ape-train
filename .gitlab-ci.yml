@@ -64,3 +64,12 @@ isort:
     allow_failure: true
     only:
         - merge_requests
+
+pages:
+  stage: deploy
+  image: alpine
+  script:
+    - mv doc/seminaire-dms-oct-2022/slides public
+  artifacts:
+    paths:
+      - public
