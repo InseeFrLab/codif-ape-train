@@ -1,0 +1,13 @@
+"","Rate","Type","Accuracy"
+"1","0%","Données guichet unique",0.800267584097859
+"2","5%","Données guichet unique",0.838047910295617
+"3","10%","Données guichet unique",0.870795107033639
+"4","15%","Données guichet unique",0.89920998980632
+"5","20%","Données guichet unique",0.924566768603466
+"6","25%","Données guichet unique",0.944253312945973
+"7","0%","Données test",0.88845361778173
+"8","5%","Données test",0.922001514288824
+"9","10%","Données test",0.948296985575021
+"10","15%","Données test",0.967809451833985
+"11","20%","Données test",0.981098947704722
+"12","25%","Données test",0.988864699087643
