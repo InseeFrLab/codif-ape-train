@@ -23,6 +23,23 @@ css: custom.css
 from: markdown+emoji
 ---
 
+```{r}
+## Initialisation
+library(readr)
+library(ggplot2)
+library(dplyr)
+source("../../../graphs/theme_custom.R")
+
+Accuracy_lvl <- read_csv("../../../graphs/data_graphs/Accuracy_lvl.csv")
+GU_TEST_distrib <- read_csv("../../../graphs/data_graphs/GU_TEST_distrib.csv")
+TOPK_Accuracy <- read_csv("../../../graphs/data_graphs/TOPK_Accuracy.csv")
+Accuracy_reprise <- read_csv("../../../graphs/data_graphs/Accuracy_reprise.csv")
+F1_distrib_by_cat <- read_csv("../../../graphs/data_graphs/F1_distrib_by_cat.csv")
+IC_distrib <- read_csv("../../../graphs/data_graphs/IC_distrib.csv")
+IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
+
+```
+
 # Introduction
 
 ## Contexte 
@@ -145,11 +162,6 @@ Racinisation des mots | deratis desinsectis desinfect |
  <center>
 ```{r fig.width=13,fig.height=4.5}
 
-library(readr)
-library(ggplot2)
-source("../../../graphs/theme_custom.R")
-
-GU_TEST_distrib <- read_csv("../../../graphs/data_graphs/GU_TEST_distrib.csv")
 plot_GU_TEST_distrib <- function(data){
   plot <- ggplot(data, aes(x=ground_truth_1, y=Share, fill=Type))+
     ggtitle('Distribution des classes au niveau 1 en fonction des jeux de données')+
@@ -191,14 +203,7 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
 ## De bons résultats
 
 ```{r}
-
-library(readr)
-library(ggplot2)
-library(dplyr)
-
-source("../../../graphs/theme_custom.R")
-
-Accuracy_lvl <- read_csv("../../../graphs/data_graphs/Accuracy_lvl.csv")%>%
+Accuracy_lvl <- Accuracy_lvl %>%
     mutate(Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1))))
     )
 
@@ -218,19 +223,11 @@ plot_Accuracy_lvl <- function(data){
 
 plot_Accuracy_lvl(Accuracy_lvl)
 
-
 ```
 
 ## Top K acc 
 
 ```{r}
-
-library(readr)
-library(ggplot2)
-source("../../../graphs/theme_custom.R")
-
-TOPK_Accuracy <- read_csv("../../../graphs/data_graphs/TOPK_Accuracy.csv")
-
 plot_TOPK_Accuracy <- function(data){
   plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Topk))+
     ggtitle("")+
@@ -253,12 +250,7 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 ## Reprise 
 
 ```{r}
-
-library(readr)
-library(ggplot2)
-source("../../../graphs/theme_custom.R")
-
-Accuracy_reprise <- read_csv("../../../graphs/data_graphs/Accuracy_reprise.csv")%>%
+Accuracy_reprise <- Accuracy_reprise %>%
       mutate(
            Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%"))
       )
@@ -284,12 +276,7 @@ plot_Accuracy_reprise(Accuracy_reprise)
 
 ## heterogene
 ```{r}
-
-library(readr)
-library(ggplot2)
-source("../../../graphs/theme_custom.R")
-
-F1_distrib_by_cat <- read_csv("../../../graphs/data_graphs/F1_distrib_by_cat.csv")%>%
+F1_distrib_by_cat <- F1_distrib_by_cat %>%
       mutate(
            Group = factor(Group, levels = c("Catégories représentant 50% des données",
                                             "Catégories représentant 25% des données",
@@ -323,14 +310,6 @@ plot_F1_distrib_by_cat(F1_distrib_by_cat)
 ```
 ## Indice de confiance 
 ```{r}
-
-library(readr)
-library(ggplot2)
-source("../../../graphs/theme_custom.R")
-
-IC_distrib <- read_csv("../../../graphs/data_graphs/IC_distrib.csv")
-IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
-
 plot_IC_distrib <- function(data, thresholds, ypos){
   plot <- ggplot(data)+
     ggtitle("")+
