@@ -14,6 +14,7 @@ plot_Accuracy_lvl <- function(data){
     geom_bar(stat = "identity", position = position_dodge())+
     geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size = 6)+
     scale_fill_manual(values=c(Palette_col), labels=c("Données guichet unique", "Données test"))+
+    annotate("rect", xmin=c(0.5), xmax=c(1.5), ymin=c(-0.01) , ymax=c(1), color="#EE0220", fill=NA, size=1.5)+
     guides(fill=guide_legend(nrow=1, byrow=TRUE))+
     expand_limits(y = 1.)+
     theme_custom()+

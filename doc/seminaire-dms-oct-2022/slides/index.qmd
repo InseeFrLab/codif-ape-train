@@ -3,8 +3,8 @@ title: Codification automatique de l’APE dans le cadre du projet Sirene 4
 subtitle: |
   **[Séminaire DMS]{.orange}**
 author: |
-  Thomas Faria,
-  Tom Seimandi
+  [Thomas Faria](https://github.com/ThomasFaria),
+  [Tom Seimandi](https://github.com/tomseimandi/)
 date: 7 octobre 2022
 slide-number: true
 # uncomment for French presentations:
