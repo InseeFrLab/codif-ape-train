@@ -159,8 +159,8 @@ Racinisation des mots | deratis desinsectis desinfect |
   - un jeu de [**test**]{.blue2}, 20\% des données soit [$\approx$ **2.5 millions**]{.green2} observations
   - un jeu issue du [**guichet unique**]{.blue2} [$\approx$ **15 000**]{.green2} observations
 
- <center>
-```{r fig.width=13,fig.height=4.5}
+
+```{r fig.width=13,fig.height=4.5, fig.align="center"}
 
 plot_GU_TEST_distrib <- function(data){
   plot <- ggplot(data, aes(x=ground_truth_1, y=Share, fill=Type))+
@@ -186,7 +186,6 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
 
 ```
 
-</center>
 
 
 ## Évaluation de la performance {auto-animate=true}
@@ -198,25 +197,31 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
   - Le [**score F1**]{.blue2} : Moyenne harmonique du rappel et de la précision.
 
 
-# Résultats obtenus
+# Principaux résultats
 
-## De bons résultats
+## Une bonne performance globale
 
-```{r}
+
+```{r fig.width=13,fig.height=5, fig.align="center"}
 Accuracy_lvl <- Accuracy_lvl %>%
     mutate(Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1))))
     )
 
 plot_Accuracy_lvl <- function(data){
   plot<- ggplot(data , aes(x=Level, y=Accuracy, fill=Type))+
-    ggtitle("")+
+    ggtitle("Taux de précision pour chaque niveau de la nomenclature du code APE")+
     geom_bar(stat = "identity", position = position_dodge())+
-    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size = 6)+
     scale_fill_manual(values=c(Palette_col), labels=c("Données guichet unique", "Données test"))+
     guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    expand_limits(y = 1.)+
     theme_custom()+
     theme(
-      text = element_text(size = 16)
+      text = element_text(size = 16),
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 18),
+      axis.text.y = element_text(size = 18),
+      axis.text.x = element_text(size = 18),
     )
   return(plot)
 }
@@ -225,19 +230,29 @@ plot_Accuracy_lvl(Accuracy_lvl)
 
 ```
 
-## Top K acc 
 
-```{r}
+- Près de 80% des libellés issus du guichet unique sont correctement codififiés ;
+- Erreurs de prédiction proches dans la nomenclature.
+
+## Une aide à la reprise manuelle
+
+
+```{r fig.width=13,fig.height=5, fig.align="center"}
 plot_TOPK_Accuracy <- function(data){
   plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Topk))+
-    ggtitle("")+
+    ggtitle("Top-K Accuracy pour chaque jeu de données")+
     geom_bar(stat = "identity", position = position_dodge())+
-    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size = 6)+
     scale_fill_manual(values=c(Palette_col))+
+    expand_limits(y = 1.)+
     guides(fill=guide_legend(nrow=1, byrow=TRUE))+
     theme_custom()+
     theme(
-      text = element_text(size = 16)
+      text = element_text(size = 16),
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 18),
+      axis.text.y = element_text(size = 18),
+      axis.text.x = element_text(size = 18),
     )
   return(plot)
 }
@@ -247,35 +262,14 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 
 ```
 
-## Reprise 
 
-```{r}
-Accuracy_reprise <- Accuracy_reprise %>%
-      mutate(
-           Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%"))
-      )
-plot_Accuracy_reprise <- function(data){
-  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
-    ggtitle("")+
-    geom_bar(stat = "identity", position = position_dodge())+
-    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
-    scale_fill_manual(values=c(Palette_col))+
-    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
-    theme_custom()+
-    theme(
-      text = element_text(size = 16)
-    )
-  return(plot)
-}
+- Connaissance des probabilités pour chaque classe ;
+- Dans 94% des cas, la bonne classification se trouve dans les 5 prédictions les plus probables. 
 
+## Une performance hétérogène en fonction des classes
 
-plot_Accuracy_reprise(Accuracy_reprise)
+```{r  fig.width=13,fig.height=7, fig.align="center"}
 
-
-```
-
-## heterogene
-```{r}
 F1_distrib_by_cat <- F1_distrib_by_cat %>%
       mutate(
            Group = factor(Group, levels = c("Catégories représentant 50% des données",
@@ -288,7 +282,7 @@ F1_distrib_by_cat <- F1_distrib_by_cat %>%
 
 plot_F1_distrib_by_cat <- function(data){
   ggplot(data) + 
-    ggtitle("")+
+    ggtitle("Distribution du F1-score en \nfonction de la fréquence des classes")+
     geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
     facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
     theme_custom()+
@@ -296,7 +290,12 @@ plot_F1_distrib_by_cat <- function(data){
     scale_fill_manual(values = Palette_col)+
     theme(strip.placement = "outside",
           strip.text.y = element_blank(),
-          text = element_text(size = 16)
+          text = element_text(size = 16),
+          plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+          legend.text = element_text(size = 18),
+          axis.text.y = element_text(size = 18),
+          axis.text.x = element_text(size = 18),
+          panel.spacing = unit(1, "lines")
     )+
     guides(fill=guide_legend(nrow=2, byrow=TRUE))
   
@@ -308,16 +307,29 @@ plot_F1_distrib_by_cat(F1_distrib_by_cat)
 
 
 ```
-## Indice de confiance 
-```{r}
+
+- Performance mitigée sur plusieurs classes peu fréquentes.
+
+# Indice de confiance et reprise manuelle
+
+## Construction d'un indice de confiance
+
+
+```{r fig.width=13, fig.height=5, fig.align="center"}
 plot_IC_distrib <- function(data, thresholds, ypos){
   plot <- ggplot(data)+
-    ggtitle("")+
+    ggtitle("Distribution de l’indice de confiance en \nfonction du résultat de la prédiction")+
     geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
     scale_fill_manual(values=c(Palette_col),labels=c("Mauvaises prédictions", "Bonnes prédictions"))+
     geom_vline(xintercept = thresholds$x, color = rgb(83, 83, 83, maxColorValue = 255))+
-    theme_custom()+ 
-    annotate("text", x = thresholds$x+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
+    theme_custom()+
+    theme(
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 24),
+      axis.text.y = element_text(size = 24),
+      axis.text.x = element_text(size = 24),
+    )+
+    annotate("text", x = thresholds$x+0.03, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"), size = 7)
   
   return(plot)
   
@@ -328,7 +340,44 @@ plot_IC_distrib(IC_distrib, IC_thresholds, 51)
 
 ```
 
-## Résultats hétérogènes
+
+- Objectif : discriminer les *mauvaises* des *bonnes* prédictions ;
+- Indice de confiance retenu : différence des deux probabilité les plus élevée.
+
+
+## Efficacité de la reprise manuelle
+
+
+```{r fig.width=13,fig.height=5, fig.align="center"}
+Accuracy_reprise <- Accuracy_reprise %>%
+      mutate(
+           Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%"))
+      )
+plot_Accuracy_reprise <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
+    ggtitle("Taux de précision en fonction du taux de reprise manuelle effectuée")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size= 5)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16),
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 18),
+      axis.text.y = element_text(size = 18),
+      axis.text.x = element_text(size = 18),
+    )
+  return(plot)
+}
+
+
+plot_Accuracy_reprise(Accuracy_reprise)
+
+
+```
+
+- Optimisation de la reprise manuelle ➨ gain de performance
 
 # Mise en production {auto-animate=true}
 
