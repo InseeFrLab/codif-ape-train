@@ -79,12 +79,12 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 ## Utilisation de n-grams {auto-animate=true}
 
 :::{.incremental}
-- Plongements de mots : [**vectorisation**]{.orange}
+- [**Plongements de mots**]{.orange} : [**vectorisation**]{.blue2}
 - Plongements [**pré-entraînés**]{.orange} disponibles en open-source ;
-- On apprend [**nos propres plongements**]{.orange} de mots ;
+- On apprend [**nos propres**]{.orange} plongements de mots ;
 - On apprend aussi des plongements pour :
-  - Les [**n-grams de mots**]{.orange} ;
-  - Les [**n-grams de caractères**]{.orange} ;
+  - Les [**n-grams de mots**]{.blue2} ;
+  - Les [**n-grams de caractères**]{.blue2} ;
 :::
 
 ## Classifieur linéaire {auto-animate=true}
@@ -92,8 +92,8 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 - [**2 méthodes**]{.orange} pour l'optimisation du classifieur : 
   - [**Softmax standard**]{.blue2} : un [**unique**]{.green2} classifieur multiclasse
   - [**One-vs-all**]{.blue2} : de [**multiples**]{.green2} classifieurs binaires
-- [**Optimisation**]{.orange} : algorithme de type [**descente de gradient stochastique**]{.green2} ;
-- [**Fonction de perte**]{.orange} : [**entropie croisée**]{.green2} ;
+- [**Optimisation**]{.orange} : algorithme de type [**descente de gradient stochastique**]{.blue2} ;
+- [**Fonction de perte**]{.orange} : [**entropie croisée**]{.blue2} ;
 
 ## Classification à partir de plongements lexicaux {auto-animate=true}
 
@@ -108,8 +108,8 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 :::
 
 :::{.incremental}
-- `fastText` : pas de prise en charge des variables catégorielles : concaténation avec le libellé ;
-- Optimisation des paramètres d'entraînement et hyperparamètres avec `mlflow`.
+- [**fastText**]{.blue2} : pas de prise en charge des variables catégorielles : concaténation avec le libellé ;
+- Optimisation des paramètres d'entraînement et hyperparamètres avec [**mlflow**]{.blue2}.
 :::
 ## Prise en compte de variables catégorielles
 
@@ -129,8 +129,8 @@ Cours de musique | NaN | X | 01P |NaN
 
 ## Prétraitements effectués
 
--  [**Nettoyage**]{.orange} indispensable pour l'analyse textuelle 
-- [**Contrainte**]{.orange} : [**simple**]{.blue2}, [**léger**]{.blue2} et facilement [**reproductible**]{.blue2} en Java
+-  [**Nettoyage**]{.orange} indispensable pour l'analyse textuelle.
+- [**Contrainte**]{.orange} : [**simple**]{.blue2}, [**léger**]{.blue2} et facilement [**reproductible**]{.blue2} en Java.
 
 
 Transformation | Libellé |
@@ -138,7 +138,6 @@ Transformation | Libellé |
 Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
 Passage en minuscule | 3 d : la deratisation - la desinsectisation - la desinfection |
 Suppression des ponctuations | 3 d la deratisation la desinsectisation la desinfection |
-Suppression des chiffres | d la deratisation la desinsectisation la desinfection |
 
 ## Prétraitements effectués
 
@@ -146,8 +145,16 @@ Transformation | Libellé |
 --|-------------|
 Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
 ... | ... |
-Suppression des mots à 1 lettre | la deratisation la desinsectisation la desinfection |
-Suppression des stopwords | deratisation desinsectisation desinfection |
+Suppression des chiffres | d la deratisation la desinsectisation la desinfection |
+Suppression des mots à une lettre | la deratisation la desinsectisation la desinfection |
+Suppression des *stopwords* | deratisation desinsectisation desinfection |
+
+## Prétraitements effectués
+
+Transformation | Libellé |
+--|-------------|
+Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
+... | ... |
 Suppression des NaN | deratisation desinsectisation desinfection |
 Racinisation des mots | deratis desinsectis desinfect |
 
@@ -231,8 +238,8 @@ plot_Accuracy_lvl(Accuracy_lvl)
 ```
 
 
-- Près de 80% des libellés issus du guichet unique sont correctement codififiés ;
-- Erreurs de prédiction proches dans la nomenclature.
+- Près de [**80%**]{.orange} des libellés issus du guichet unique sont correctement codififiés ;
+- Erreurs de prédiction [**proches**]{.orange} dans la nomenclature.
 
 ## Une aide à la reprise manuelle
 
@@ -264,7 +271,7 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 
 
 - Connaissance des probabilités pour chaque classe ;
-- Dans 94% des cas, la bonne classification se trouve dans les 5 prédictions les plus probables. 
+- Dans [**94%**]{.orange} des cas, la bonne classification se trouve dans les 5 prédictions les plus probables. 
 
 ## Une performance hétérogène en fonction des classes
 
@@ -282,7 +289,7 @@ F1_distrib_by_cat <- F1_distrib_by_cat %>%
 
 plot_F1_distrib_by_cat <- function(data){
   ggplot(data) + 
-    ggtitle("Distribution du F1-score en \nfonction de la fréquence des classes")+
+    ggtitle("Distribution du F1-score en fonction de la fréquence des classes")+
     geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
     facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
     theme_custom()+
@@ -292,7 +299,7 @@ plot_F1_distrib_by_cat <- function(data){
           strip.text.y = element_blank(),
           text = element_text(size = 16),
           plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
-          legend.text = element_text(size = 18),
+          legend.text = element_text(size = 22),
           axis.text.y = element_text(size = 18),
           axis.text.x = element_text(size = 18),
           panel.spacing = unit(1, "lines")
@@ -308,7 +315,7 @@ plot_F1_distrib_by_cat(F1_distrib_by_cat)
 
 ```
 
-- Performance mitigée sur plusieurs classes peu fréquentes.
+- [**Performance mitigée**]{.orange} sur plusieurs classes peu fréquentes.
 
 # Indice de confiance et reprise manuelle
 
@@ -341,8 +348,8 @@ plot_IC_distrib(IC_distrib, IC_thresholds, 51)
 ```
 
 
-- Objectif : discriminer les *mauvaises* des *bonnes* prédictions ;
-- Indice de confiance retenu : différence des deux probabilité les plus élevée.
+- [**Objectif**]{.orange} : [**discriminer**]{.blue2} les *mauvaises* des *bonnes* prédictions ;
+- [**Indice de confiance retenu**]{.orange} : différence entre les deux probabilités les plus élevées.
 
 
 ## Efficacité de la reprise manuelle
