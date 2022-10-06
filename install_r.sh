@@ -41,5 +41,6 @@ sudo /opt/install-system-libs.sh
 sudo install2.r --error devtools
 sudo install2.r --error readr
 sudo install2.r --error ggplot2
+sudo install2.r --error dplyr
 # Clean
 sudo rm -rf /var/lib/apt/lists/*

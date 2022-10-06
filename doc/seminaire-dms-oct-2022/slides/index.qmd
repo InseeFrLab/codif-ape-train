@@ -45,17 +45,17 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 ## Contexte 
 
 
-- [**Plusieurs changements majeurs**]{.blue2}: 
-  - [**Interne**]{.green2} : Refonte du répertoire [**Sirene 4**]{.orange} ;
+- [**Plusieurs changements majeurs**]{.blue2} : 
+  - [**Interne**]{.green2} : Refonte du répertoire [**Sirene 4**]{.orange}.
   - [**Externe**]{.green2} : Mise en place d'un [**guichet unique**]{.orange}.
 
-- [**Constat**]{.blue2} : [**Sicore**]{.orange} n'est plus l'outil adapté &rarr; 30% de codification automatique.
+- [**Constat**]{.blue2} : [**Sicore**]{.orange} n'est plus l'outil adapté ➨ 30% de codification automatique.
 
 - [**Conséquence**]{.blue2} : moment idéal pour proposer une nouvelle méthodologie de codification automatique de l'APE.
 
 ## Données
 
-- [$\approx 10$ **millions**]{.orange} de liasses d'entreprises issues de Sirene 3 couvrant la période 2014-2022.
+- [$\approx$ **10 millions**]{.orange} de liasses d'entreprises issues de Sirene 3 couvrant la période 2014-2022.
 - [**Données labellisées**]{.orange} par Sicore ou par un gestionnaire.
 - Une observation consiste en : 
   - un [**descriptif textuel**]{.red2} de l'activité
@@ -74,32 +74,32 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 | Classe      | 5224  |Manutention|615|
 | **Sous-classe** | [**5224A**]{.red2} |**Manutention portuaire**|[**732**]{.orange}|
 
-# Méthodologie {auto-animate=true}
+# Méthodologie
 
-## Utilisation de n-grams {auto-animate=true}
+## Vectorisation des libellés
 
-:::{.incremental}
-- [**Plongements de mots**]{.orange} : [**vectorisation**]{.blue2}
-- Plongements [**pré-entraînés**]{.orange} disponibles en open-source ;
-- On apprend [**nos propres**]{.orange} plongements de mots ;
-- On apprend aussi des plongements pour :
-  - Les [**n-grams de mots**]{.blue2} ;
-  - Les [**n-grams de caractères**]{.blue2} ;
-:::
+- [**Plongements lexicaux**]{.orange} : méthode de [**vectorisation**]{.blue2}.
+- Plongements [**pré-entraînés**]{.orange} disponibles en open-source.
+- On apprend [**nos propres**]{.orange} plongements de [**mots**]{.blue2}.
+- Mais aussi des plongements pour :
+  - Les [**n-grams de mots**]{.blue2}.
+  - Les [**n-grams de caractères**]{.blue2}.
 
-## Classifieur linéaire {auto-animate=true}
+Diagramme
 
-- [**2 méthodes**]{.orange} pour l'optimisation du classifieur : 
-  - [**Softmax standard**]{.blue2} : un [**unique**]{.green2} classifieur multiclasse
-  - [**One-vs-all**]{.blue2} : de [**multiples**]{.green2} classifieurs binaires
-- [**Optimisation**]{.orange} : algorithme de type [**descente de gradient stochastique**]{.blue2} ;
-- [**Fonction de perte**]{.orange} : [**entropie croisée**]{.blue2} ;
+## Classifieur linéaire
 
-## Classification à partir de plongements lexicaux {auto-animate=true}
+- [**2 méthodes**]{.orange} pour la classification : 
+  - [**Softmax**]{.blue2} : un [**unique**]{.green2} classifieur multiclasse.
+  - [**One-vs-all**]{.blue2} : de [**multiples**]{.green2} classifieurs binaires.
+- [**Optimisation**]{.orange} : algorithme de type [**descente de gradient stochastique**]{.blue2}.
+- [**Fonction de perte**]{.orange} : [**entropie croisée**]{.blue2}.
+
+## Classification à partir de plongements lexicaux
 
 ![](img/fastText_desc_ape.png){height="400" fig-align="center"}
 
-## Implémentation, entraînement {auto-animate=true}
+## Implémentation, entraînement
 
 ::: {layout-ncol=2}
 ![](img/fasttext.png){height="100"}
@@ -107,13 +107,12 @@ IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 ![](img/mlflow.png){height="100"}
 :::
 
-:::{.incremental}
-- [**fastText**]{.blue2} : pas de prise en charge des variables catégorielles : concaténation avec le libellé ;
+- [**fastText**]{.blue2} : librairie rapide (`C++`) et facilement utilisable.
 - Optimisation des paramètres d'entraînement et hyperparamètres avec [**mlflow**]{.blue2}.
-:::
-## Prise en compte de variables catégorielles
 
-- [**Concaténation**]{.orange} du libellé ainsi que les noms et valeurs des variables annexes :
+## Prise en compte des variables catégorielles
+
+- [**Concaténation**]{.orange} du libellé avec les noms et valeurs des variables annexes :
 
 Libellé | NAT | TYP | EVT | SUR | 
 --------|-----|-----|-----|-----|
@@ -125,7 +124,7 @@ Cours de musique | NaN | X | 01P |NaN
 
 "Cours de musique [NAT]{.green2}\_[NaN]{.blue2} [TYP]{.green2}\_[X]{.blue2} [EVT]{.green2}\_[01P]{.blue2} [SUR]{.green2}\_[NaN]{.blue2}"
 
-- [**Méthode imparfaite**]{.orange} : jetons "AT_" ou "T_0" utilisés
+- [**Méthode imparfaite**]{.orange} : 3-grams "AT_" ou "T_0" utilisés.
 
 ## Prétraitements effectués
 
@@ -160,7 +159,7 @@ Racinisation des mots | deratis desinsectis desinfect |
 
 
 
-## Évaluation de la performance {auto-animate=true}
+## Évaluation de la performance
 
 - Évaluation sur [**2 jeux de données**]{.orange} :
   - un jeu de [**test**]{.blue2}, 20\% des données soit [$\approx$ **2.5 millions**]{.green2} observations
@@ -195,12 +194,12 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
 
 
 
-## Évaluation de la performance {auto-animate=true}
+## Évaluation de la performance
 
 - [**4 métriques**]{.orange} pour l'analyse de la performance : 
-  - Le [**taux de précision**]{.blue2} : taux global de liasses bien prédites (*accuracy*) ;
-  - Le [**rappel**]{.blue2} : taux de bonnes prédictions de la classe K parmi les vraies valeurs K ;
-  - La [**précision**]{.blue2} : taux de bonnes prédictions de la classe K parmi les prédictions K ;
+  - Le [**taux de précision**]{.blue2} : taux global de liasses bien prédites (*accuracy*).
+  - Le [**rappel**]{.blue2} : taux de bonnes prédictions de la classe K parmi les vraies valeurs K.
+  - La [**précision**]{.blue2} : taux de bonnes prédictions de la classe K parmi les prédictions K.
   - Le [**score F1**]{.blue2} : Moyenne harmonique du rappel et de la précision.
 
 
@@ -238,7 +237,7 @@ plot_Accuracy_lvl(Accuracy_lvl)
 ```
 
 
-- Près de [**80%**]{.orange} des libellés issus du guichet unique sont correctement codififiés ;
+- Près de [**80%**]{.orange} des libellés issus du guichet unique sont correctement codifiés.
 - Erreurs de prédiction [**proches**]{.orange} dans la nomenclature.
 
 ## Une aide à la reprise manuelle
@@ -269,8 +268,7 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 
 ```
 
-
-- Connaissance des probabilités pour chaque classe ;
+- Connaissance des probabilités pour chaque classe.
 - Dans [**94%**]{.orange} des cas, la bonne classification se trouve dans les 5 prédictions les plus probables. 
 
 ## Une performance hétérogène en fonction des classes
@@ -347,8 +345,7 @@ plot_IC_distrib(IC_distrib, IC_thresholds, 51)
 
 ```
 
-
-- [**Objectif**]{.orange} : [**discriminer**]{.blue2} les *mauvaises* des *bonnes* prédictions ;
+- [**Objectif**]{.orange} : [**discriminer**]{.blue2} les *mauvaises* des *bonnes* prédictions.
 - [**Indice de confiance retenu**]{.orange} : différence entre les deux probabilités les plus élevées.
 
 
@@ -362,7 +359,7 @@ Accuracy_reprise <- Accuracy_reprise %>%
       )
 plot_Accuracy_reprise <- function(data){
   plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
-    ggtitle("Taux de précision en fonction du taux de reprise manuelle effectuée")+
+    ggtitle("Accuracy en fonction du taux de reprise manuelle effectuée")+
     geom_bar(stat = "identity", position = position_dodge())+
     geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size= 5)+
     scale_fill_manual(values=c(Palette_col))+
@@ -384,29 +381,36 @@ plot_Accuracy_reprise(Accuracy_reprise)
 
 ```
 
-- Optimisation de la reprise manuelle ➨ gain de performance
+- Optimisation de la reprise manuelle ➨ [**gain de performance**]{.orange}.
 
-# Mise en production {auto-animate=true}
+# Enjeux liés à la mise en production
 
-## Les enjeux {auto-animate=true}
+## Organisation prévue
 
-:::{.incremental}
-- Intégration dans [**Sirene 4**]{.orange} pour coder le guichet unique;
-- Module de codification : API construite sur `JFastText` :arrow_right: pré-traitements ?
-- Place et utilisation du module dans le SI Sirene 4;
-- Définition du contenu des [**logs**]{.orange}.
+- Intégration dans [**Sirene 4**]{.orange} pour coder le guichet unique.
+- Module de codification : API construite sur `JFastText`.
+- Définition du contenu des [**logs**]{.orange} pour contrôle futur.
+- [**Double rôle**]{.orange} du SSP Lab à moyen terme :
+  - [**Livraison**]{.blue2} des modèles entraînés.
+  - [**Contrôle**]{.blue2} qualité.
+
+
+:::{.callout-important}
+## À clarifier
+
+1) Identification des liasses non-codables.
+2) Utilisation du module comme aide à la reprise manuelle.
 :::
 
-## Organisation {auto-animate=true}
+## Organisation à terme ?
 
 ![](img/orga_ape.png)
 
-## Maintenance, réentraînement {auto-animate=true}
+## Problématiques pour la codification en production
 
-:::{.incremental}
-- [**Monitoring du modèle**]{.orange} en production : quoi et à quelle fréquence ?
-- [**Monitoring des liasses**]{.orange} à coder ?
+- [**Gestion des versions**]{.orange} des modèles en production ?
+- [**Contrôle du modèle**]{.orange} en production : quoi et à quelle fréquence ?
+- [**Contrôle des entrées**]{.orange} à coder ?
 - [**Réentraînement**]{.orange} d'un modèle : comment et à quelle fréquence ?
 - Utilisation et maintenance des différents modules ?
-- Gestion du [**changement de la NAF**]{.orange} ?
-:::
+- Gestion des [**changements de nomenclature**]{.orange} ?
