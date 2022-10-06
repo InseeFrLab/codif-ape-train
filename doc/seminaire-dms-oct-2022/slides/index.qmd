@@ -136,9 +136,9 @@ Racinisation des mots | deratis desinsectis desinfect |
 
 
 
-## Evaluation de la performance {auto-animate=true}
+## Évaluation de la performance {auto-animate=true}
 
-- Evaluation sur [**2 jeux de données**]{.orange} :
+- Évaluation sur [**2 jeux de données**]{.orange} :
   - un jeu de [**test**]{.blue2}, 20\% des données soit [$\approx$ **2.5 millions**]{.green2} observations
   - un jeu issue du [**guichet unique**]{.blue2} [$\approx$ **15 000**]{.green2} observations
 
@@ -177,7 +177,7 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
 </center>
 
 
-## Evaluation de la performance {auto-animate=true}
+## Évaluation de la performance {auto-animate=true}
 
 - [**4 métriques**]{.orange} pour l'analyse de la performance : 
   - Le [**taux de précision**]{.blue2} : taux global de liasses bien prédites (*accuracy*) ;
@@ -190,7 +190,164 @@ plot_GU_TEST_distrib(GU_TEST_distrib)
 
 ## De bons résultats
 
+```{r}
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+
+source("../../../graphs/theme_custom.R")
+
+Accuracy_lvl <- read_csv("../../../graphs/data_graphs/Accuracy_lvl.csv")%>%
+    mutate(Level = factor(Level, levels = paste("Niveau", paste(seq(5,1,-1))))
+    )
+
+plot_Accuracy_lvl <- function(data){
+  plot<- ggplot(data , aes(x=Level, y=Accuracy, fill=Type))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col), labels=c("Données guichet unique", "Données test"))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+
+plot_Accuracy_lvl(Accuracy_lvl)
+
+
+```
+
+## Top K acc 
+
+```{r}
+
+library(readr)
+library(ggplot2)
+source("../../../graphs/theme_custom.R")
+
+TOPK_Accuracy <- read_csv("../../../graphs/data_graphs/TOPK_Accuracy.csv")
+
+plot_TOPK_Accuracy <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Topk))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+
+plot_TOPK_Accuracy(TOPK_Accuracy)
+
+
+```
+
+## Reprise 
+
+```{r}
+
+library(readr)
+library(ggplot2)
+source("../../../graphs/theme_custom.R")
+
+Accuracy_reprise <- read_csv("../../../graphs/data_graphs/Accuracy_reprise.csv")%>%
+      mutate(
+           Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%"))
+      )
+plot_Accuracy_reprise <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
+    ggtitle("")+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16)
+    )
+  return(plot)
+}
+
+
+plot_Accuracy_reprise(Accuracy_reprise)
+
+
+```
+
+## heterogene
+```{r}
+
+library(readr)
+library(ggplot2)
+source("../../../graphs/theme_custom.R")
+
+F1_distrib_by_cat <- read_csv("../../../graphs/data_graphs/F1_distrib_by_cat.csv")%>%
+      mutate(
+           Group = factor(Group, levels = c("Catégories représentant 50% des données",
+                                            "Catégories représentant 25% des données",
+                                            "Catégories représentant 20% des données",
+                                            "Catégories représentant 5% des données"
+                                            
+           ))
+           )
+
+plot_F1_distrib_by_cat <- function(data){
+  ggplot(data) + 
+    ggtitle("")+
+    geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
+    facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
+    theme_custom()+
+    xlim(c(0,1))+
+    scale_fill_manual(values = Palette_col)+
+    theme(strip.placement = "outside",
+          strip.text.y = element_blank(),
+          text = element_text(size = 16)
+    )+
+    guides(fill=guide_legend(nrow=2, byrow=TRUE))
+  
+}
+
+
+
+plot_F1_distrib_by_cat(F1_distrib_by_cat)
+
+
+```
 ## Indice de confiance 
+```{r}
+
+library(readr)
+library(ggplot2)
+source("../../../graphs/theme_custom.R")
+
+IC_distrib <- read_csv("../../../graphs/data_graphs/IC_distrib.csv")
+IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
+
+plot_IC_distrib <- function(data, thresholds, ypos){
+  plot <- ggplot(data)+
+    ggtitle("")+
+    geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col),labels=c("Mauvaises prédictions", "Bonnes prédictions"))+
+    geom_vline(xintercept = thresholds$x, color = rgb(83, 83, 83, maxColorValue = 255))+
+    theme_custom()+ 
+    annotate("text", x = thresholds$x+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
+  
+  return(plot)
+  
+}
+
+plot_IC_distrib(IC_distrib, IC_thresholds, 51)
+
+
+```
 
 ## Résultats hétérogènes
 
