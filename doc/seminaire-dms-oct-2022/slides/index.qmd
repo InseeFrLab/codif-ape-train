@@ -27,6 +27,10 @@ from: markdown+emoji
 
 ```{r, echo=FALSE}
 ## Initialisation
+list.of.packages <- c("ggplot2", "readr", "dplyr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(readr)
 library(ggplot2)
 library(dplyr)
