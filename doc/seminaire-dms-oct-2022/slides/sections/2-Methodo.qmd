@@ -9,7 +9,7 @@
   - Les [**n-grams de mots**]{.blue2}.
   - Les [**n-grams de caractères**]{.blue2}.
 
-Diagramme
+![](img/n-grams.png){height="200"}
 
 ## Classifieur linéaire
 
