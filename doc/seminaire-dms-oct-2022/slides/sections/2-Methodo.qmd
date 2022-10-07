@@ -6,10 +6,9 @@
 - Plongements [**pré-entraînés**]{.orange} disponibles en open-source.
 - On apprend [**nos propres**]{.orange} plongements de [**mots**]{.blue2}.
 - Mais aussi des plongements pour :
-  - Les [**n-grams de mots**]{.blue2}.
-  - Les [**n-grams de caractères**]{.blue2}.
+  - Les [**n-grams de mots**]{.blue2} et [**n-grams de caractères**]{.blue2}.
 
-![](img/n-grams.png){height="200"}
+![](img/n-grams.png){height="250" fig-align="center"}
 
 ## Classifieur linéaire
 

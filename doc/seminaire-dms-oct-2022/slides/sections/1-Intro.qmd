@@ -1,12 +1,12 @@
 ## Contexte 
 
-- [**Plusieurs changements majeurs**]{.blue2} : 
-  - [**Interne**]{.green2} : Refonte du répertoire [**Sirene 4**]{.orange}.
-  - [**Externe**]{.green2} : Mise en place d'un [**guichet unique**]{.orange}.
+- [**Plusieurs changements majeurs**]{.orange} : 
+  - [**Interne**]{.blue2} : Refonte du répertoire [**Sirene 4**]{.green2}.
+  - [**Externe**]{.blue2} : Mise en place d'un [**guichet unique**]{.green2}.
 
-- [**Constat**]{.blue2} : [**Sicore**]{.orange} n'est plus l'outil adapté ➨ 30% de codification automatique.
+- [**Constat**]{.orange} : [**Sicore**]{.blue2} n'est plus l'outil adapté ➨ 30% de codification automatique.
 
-- [**Conséquence**]{.blue2} : moment idéal pour proposer une nouvelle méthodologie de codification automatique de l'APE.
+- [**Conséquence**]{.orange} : moment idéal pour proposer une nouvelle méthodologie de codification automatique de l'APE.
 
 ## Données
 
