@@ -103,6 +103,11 @@ def clean_lib(df, text_feature):
         # On passe tout en minuscule
         df[text_feature] = df[text_feature].map(str.lower)
 
+        # On supprime les mots d'une seule lettre
+        df[text_feature] = df[text_feature].replace(
+            to_replace=r"(?:\s|^)[a-z]{1}(?:\s|$)", value="", regex=True
+        )
+
         # On supprime toutes les ponctuations
         df[text_feature] = df[text_feature].replace(
             to_replace=r"[^\w\s]", value=" ", regex=True
@@ -123,11 +128,6 @@ def clean_lib(df, text_feature):
         #    to_replace=Word2remove, value="", regex=True
         #)
 
-        # On supprime les mots d'une seule lettre
-        df[text_feature] = df[text_feature].replace(
-            to_replace=r"\b[a-z]{1}\b", value="", regex=True
-        )
-
         # On supprime les multiple space
         df[text_feature] = df[text_feature].replace(r"\s\s+", " ", regex=True)
 
@@ -144,22 +144,24 @@ def clean_lib(df, text_feature):
         # On tokenize tous les libellés
         libs_token = [lib.split() for lib in df[text_feature].to_list()]
 
+        # Pour chaque libellé on supprime les stopword et on racinise les mots
+        libs_token = [
+            [
+                stemmer.stem(word)
+                for word in libs_token[i]
+                if word not in stopwords
+            ]
+            for i in range(len(libs_token))
+        ]
+
         # On supprime les mots duppliqué dans un même libellé
         libs_token = [
             sorted(set(libs_token[i]), key=libs_token[i].index)
             for i in range(len(libs_token))
         ]
 
-        # Pour chaque libellé on supprime les stopword et on racinise les mots
         df[text_feature] = [
-            " ".join(
-                [
-                    stemmer.stem(word)
-                    for word in libs_token[i]
-                    if word not in stopwords
-                ]
-            )
-            for i in range(len(libs_token))
+            " ".join(libs_token[i]) for i in range(len(libs_token))
         ]
 
         return df
@@ -233,24 +235,6 @@ if __name__ == "__main__":
     df["first_proba"] = [prediction[2] for prediction in predictions]
     df["second_proba"] = [prediction[3] for prediction in predictions]
 
-
-    model = fasttext.load_model("../models/model.bin")
-
-    tmp = model.predict(df.iloc[:]["libelleNettoye"].to_list(), k=2)
-
-    dict_results = {f"pred_{pred+1}" : [tmp[0][lib][pred][-5:] for lib in range(len(tmp[0]))]
-    for pred in range(2)
-    } | {
-    f"prob_{pred+1}" : [tmp[1][lib][pred] for lib in range(len(tmp[0]))]
-    for pred in range(2)
-    }
-
-    df_results = pd.DataFrame(dict_results)
-    df_results
-
-    sum(df.first_pred == df_results.pred_1)/df.shape[0]
-
-
     stemmer = SnowballStemmer(language="french")
     stopwords = tuple(ntlk_stopwords.words("french"))
 
@@ -264,4 +248,4 @@ if __name__ == "__main__":
     lib_clean_JAVA = df.libelleNettoye.apply(lambda x : x.split(" AUTO")[0]).to_list()
     compare_libs = pd.DataFrame({"RAW" : lib_raw, "PYTHON" : lib_clean_PY, "JAVA" : lib_clean_JAVA})
     compare_libs["CHECK"] = compare_libs.PYTHON ==  compare_libs.JAVA
-    compare_libs
+    compare_libs.to_csv("comparison.csv")
