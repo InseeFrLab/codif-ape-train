@@ -134,6 +134,7 @@ if __name__ == "__main__":
         [
             parse_raw_input(info_input, INFO_FIELDS, INFO_REGEXES)
             for info_input in df_info.description
+            if not info_input.__contains__('""')
         ]
     )
 
