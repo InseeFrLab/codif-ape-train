@@ -104,8 +104,8 @@ def clean_lib(df, text_feature):
         df[text_feature] = df[text_feature].map(str.lower)
 
         # On supprime les mots d'une seule lettre
-        df[text_feature] = df[text_feature].replace(
-            to_replace=r"(?:\s|^)[a-z]{1}(?:\s|$)", value="", regex=True
+        df[text_feature] = df[text_feature].apply(
+            lambda x: ' '.join([w for w in x.split() if len(w) > 1])
         )
 
         # On supprime toutes les ponctuations
