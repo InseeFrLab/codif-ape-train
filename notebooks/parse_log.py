@@ -103,6 +103,17 @@ def clean_lib(df, text_feature):
         # On passe tout en minuscule
         df[text_feature] = df[text_feature].map(str.lower)
 
+        # supprime hyphen pour les mots comme e-commerce
+        df[text_feature] = df[text_feature].replace(
+            to_replace=r"e-", value="e", regex=True
+        )
+
+        # accole le e pour les mots comme e-commerce
+        df[text_feature] = df[text_feature].replace(
+            to_replace=r"\be\s", value=" e", regex=True
+        )
+
+        # On supprime toutes les ponctuations sauf hyphens
         # On supprime les mots d'une seule lettre
         df[text_feature] = df[text_feature].apply(
             lambda x: ' '.join([w for w in x.split() if len(w) > 1])
