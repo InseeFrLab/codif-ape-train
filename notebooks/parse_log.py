@@ -114,19 +114,29 @@ def clean_lib(df, text_feature):
         )
 
         # On supprime toutes les ponctuations sauf hyphens
+        df[text_feature] = df[text_feature].replace(
+            to_replace=r"[^\w\s&&[^_-]]+", value=" ", regex=True
+        )
+
         # On supprime les mots d'une seule lettre
         df[text_feature] = df[text_feature].apply(
             lambda x: ' '.join([w for w in x.split() if len(w) > 1])
         )
 
-        # On supprime toutes les ponctuations
-        df[text_feature] = df[text_feature].replace(
-            to_replace=r"[^\w\s]", value=" ", regex=True
-        )
-
         # On supprime tous les chiffres
         df[text_feature] = df[text_feature].replace(
             to_replace=r"[\d+]", value=" ", regex=True
+        )
+
+
+        # On supprime les mots d'une seule lettre
+        df[text_feature] = df[text_feature].apply(
+            lambda x: ' '.join([w for w in x.split() if len(w) > 1])
+        )
+
+        # On supprime toutes les ponctuations DONT hyphens
+        df[text_feature] = df[text_feature].replace(
+            to_replace=r"[^\w\s]+", value=" ", regex=True
         )
 
         # On supprime les longs mots sans sens
