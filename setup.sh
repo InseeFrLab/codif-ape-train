@@ -2,6 +2,9 @@
 sudo apt-get update
 sudo apt-get install p7zip*
 
+git clone https://oauth2:$GITLAB_TOKEN@git.lab.sspcloud.fr/ssplab/codification-ape.git
+cd codification-ape
+
 pip install -r requirements.txt
 pre-commit install
 
