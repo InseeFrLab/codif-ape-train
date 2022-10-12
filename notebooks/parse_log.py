@@ -113,9 +113,9 @@ def clean_lib(df, text_feature):
             to_replace=r"\be\s", value=" e", regex=True
         )
 
-        # On supprime toutes les ponctuations sauf hyphens
+        # On supprime toutes les ponctuations
         df[text_feature] = df[text_feature].replace(
-            to_replace=r"[^\w\s&&[^_-]]+", value=" ", regex=True
+            to_replace=r"[^\w\s]+", value=" ", regex=True
         )
 
         # On supprime les mots d'une seule lettre
@@ -133,12 +133,7 @@ def clean_lib(df, text_feature):
         df[text_feature] = df[text_feature].apply(
             lambda x: ' '.join([w for w in x.split() if len(w) > 1])
         )
-
-        # On supprime toutes les ponctuations DONT hyphens
-        df[text_feature] = df[text_feature].replace(
-            to_replace=r"[^\w\s]+", value=" ", regex=True
-        )
-
+        
         # On supprime les longs mots sans sens
         #df[text_feature] = df[text_feature].replace(
         #    to_replace=LongWord2remove, value="", regex=True
@@ -270,3 +265,4 @@ if __name__ == "__main__":
     compare_libs = pd.DataFrame({"RAW" : lib_raw, "PYTHON" : lib_clean_PY, "JAVA" : lib_clean_JAVA})
     compare_libs["CHECK"] = compare_libs.PYTHON ==  compare_libs.JAVA
     compare_libs.to_csv("comparison.csv")
+    print(stopwords)
