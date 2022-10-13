@@ -1,0 +1,65 @@
+---
+title: Codification automatique de l’APE dans le cadre du projet Sirene 4 
+subtitle: |
+  **[Séminaire DMS]{.orange}**
+author: |
+  [Thomas Faria](https://github.com/ThomasFaria),
+  [Tom Seimandi](https://github.com/tomseimandi/)
+date: 7 octobre 2022
+slide-number: true
+# uncomment for French presentations:
+# lang: fr-FR
+# for blind readers:
+slide-tone: false
+chalkboard: # press the B key to toggle chalkboard
+  theme: whiteboard
+# uncomment to use the multiplex mode:
+# multiplex: true
+format:
+  onyxia-revealjs:
+    output-file: index.html
+controls: true
+css: custom.css
+from: markdown+emoji
+---
+
+# Introduction
+
+```{r, echo=FALSE}
+## Initialisation
+list.of.packages <- c("ggplot2", "readr", "dplyr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+source("../../../graphs/theme_custom.R")
+
+Accuracy_lvl <- read_csv("../../../graphs/data_graphs/Accuracy_lvl.csv")
+GU_TEST_distrib <- read_csv("../../../graphs/data_graphs/GU_TEST_distrib.csv")
+TOPK_Accuracy <- read_csv("../../../graphs/data_graphs/TOPK_Accuracy.csv")
+Accuracy_reprise <- read_csv("../../../graphs/data_graphs/Accuracy_reprise.csv")
+F1_distrib_by_cat <- read_csv("../../../graphs/data_graphs/F1_distrib_by_cat.csv")
+IC_distrib <- read_csv("../../../graphs/data_graphs/IC_distrib.csv")
+IC_thresholds <- read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
+
+```
+
+{{< include sections/1-Intro.qmd >}}
+
+# Méthodologie
+
+{{< include sections/2-Methodo.qmd >}}
+
+# Principaux résultats
+
+{{< include sections/3-Resultats.qmd >}}
+
+# Indice de confiance et reprise manuelle
+
+{{< include sections/4-IC.qmd >}}
+
+# Enjeux liés à la mise en production
+
+{{< include sections/5-MiseProd.qmd >}}

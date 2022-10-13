@@ -1,6 +1,7 @@
 stages:
     - static
     - test
+    - deploy
 
 unit-test:
     stage: test
@@ -64,3 +65,15 @@ isort:
     allow_failure: true
     only:
         - merge_requests
+
+pages:
+  stage: deploy
+  image: inseefrlab/onyxia-r-minimal
+  script:
+    - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
+    - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
+    - mv doc/seminaire-dms-oct-2022/slides public
+    - mv setup.sh public/setup.sh
+  artifacts:
+    paths:
+      - public

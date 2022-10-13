@@ -8,11 +8,9 @@ theme_custom <- function(){
     theme(
       axis.title.x=element_blank(),
       axis.title.y=element_blank(),
-      axis.text.x = element_text(colour = 'black'),
-      axis.text.y = element_text(colour = 'black', size = 10),
       legend.title = element_blank(),
-      axis.ticks = element_line(color = 'black'),
-      axis.ticks.length = unit(4, "pt"),
+      axis.ticks = element_line(color = dark_grey),
+      axis.ticks.length = unit(5, "pt"),
       legend.position = "bottom",
       strip.text.x = element_text(size = 10),
       strip.text.y = element_text(size = 10),
@@ -21,11 +19,12 @@ theme_custom <- function(){
       plot.subtitle=element_text(size =10, colour = dark_blue),
       plot.title=element_text(size=12,face="bold", colour = dark_blue),
       panel.background = element_rect(colour = light_grey),
-      axis.line = element_line(color = 'black'),
+      axis.line = element_line(color = dark_grey),
       legend.margin=margin(t = -0.1, b =-0.1, unit='cm'),
       legend.key.size = unit(0.2, "cm"),
       legend.key.width = unit(0.4,"cm"))
 }
+
 ## Customize ECB palette
 pal_col <- rbind(c(0, 50, 153),
                   c(255, 180, 0),
