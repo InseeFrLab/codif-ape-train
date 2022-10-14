@@ -16,7 +16,6 @@ class FileSystem:
         endpoint: str = os.environ["AWS_S3_ENDPOINT"],
         key: str = os.environ["AWS_ACCESS_KEY_ID"],
         secret: str = os.environ["AWS_SECRET_ACCESS_KEY"],
-        token: str = os.environ["AWS_SESSION_TOKEN"]
     ):
         """
         Constructor for the FileSystem class.
@@ -24,7 +23,6 @@ class FileSystem:
         self.endpoint = endpoint
         self.key = key
         self.secret = secret
-        self.token = token
 
     def get_file_system(self) -> S3FileSystem:
         """
@@ -34,5 +32,4 @@ class FileSystem:
             client_kwargs={"endpoint_url": "https://" + self.endpoint},
             key=self.key,
             secret=self.secret,
-            token=self.token,
         )
