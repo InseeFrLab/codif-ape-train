@@ -32,15 +32,11 @@ naf <- naf  %>%
   mutate_all(~sub("\\.", "", .))%>%
   rename(APE_SICORE_NEW = NIV5)
 
-Lib2remove <- arrow::read_csv_arrow("~/codification-ape/data/Lib2remove.csv")
+#Lib2remove <- arrow::read_csv_arrow("~/codification-ape/data/Lib2remove.csv")
 
 ##### Pré-traitement sur la base de données #####
 
-Lib2remove <- Lib2remove%>%
-  mutate(LIB_CLEAN = tolower(LIB))
-
 dff <- df%>%
-  select(LIA_NUM, DATE, LIB_SICORE, APE_SICORE)%>%
   mutate(LIB_CLEAN = tolower(LIB_SICORE), #On vire les trucs vide de sens qui doivent etre viré en amont du modèle
          LIB_CLEAN = str_replace_all(LIB_CLEAN, "\\bidem\\b|\\bvoir ci dessous\\b|\\[vide\\]|\\bundefined\\b|\\bpas d objet\\b|\\(voir ci dessus\\)|\\(voir extrait siege social\\/etablissement principal\\)|\\bcf activite principale\\b|\\bcf activite principale et objet\\b|\\bcf activites de l entreprise\\b|\\bcf activites principales de l entreprise\\b|\\bcf actvites principales\\b|\\bcf k bis\\b", " "),
          LIB_CLEAN = str_replace_all(LIB_CLEAN, "\\bcf le principales activites de l  entreprise\\b|\\bcf le sprincipale activites de l  entreprise\\b|\\bcf le sprincipales activites de l  entreprise\\b|\\bcf les activites principales de l  entreprise\\b|\\bcf les ppales activites de l  entreprise\\b|\\bcf les ppales activites de la ste\\b|\\bcf les principale activites de l  entreprise\\b|\\bcf les principales activites\\b|\\bcf les principales activites de l  entreprise\\b", " "),
@@ -71,14 +67,19 @@ dff <- df%>%
   )%>%
   mutate(LIB_CLEAN = na_if(str_squish(LIB_CLEAN), "")
   )%>% 
-  drop_na(APE_SICORE, LIB_CLEAN)
+  drop_na(APE_SICORE, LIB_CLEAN)%>% 
+  mutate(LIB_CLEAN_CAT = paste0(LIB_CLEAN, 
+                                ' AUTO_', AUTO, 
+                                ' NAT_SICORE_', NAT_SICORE, 
+                                ' EVT_SICORE_', EVT_SICORE, 
+                                ' SURF_',SURF))
 
-LibDuplicated <- dff%>%subset(duplicated(LIB_CLEAN))%>%pull(LIB_CLEAN)%>%unique()
-df_LibDuplicated <- dff%>%subset(LIB_CLEAN %in% LibDuplicated)
+LibDuplicated <- dff%>%subset(duplicated(LIB_CLEAN_CAT))%>%pull(LIB_CLEAN_CAT)%>%unique()
+df_LibDuplicated <- dff%>%subset(LIB_CLEAN_CAT %in% LibDuplicated)
 
 # Get the most frequent code for a given lib and compute the frequency of this code
 APE_libs_proportions <- df_LibDuplicated%>%
-  group_by(LIB_CLEAN)%>%
+  group_by(LIB_CLEAN_CAT)%>%
   summarize(
     APE_SICORE_NEW = names(which.max(table(APE_SICORE))),
     NbDiff = length(unique(APE_SICORE)),
@@ -94,7 +95,7 @@ libs_to_harmonised <- APE_libs_proportions%>%
 # On récupère les libs dont on ne connait pas assez bien le bon code APE pour les supprimer
 libs_to_remove <- APE_libs_proportions%>%
   filter(Prop >= 0.48)%>%
-  pull(LIB_CLEAN)
+  pull(LIB_CLEAN_CAT)
 
 # On regarde combien d'observation cela représente
 APE_libs_proportions%>%
@@ -102,35 +103,39 @@ APE_libs_proportions%>%
   pull(N)%>%
   sum()
 
-# reaffecter les bon codes
-# reconstruire la base
-zz <- dff%>% left_join(APE_libs_proportions%>%select(LIB_CLEAN, APE_SICORE_NEW))%>%
+# Harmonisation automatique en fonction du nombre d'occurence d'un libellé 
+dff <- dff%>% left_join(APE_libs_proportions%>%select(LIB_CLEAN_CAT, APE_SICORE_NEW))%>%
   mutate(APE_SICORE_NEW = case_when(is.na(APE_SICORE_NEW) ~ APE_SICORE,
                                     T ~ APE_SICORE_NEW)
   )%>%
-  filter(!(LIB_CLEAN %in% libs_to_remove))
-  
-  
+  filter(!(LIB_CLEAN_CAT %in% libs_to_remove))
+
+# Harmonisation arbitraire selon les requêtes de l'équipe métier
+dff <- dff %>% mutate(
+  APE_SICORE_NEW = case_when(
+  grepl('lmnp|loueur en meuble non professionnel|loueur bailleur non professionnel|location meublee non professionnelle|loueur meuble non professionnel|loueurs en meubles non professionnels|loueur en meubl non professionnel|loueur en meubles non professionnel', LIB_CLEAN) ~ "5520Z",
+  TRUE ~ APE_SICORE_NEW
+  )
+)
+
+# On selection les variables necessaires pour l'entrainement du modèle
+dff <- dff %>%
   select(LIA_NUM,DATE, APE_SICORE_NEW, LIB_SICORE, EVT_SICORE, AUTO, NAT_SICORE, SURF)%>%
   rename(APE_SICORE = APE_SICORE_NEW)
 
 
-dd<- zz %>% filter(APE_SICORE != APE_SICORE_NEW)
-
-aa<-df_LibDuplicated %>%filter(LIB_CLEAN == "livraison de repas domicile velo gestion de parc de trottinettes")
-
-
-#"\\bidem\\b|\\bvoir ci dessous\\b|\[vide\]|\\bundefined\\b|\\bpas d objet\\b|\(voir ci dessus\)|\(voir extrait siege social\/etablissement principal\)|\\bcf activite principale\\b|\\bcf activite principale et objet\\b|\\bcf activites de l entreprise\\b|\\bcf activites principales de l entreprise\\b|\\bcf actvites principales\\b|\\bcf k bis\\b|\\bcf le principales activites de l  entreprise\\b|\\bcf le sprincipale activites de l  entreprise\\b|\\bcf le sprincipales activites de l  entreprise\\b|\\bcf les activites principales de l  entreprise\\b|\\bcf les ppales activites de l  entreprise\\b|\\bcf les ppales activites de la ste\\b|\\bcf les principale activites de l  entreprise\\b|\\bcf les principales activites\\b|\\bcf les principales activites de l  entreprise\\b|\\bcf les principales activites de l  entreprises\\b|\\bcf les principales activites ppales de l  entreprise\\b|\\bcf les principales activtes de l  entreprise\\b|\\bcf les principales acttivites de l  entreprise\\b|\\bcf les prinipales activites de l  entreprise\\b|\\bcf lesprincipales activites de l  entreprise\\b|\\bcf objet\\b|\\bcf obs\\b|\\bcf principales activite de l  entreprise\\b|\\bcf principales activites de l  entreprise\\b|cf rubrique \"principales activites de l entreprise\" idem|cf rubrique n2 ci dessus \(743b\)|\\bcf supra\\b|\\bcf ci  dessus\\b|\\bcommerce de detail, idem case 2\\b|\\bextension a: voir ci dessus\\b|\\bid\\b|\\bid principales activites\\b|\\bid principales activites de l  entreprise\\b|\\bidem ci dessus\\b|idem \( voir principales activites\)|\\bidem  dessus\\b|\\bidem 1ere page\\b|\\bidem a principales activites de l  entreprise\\b|\\bidem activiet eprincipale\\b|\\bidem activite\\b|\\bidem activite 1ere page\\b|\\bidem activite ci  dessus\\b|\\bidem activite de l  entreprise\\b|\\bidem activite enoncee ci  dessus\\b|\\bidem activite entreprise\\b|\\bidem activite generales\\b|\\bidem activite premiere page\\b|\\bidem activite principale\\b|\\bidem activite princippale\\b|\\bidem activite prinicpale\\b|\\bidem activite sur 1ere page\\b|\\bidem activites ci dessus\\b|\\bidem activites declarees au siege et principal\\b|\\bidem activites enoncees ci dessus\\b|\\bidem activites entreprise\\b|\\bidem activites principales\\b|\\bidem activites principales de l entreprise\\b|\\bidem activites siege\\b|\\bidem activte principale\\b|\\bidem activtie 1ere page\\b|\\bidem au siege\\b|\\bidem au siege social\\b|\\bidem aux principales actiivtes\\b|\\bidem aux principales activites\\b|\\bidem case 13\\b|\\bidem ci dessous\\b|\\bidem ci dessus enoncee\\b|\\bidem cidessus\\b|\\bidem objet\\b|\\bidem premiere page\\b|\\bidem pricincipales activites de l entreprise\\b|\\bidem pricipales activites\\b|\\bidem principale activite\\b|\\bidem principales activite de l entreprise\\b|\\bidem principales activite de l entreprises\\b|\\bidem principales activite l entreprise\\b|\\bidem principales activites\\b|\\bidem principales activites citees ci dessus\\b|\\bidem principales activites de l entreprises\\b|idem principales activites de l entreprise\(objet\)|\\bidem principales activites et objet social\\b|\\bidem principales activitse de l entreprise\\b|\\bidem que celle decrite plus haut\\b|\\bidem que ci dessus\\b|\\bidem que l activite decrite plus haut\\b|\\bidem que les activites principales\\b|\\bidem que les activites principales ci dessus\\b|\\bidem que les activitges principales\\b|\\bidem que les principales activites\\b|\\bidem que les principales activites de l entreprise\\b|\\bidem que pour le siege\\b|\\bidem rubrique principales activites de l entreprise\\b|\\bidem siege\\b|idem siege \+ voir observation|\\bidem siege et ets principal\\b|\\bidem siege social\\b|idem siege, \(\+ articles americains\)|\\bidem societe\\b|\\bidem voir activite principale\\b|\\bidem voir ci dessus\\b|\\bidentique a l objet social indique en case 2 de l imprime m2\\b|\\bidm ci dessus\\b|\\bnon indiquee\\b|\\bnon precise\\b|\\bnon precisee\\b|\\bnon precisees\\b|\\bvoir 1ere page\\b|\\bvoir activite ci dessus\\b|\\bvoir activite principale\\b|\\bvoir activite principale ci dessus\\b|\\bvoir activites principales\\b|\\bvoir cidessus\\b|\\bvoir idem ci dessus\\b|\\bvoir objet social\\b|\\bvoir page 1\\b|\\bvoir page precedente\\b|\\bvoir plus haut\\b|\\bvoir princiale activite\\b|\\bvoir princiales activites\\b|\\bvoir princiapales activites\\b|\\bvoir princiaples activites\\b|\\bvoir principale activite\\b|\\bvoir principales activites\\b|\\bvoir principales activites de l entreprise\\b|\\bvoir principales actvites\\b|\\bvoir principalesactivites\\b|\\bvoir principles activites\\b|\\bvoir rubrique principales activites de l entreprise\\b|\\bvoir sur la 1ere page\\b|\\bvoir dessus\\b|voir: \"principales activite de l entreprise\"|voir: \"principales activites de l entreprises\"|voir: \"principales activites de l entrprise\"|voir: \"principales activites en entreprise\"|\\bconforme au kbis\\b|\\bsans changement\\b|\\bsans activite\\b|\\bsans acitivite\\b|\\bactivite inchangee\\b|\\bactivites inchangees\\b|\\bsiege social\\b|\\ba definir\\b|\\ba preciser\\b|\\bci dessus\\b|\\bci desus\\b|\\bci desssus\\b|\\bvoir activit principale\\b|\\bidem extrait kbis\\b|\\bn a plus a etre mentionne sur l extrait decret\\b|\\bcf statuts\\b|\\bactivite principale case\\b|\\bactivites principales case\\b|\\bactivite principale\\b|\\bactivites principales\\b|\\bvoir case\\b|\\baucun changement\\b|\\bsans modification\\b|\\bactivite non modifiee\\b|\\bactivite identique\\b|\\bpas de changement\\b|\\bcode\\b|\\bape\\b|\\bnaf\\b|\\binchangee\\b|\\bbinchanges\\b|\\binchnagee\\b|\\bkbis\\b|\\bk bis\\b|\\binchangees\\b|\\bnp\\b|\\binchange\\b|\\bnc\\b|\\bxx\\b|\\bxxx\\b|\\binconnue\\b|\\binconnu\\b|\\bvoir\\b|\\bannexe\\b"
-
 aws.s3::s3write_using(
-  df_new,
+  dff,
   FUN = arrow::write_parquet,
   # Mettre les options de FUN ici
   multipart = TRUE,
-  object = "/data/extraction_sirene_20220712_harmonised.parquet",
+  object = "/data/extraction_sirene_20220712_harmonised_20221014.parquet",
   bucket = "projet-ape",
   opts = list("region" = "")
 )
+
+# utiliser data.table ?
+# prendre en compte la date ?
 
 
 
