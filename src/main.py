@@ -85,7 +85,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         t = time.time()
         if model_type == "fasttext":
             evaluator = framework_classes["evaluator"](model)
-        if model_type == "pytorch":
+        elif model_type == "pytorch":
             evaluator = framework_classes["evaluator"](
                 model,
                 trainer.tokenizer
