@@ -4,7 +4,7 @@ entry_points:
   main:
     parameters:
       remote_server_uri: {type: str, default: https://mlflow.lab.sspcloud.fr}
-      experiment_name: {type: str, default: test}
+      experiment_name: {type: str, default: Production}
       run_name: {type: str, default: default}
       data_path: {type: str, default: data/extraction_sirene_sample.parquet}
       config_path: {type: str, default: config/config_fasttext.yaml}
