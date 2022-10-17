@@ -75,6 +75,7 @@ pages:
     - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
     - mv doc/seminaire-dms-oct-2022/slides public
     - mv setup.sh public/setup.sh
+    - cat public/index.html
   artifacts:
     paths:
       - public
