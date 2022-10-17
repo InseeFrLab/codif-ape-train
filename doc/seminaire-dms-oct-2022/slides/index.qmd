@@ -23,6 +23,7 @@ format:
 controls: true
 css: custom.css
 from: markdown+emoji
+ascii: false
 ---
 
 # Introduction
