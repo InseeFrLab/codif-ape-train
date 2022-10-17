@@ -72,7 +72,7 @@ pages:
   script:
     - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
-    - file -bi index.qmd
+    - file -bi doc/seminaire-dms-oct-2022/slides/index.qmd
     - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
     - mv doc/seminaire-dms-oct-2022/slides public
     - mv setup.sh public/setup.sh
