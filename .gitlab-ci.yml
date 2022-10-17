@@ -71,9 +71,7 @@ pages:
   image: inseefrlab/onyxia-r-minimal
   script:
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
-    - install2.r --error readr
-    - install2.r --error ggplot2
-    - install2.r --error dplyr
+    - Rscript -e "install.packages(c('rmarkdown','readr'))"
     - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
     - mv doc/seminaire-dms-oct-2022/slides public
     - mv setup.sh public/setup.sh

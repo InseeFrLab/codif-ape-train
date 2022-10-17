@@ -4,10 +4,17 @@ export R_VERSION="4.2.1"
 export R_HOME="/usr/local/lib/R"
 export DEFAULT_USER="${USERNAME}"
 
+if [ "$(whoami)" != "root" ]
+then
+    sudo su -s "$0"
+    exit
+fi
+
 # Install R
-sudo git clone --branch R${R_VERSION} --depth 1 https://github.com/rocker-org/rocker-versioned2.git /tmp/rocker-versioned2
-sudo cp -r /tmp/rocker-versioned2/scripts/ /rocker_scripts/
-sudo chmod -R 755 /rocker_scripts/
+git clone --branch R${R_VERSION} --depth 1 https://github.com/rocker-org/rocker-versioned2.git /tmp/rocker-versioned2
+cp -r /tmp/rocker-versioned2/scripts/ /rocker_scripts/
+chmod -R 755 /rocker_scripts/
+
 source /rocker_scripts/install_R_source.sh
 
 # Use RStudio's package manager to download packages as binaries
@@ -16,8 +23,9 @@ export CRAN="https://packagemanager.rstudio.com/cran/__linux__/focal/latest"
 # Set up R (RSPM, OpenBLAS, littler, addtional packages)
 source /rocker_scripts/setup_R.sh
 
-sudo install2.r --error readr
-sudo install2.r --error ggplot2
-sudo install2.r --error dplyr
+install2.r --error rmarkdown
+install2.r --error readr
+install2.r --error ggplot2
+install2.r --error dplyr
 # Clean
-sudo rm -rf /var/lib/apt/lists/*
+rm -rf /var/lib/apt/lists/*
