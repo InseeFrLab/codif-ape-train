@@ -9,6 +9,8 @@ date: 7 octobre 2022
 slide-number: true
 # uncomment for French presentations:
 lang: fr-FR
+header-includes: 
+  - \usepackage[utf8]{inputenc}
 # for blind readers:
 slide-tone: false
 chalkboard: # press the B key to toggle chalkboard
