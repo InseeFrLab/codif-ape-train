@@ -71,7 +71,7 @@ pages:
   image: inseefrlab/onyxia-r-minimal
   script:
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
-    - Rscript -e "install.packages(c('rmarkdown','readr'))"
+    - Rscript -e "install.packages(c('rmarkdown','readr','utf8'))"
     - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
     - mv doc/seminaire-dms-oct-2022/slides public
     - mv setup.sh public/setup.sh
