@@ -8,7 +8,7 @@ author: |
 date: 7 octobre 2022
 slide-number: true
 # uncomment for French presentations:
-# lang: fr-FR
+lang: fr-FR
 # for blind readers:
 slide-tone: false
 chalkboard: # press the B key to toggle chalkboard
