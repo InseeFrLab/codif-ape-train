@@ -2,6 +2,7 @@
 FastTextPreprocessor class.
 """
 import time
+import unidecode
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -115,6 +116,9 @@ class FastTextPreprocessor(Preprocessor):
 
         # On définit une regex de mots à supprimer du jeu de données
         Word2remove = r"\bcode\b|\bcadre\b|\bape\b|\bape[a-z]{1}\b|\bnaf\b|\binchangee\b|\binchnagee\b|\bkbis\b|\bk bis\b|\binchangees\b|\bnp\b|\binchange\b|\bnc\b|\bidem\b|\bxx\b|\bxxx\b|\baa\b|\baaa\b|\bidem cadre precedent\b|\bidem case\b|\binchanges\b|\bmo\b|\biem\b|\bci dessus\b|\bet\b"
+
+        # On harmonise l'encodage (principalement suppression accents)
+        df[text_feature] = df[text_feature].map(unidecode.unidecode)
 
         # On passe tout en minuscule
         df[text_feature] = df[text_feature].map(str.lower)
