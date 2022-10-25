@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+import string
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 
@@ -15,7 +16,7 @@ class Preprocessor(ABC):
     """
 
     def __init__(
-        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french"))
+        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase)
     ) -> None:
         """
         Constructor for the Preprocessor class.
