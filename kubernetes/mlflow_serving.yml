@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-serving
+  labels:
+    app: serve-model-mlflow
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow-serving
+  template:
+    metadata:
+      labels:
+        app: mlflow-serving
+
+    spec:
+      containers:
+        - name: mlflow-serving
+          image: "git-registry.lab.sspcloud.fr/ssplab/codification-ape:latest"
+          env:
+            - name: MODEL_URI
+              value: "s3://projet-ape/mlflow-artifacts/6/6c1384866bd24d9a94893bd8220962c8/artifacts/default"  # to change
+            - name: SERVING_PORT
+              value: "8082"
+            - name: AWS_ACCESS_KEY_ID
+              value: "projet-ape-sa"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "secret_access_key"  # to change
+            - name: AWS_S3_ENDPOINT
+              value: "minio.lab.sspcloud.fr"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+          resources:
+            requests:
+              cpu: "100m"
