@@ -8,7 +8,7 @@ library(caret)
 library(cowplot)
 
 source("theme_custom.R")
-model = "d59e23a319fe40e0afed1c79172ba9bd"
+model = "4e5c4673cbbd412e91456b3443e8dabe"
 aws.s3::get_bucket("projet-ape", region = "", prefix = paste0("data/predictions_test_", model,".csv"))
 
 ##### Data importation #####
@@ -60,8 +60,8 @@ get_thresholds_IC_distrib <- function(data, quantiles){
 plot_IC_distrib <- function(data, thresholds, ypos){
   plot <- ggplot(data)+
     ggtitle("")+
-    geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
-    scale_fill_manual(values=c(Palette_col),labels=c("Mauvaises prédictions", "Bonnes prédictions"))+
+    geom_histogram(aes(x=Score, y=..count..),binwidth=.01, alpha=.5, position="identity") +
+    #scale_fill_manual(values=c(Palette_col),labels=c("Mauvaises prédictions", "Bonnes prédictions"))+
     geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
     theme_custom()+ 
     annotate("text", x = thresholds+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
@@ -69,7 +69,7 @@ plot_IC_distrib <- function(data, thresholds, ypos){
   return(plot)
   
 }
-plot_IC_distrib(get_data_IC_distrib(df), get_thresholds_IC_distrib(df, seq(0.05, 0.25,0.05)), 51)
+plot_IC_distrib(get_data_IC_distrib(df), get_thresholds_IC_distrib(df, seq(0.05, 0.25,0.05)), 4000)
 #### Distribution GU/TEST #### 
 get_data_GU_TEST_distrib <- function(data){
   sample <- data %>%
@@ -358,8 +358,44 @@ xx <- get_data_F1_distrib_by_cat(df)
 ##############################################################################################
 ##############################################################################################
 ##############################################################################################
+data <- 
+  aws.s3::s3read_using(
+    FUN = readr::read_csv,
+    # Mettre les options de FUN ici
+    object = paste0("/data/logs_analysis.csv"),
+    bucket = "projet-ape",
+    opts = list("region" = "")
+  )
+
+get_thresholds_IC_distrib <- function(data, quantiles){
+  thresholds <- data|>
+    dplyr::pull(score)|>
+    quantile(quantiles)
+  return(thresholds)
+}
+
+plot_IC_distrib <- function(data, thresholds, ypos){
+  plot <- ggplot(data)+
+    ggtitle("")+
+    geom_histogram(aes(x=score, fill=fasttextVersion, y=..density..),binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col),labels=c("Current version", "Old version"))+
+    geom_vline(xintercept = thresholds, color = rgb(83, 83, 83, maxColorValue = 255))+
+    theme_custom()+ 
+    annotate("text", x = thresholds+0.04, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"))
+  
+  return(plot)
+  
+}
+plot_IC_distrib(data, get_thresholds_IC_distrib(data, seq(0.05, 0.25,0.05)), 51)
 
 
+data|>
+  dplyr::pull(score)|>
+  quantile(0.67)
+
+##############################################################################################
+##############################################################################################
+##############################################################################################
 ##### Matrice de confusion niveau 1 ##### 
 PlotConfusionMatrix <- function(data, type){
   TotalSize <- data%>%subset(Type %in% type)%>%nrow()
