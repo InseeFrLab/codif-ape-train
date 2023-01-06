@@ -10,17 +10,16 @@ from enum import Enum
 
 sys.path.append("../")
 
-HEADER_LEN = 59
-EVENT_LEN = 41
+HEADER_LEN = 55
+EVENT_LEN = 77
 
 
 class EventType(Enum):
     """
 
     """
-    ID = "s.i.AbstractBatchCodificationServiceImpl"
-    INFO = "r.b.j.c.s.i.BatchCodificationServiceImpl"
-    RAW_INPUT = "stractLiasse1ToLiasseVarInteretProcessor"
+    INFO_169 = "fr.insee.sirene4.repertoire.api.codification.rest.CodificationController:169"
+    INFO_122 = "fr.insee.sirene4.repertoire.api.codification.rest.CodificationController:122"
 
 
 def extract_log_info(f):
@@ -32,17 +31,19 @@ def extract_log_info(f):
     Returns:
         _type_: _description_
     """
+    timestamp = []
     event_types = []
     descriptions = []
     for line in f:
         line_without_timestamp = line[HEADER_LEN:]
         if not line_without_timestamp:
             continue
+        timestamp.append(line[:23])
         event_types.append(line_without_timestamp[:EVENT_LEN].rstrip())
         descriptions.append(line_without_timestamp[EVENT_LEN + 2:])
     return pd.DataFrame(
-        list(zip(event_types, descriptions)),
-        columns=['event_type', 'description']
+        list(zip(timestamp, event_types, descriptions)),
+        columns=['timestamp', 'event_type', 'description']
     )
 
 
@@ -187,28 +188,8 @@ def clean_lib(df, text_feature):
         return df
 
 
-RAW_INPUT_FIELDS = [
-    "norme",
-    "siren",
-    "nic",
-    "liasseType",
-    "categorieJuridique",
-    "domas",
-    "ssdom",
-    "domaineAssoc",
-    "ssDomaineAssoc",
-    "libelleActivitePrincipaleEtablissement",
-    "sedentarite",
-    "natureActivites",
-    "surface",
-    "lieuExercice",
-    "presenceSalaries"
-]
-RAW_INPUT_REGEXES = [
-    re.compile(r'{}'.format(field + '=([^,]*)[,\]]'))
-    for field in RAW_INPUT_FIELDS
-]
 INFO_FIELDS = [
+    "libelleActivite",
     "natureActivites",
     "liasseType",
     "evenementType",
@@ -231,13 +212,10 @@ if __name__ == "__main__":
     with open("../data/api_log.log") as f:
         df = extract_log_info(f)
 
-    df_ids = df[df.event_type == EventType.ID.value]
-    df_info = df[df.event_type == EventType.INFO.value]
-    df_raw_input = df[df.event_type == EventType.RAW_INPUT.value]
-    df_raw_input = df_raw_input[
-        df_raw_input.description.str.startswith("LiasseVarInteretCodification")
-    ]
-
+    df_info_122 = df[df.event_type == EventType.INFO_122.value]
+    df_info_169 = df[df.event_type == EventType.INFO_169.value]
+    df_info = pd.concat([df_info_122, df_info_169])
+    
     df = pd.DataFrame(
         [
             parse_raw_input(info_input, INFO_FIELDS, INFO_REGEXES)
@@ -245,6 +223,16 @@ if __name__ == "__main__":
             if not info_input.__contains__('""')
         ]
     )
+
+    df["timestamp"] = [
+                        df_info.timestamp[i]
+                        for i in df_info.index
+                        if not df_info.description[i].__contains__('""')
+                    ]
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    
+    df = df[df.libelleNettoye != "null"]
 
     predictions = [
         extract_first_pred(predictions)
@@ -254,7 +242,7 @@ if __name__ == "__main__":
     df["second_pred"] = [prediction[1] for prediction in predictions]
     df["first_proba"] = [prediction[2] for prediction in predictions]
     df["second_proba"] = [prediction[3] for prediction in predictions]
-
+    
     stemmer = SnowballStemmer(language="french")
     stopwords = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase)
 
