@@ -242,7 +242,10 @@ if __name__ == "__main__":
     df["second_pred"] = [prediction[1] for prediction in predictions]
     df["first_proba"] = [prediction[2] for prediction in predictions]
     df["second_proba"] = [prediction[3] for prediction in predictions]
-    
+    df["score"] = df["first_proba"] - df["second_proba"]
+    df["DEC15"] = df["timestamp"] > "2022-12-15 14:12"
+    df.to_csv("logs_analysis.csv")
+
     stemmer = SnowballStemmer(language="french")
     stopwords = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase)
 
