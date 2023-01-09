@@ -77,12 +77,12 @@ def extract_first_pred(predictions):
     Returns:
         _type_: _description_
     """
-    regex = re.compile(r'proposé = ([^;]*) ;.*associée = ([^;]*)\].*proposé = ([^;]*) ;.*associée = ([^;]*)\]')
-    matches = regex.search(predictions)
-    first_code = matches.group(1)
-    second_code = matches.group(3)
-    first_proba = matches.group(2)
-    second_proba = matches.group(4)
+    regex = re.compile(r"\[prediction n° \d+ : code naf proposé = ([A-Z0-9]+) ; proba associée = ([\d.E-]+)\]")
+    matches = re.findall(regex, predictions)
+    first_code = matches[0][0]
+    second_code = matches[1][0]
+    first_proba = matches[0][1]
+    second_proba = matches[1][1]
     return (first_code, second_code, float(first_proba), float(second_proba))
 
 
@@ -189,6 +189,7 @@ def clean_lib(df, text_feature):
 
 
 INFO_FIELDS = [
+    "sourceAppel",
     "libelleActivite",
     "natureActivites",
     "liasseType",
@@ -225,13 +226,13 @@ if __name__ == "__main__":
     )
 
     df["timestamp"] = [
-                        df_info.timestamp[i]
-                        for i in df_info.index
-                        if not df_info.description[i].__contains__('""')
-                    ]
+                    df_info.timestamp[i]
+                    for i in df_info.index
+                    if not df_info.description[i].__contains__('""')
+                ]
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    
+
     df = df[df.libelleNettoye != "null"]
 
     predictions = [
