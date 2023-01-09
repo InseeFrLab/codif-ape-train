@@ -362,7 +362,7 @@ data <-
   aws.s3::s3read_using(
     FUN = readr::read_csv,
     # Mettre les options de FUN ici
-    object = paste0("/data/logs_analysis.csv"),
+    object = paste0("/data/comparison_old_new_models.csv"),
     bucket = "projet-ape",
     opts = list("region" = "")
   )
@@ -374,7 +374,7 @@ get_thresholds_IC_distrib <- function(data, quantiles){
   return(thresholds)
 }
 
-plot_IC_distrib <- function(data, thresholds, ypos){
+plot_IC_distrib <- function(data, thresholds, ypos){ 
   plot <- ggplot(data)+
     ggtitle("")+
     geom_histogram(aes(x=score, fill=fasttextVersion, y=..density..),binwidth=.01, alpha=.5, position="identity") +
@@ -386,7 +386,8 @@ plot_IC_distrib <- function(data, thresholds, ypos){
   return(plot)
   
 }
-plot_IC_distrib(data, get_thresholds_IC_distrib(data, seq(0.05, 0.25,0.05)), 51)
+plot_IC_distrib(data |> dplyr::filter(sourceAppel == "WF" & timestamp < "2022-12-15 13:12:00"), 
+                get_thresholds_IC_distrib(data |> dplyr::filter(sourceAppel == "WF"& timestamp < "2022-12-15 13:12:00"), seq(0.05, 0.25,0.05)), 51)
 
 
 data|>
