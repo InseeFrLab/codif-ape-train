@@ -47,20 +47,9 @@ class FastTextPreprocessor(Preprocessor):
 
         df = self.clean_lib(df, text_feature)
 
-        # Adding missing APE codes in the database
-        MissingCodes = set(df_naf[y]) - set(df[y])
-        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
-        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
-        Fake_obs.index = [f"FAKE_{i}" for i in range(Fake_obs.shape[0])]
-        Fake_obs = self.clean_lib(Fake_obs, text_feature)
-        df = pd.concat([df, Fake_obs])
-        print(
-            f"\t*** {len(MissingCodes)} missing codes have been added in the database.\n"
-        )
+        # Adding missing APE codes in the database by adding the official label as text feature
+        df_train = self.add_missing_codes(df, df_naf, y, text_feature)
 
-        # Guichet unique split
-        df_gu = df[df.index.str.startswith("J")]
-        df = df[~df.index.str.startswith("J")]
         # Train/test split
         features = [text_feature]
         if categorical_features is not None:
@@ -79,16 +68,8 @@ class FastTextPreprocessor(Preprocessor):
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
 
-        # Adding missing APE codes in the train database
-        MissingCodes = set(df_naf[y]) - set(df_train[y])
-        Fake_obs = df_naf[df_naf[y].isin(MissingCodes)]
-        Fake_obs.loc[:, text_feature] = Fake_obs.LIB_NIV5
-        Fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(Fake_obs.shape[0])]
-        Fake_obs = self.clean_lib(Fake_obs, text_feature)
-        df_train = pd.concat([df_train, Fake_obs])
-        print(
-            f"\t*** {len(MissingCodes)} missing codes have been added in the train database...\n"
-        )
+        # Adding missing APE codes in the train database by adding the official label as text feature
+        df_train = self.add_missing_codes(df_train, df_naf, y, text_feature)
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
@@ -98,7 +79,7 @@ class FastTextPreprocessor(Preprocessor):
                 f"\t*** Done! Oversampling lasted {round((time.time() - t)/60,1)} minutes.\n"
             )
 
-        return df_train, df_test, df_gu
+        return df_train, df_test
 
     def clean_lib(self, df: pd.DataFrame, text_feature: str) -> pd.DataFrame:
         """
@@ -199,6 +180,18 @@ class FastTextPreprocessor(Preprocessor):
         return df
 
     def oversample_df(self, df: pd.DataFrame, threshold: int, Y: str):
+        """
+        Oversamples the minority classes in a pandas DataFrame to achieve a more balanced dataset.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame to be oversampled.
+            threshold (int): The minimum number of samples for each class. Classes with fewer
+                samples than the threshold will be oversampled.
+            Y (str): The name of the column containing the class labels.
+
+        Returns:
+            pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
+        """
         Code2Oversample = df.value_counts(Y)[
             df.value_counts(Y) < threshold
         ].index.to_list()
@@ -211,3 +204,28 @@ class FastTextPreprocessor(Preprocessor):
             )
 
         return pd.concat([df, df_oversampled])
+
+    def add_missing_codes(self, df: pd.DataFrame, df_naf: pd.DataFrame, Y: str, TEXT_FEATURE: str):
+        """
+        Oversamples the minority classes in a pandas DataFrame to achieve a more balanced dataset.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame to be oversampled.
+            threshold (int): The minimum number of samples for each class. Classes with fewer
+                samples than the threshold will be oversampled.
+            Y (str): The name of the column containing the class labels.
+
+        Returns:
+            pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
+        """
+        missing_codes = set(df_naf[Y]) - set(df[Y])
+        fake_obs = df_naf[df_naf[Y].isin(missing_codes)]
+        fake_obs.loc[:, TEXT_FEATURE] = fake_obs.LIB_NIV5
+        fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(fake_obs.shape[0])]
+        fake_obs = self.clean_lib(fake_obs, TEXT_FEATURE)
+        df = pd.concat([df, fake_obs])
+
+        print(
+            f"\t*** {len(MissingCodes)} missing codes have been added in the train database...\n"
+        )
+        return df

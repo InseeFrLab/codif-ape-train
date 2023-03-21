@@ -40,7 +40,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         oversampling = config["oversampling"]
 
         # Preprocess data
-        df_train, df_test, df_gu = preprocessor.preprocess(
+        df_train, df_test = preprocessor.preprocess(
             df=df,
             y=Y,
             text_feature=TEXT_FEATURE,
@@ -97,6 +97,8 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         else:
             raise KeyError("Model type is not valid.")
 
+
+        # TODO : gerer le split df_gu et la size df_gu  
         accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
         )
@@ -130,3 +132,13 @@ if __name__ == "__main__":
         str(sys.argv[4]),
         str(sys.argv[5]),
     )
+
+
+# TODO : refaire marcher le code
+# TODO : nettoyer les experiments sur Mlflow
+# TODO : en créer un nouveau et faire tourner des tests dessus
+# TODO : Readapter la base avec les dernieres demandes
+# TODO : Reentrainer le modèle
+
+
+

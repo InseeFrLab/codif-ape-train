@@ -61,7 +61,7 @@ class Preprocessor(ABC):
         df_naf = df_naf[[f"APE_NIV{i}" for i in range(1, 6)] + ["LIB_NIV5"]]
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
-        # General preprocessing
+        # General preprocessing (We keep only necessary features + fill NA by "NaN")
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
