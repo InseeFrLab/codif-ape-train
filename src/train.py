@@ -61,7 +61,11 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             fasttext_model_path = run_name + ".bin"
             model.save_model(fasttext_model_path)
 
-            artifacts = {"fasttext_model_path": fasttext_model_path}
+            artifacts = {
+                "fasttext_model_path": fasttext_model_path,
+                "categorical_features": categorical_features,
+                "text_feature": TEXT_FEATURE,
+            }
 
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
@@ -90,7 +94,10 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         else:
             raise KeyError("Model type is not valid.")
 
-        # TODO : gerer le split df_gu et la size df_gu
+        # Split Test and Guichet Unique
+        df_gu = df_test[df_test.index.str.startswith("J")]
+        df_test = df_test[~df_test.index.str.startswith("J")]
+
         accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
         )
@@ -99,16 +106,9 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
-        # On training set
-        train_accuracies = evaluator.evaluate(
-            df_train, Y, TEXT_FEATURE, categorical_features, 5
-        )
-        for metric, value in train_accuracies.items():
-            mlflow.log_metric(metric + "_train", value)
-
         # On guichet unique set
         gu_accuracies = evaluator.evaluate(
-            df_train, Y, TEXT_FEATURE, categorical_features, 5
+            df_gu, Y, TEXT_FEATURE, categorical_features, 5
         )
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)

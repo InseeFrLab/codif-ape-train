@@ -3,6 +3,7 @@ FastText wrapper for MLflow.
 """
 import fasttext
 import mlflow
+
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
 
 
@@ -19,9 +20,14 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         Args:
             context: MLflow context where the model artifact is stored.
         """
+        # pylint: disable=attribute-defined-outside-init
         self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
+        self.categorical_features = fasttext.load_model(
+            context.artifacts["categorical_features"]
+        )
+        self.text_feature = fasttext.load_model(context.artifacts["text_feature"])
         self.model_evaluator = FastTextEvaluator(self.model)
-        # TODO : get artifacts to check right columns are there in `predict`
+        # pylint: enable=attribute-defined-outside-init
 
     def predict(self, context, model_input):
         """
@@ -38,15 +44,11 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         # TODO : code below is duplicated from FastTextEvaluator - fix
         libs = []
 
-        # TODO : replace hard-coded variable names with values from context
-        categorical_features = ["AUTO", "NAT_SICORE", "SURF", "EVT_SICORE"]
-        text_feature = "LIB_SICORE"
-
         iterables_features = (
-            categorical_features if categorical_features is not None else []
+            self.categorical_features if self.categorical_features is not None else []
         )
         for item in model_input.iterrows():
-            formatted_item = item[1][text_feature]
+            formatted_item = item[1][self.text_feature]
             for feature in iterables_features:
                 if f"{item[1][feature]}".endswith(".0"):
                     formatted_item += f" {feature}_{item[1][feature]}"[:-2]
