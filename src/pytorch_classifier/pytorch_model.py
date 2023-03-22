@@ -12,14 +12,16 @@ class PytorchModel(nn.Module):
     Pytorch Model.
     """
 
-    def __init__(self,
-                 embedding_dim: int,
-                 vocab_size: int,
-                 num_classes: int,
-                 y: str,
-                 categorical_features: List[str],
-                 padding_idx: int = 0,
-                 sparse: bool = False):
+    def __init__(
+        self,
+        embedding_dim: int,
+        vocab_size: int,
+        num_classes: int,
+        y: str,
+        categorical_features: List[str],
+        padding_idx: int = 0,
+        sparse: bool = False,
+    ):
         """
         Constructor for the PytorchModel class.
 
@@ -41,17 +43,14 @@ class PytorchModel(nn.Module):
             embedding_dim=embedding_dim,
             num_embeddings=vocab_size,
             padding_idx=padding_idx,
-            sparse=sparse
+            sparse=sparse,
         )
         self.categorical_embeddings = {}
         for variable in categorical_features:
             vocab_size = len(mappings[variable])
-            emb = nn.Embedding(
-                embedding_dim=embedding_dim,
-                num_embeddings=vocab_size
-            )
+            emb = nn.Embedding(embedding_dim=embedding_dim, num_embeddings=vocab_size)
             self.categorical_embeddings[variable] = emb
-            setattr(self, 'emb_{}'.format(variable), emb)
+            setattr(self, "emb_{}".format(variable), emb)
 
         self.fc = nn.Linear(embedding_dim, num_classes)
 

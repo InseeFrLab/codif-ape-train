@@ -6,7 +6,7 @@ from typing import List, Tuple
 from pytorch_classifier.pytorch_utils import get_hash, get_word_ngram_id
 
 
-class Tokenizer():
+class Tokenizer:
     """
     Tokenizer class.
     """
@@ -18,7 +18,7 @@ class Tokenizer():
         max_n: int,
         buckets: int,
         word_ngrams: int,
-        training_text: List[str]
+        training_text: List[str],
     ):
         """
         Constructor for the Tokenizer class.
@@ -89,7 +89,7 @@ class Tokenizer():
         Returns:
             List[str]: List of character n-grams.
         """
-        return [word[i: i+n] for i in range(len(word) - n + 1)]
+        return [word[i : i + n] for i in range(len(word) - n + 1)]
 
     def get_subword_index(self, subword: str) -> int:
         """
@@ -128,12 +128,10 @@ class Tokenizer():
             Tuple[List[str], List[int]]: Tuple of tokens and indices.
         """
         tokens = []
-        word_with_tags = '<' + word + '>'
+        word_with_tags = "<" + word + ">"
         for n in range(self.min_n, self.max_n + 1):
             tokens += self.get_ngram_list(word_with_tags, n)
-        indices = [self.get_subword_index(
-            token
-        ) for token in tokens]
+        indices = [self.get_subword_index(token) for token in tokens]
 
         # Add word
         try:
@@ -169,9 +167,7 @@ class Tokenizer():
 
         for word_ngram_len in range(2, self.word_ngrams + 1):
             for i in range(len(words) - word_ngram_len + 1):
-                hashes = tuple(
-                    get_hash(word) for word in words[i: i + word_ngram_len]
-                )
+                hashes = tuple(get_hash(word) for word in words[i : i + word_ngram_len])
                 word_ngram_id = int(
                     get_word_ngram_id(hashes, self.buckets, self.nwords)
                 )

@@ -131,7 +131,7 @@ class FastTextPreprocessor(Preprocessor):
 
         # On supprime les mots d'une seule lettre
         df[text_feature] = df[text_feature].apply(
-            lambda x: ' '.join([w for w in x.split() if len(w) > 1])
+            lambda x: " ".join([w for w in x.split() if len(w) > 1])
         )
 
         # On supprime tous les chiffres
@@ -141,7 +141,7 @@ class FastTextPreprocessor(Preprocessor):
 
         # On supprime les mots d'une seule lettre
         df[text_feature] = df[text_feature].apply(
-            lambda x: ' '.join([w for w in x.split() if len(w) > 1])
+            lambda x: " ".join([w for w in x.split() if len(w) > 1])
         )
 
         # On supprime les multiple space
@@ -205,7 +205,9 @@ class FastTextPreprocessor(Preprocessor):
 
         return pd.concat([df, df_oversampled])
 
-    def add_missing_codes(self, df: pd.DataFrame, df_naf: pd.DataFrame, Y: str, TEXT_FEATURE: str):
+    def add_missing_codes(
+        self, df: pd.DataFrame, df_naf: pd.DataFrame, Y: str, TEXT_FEATURE: str
+    ):
         """
         Oversamples the minority classes in a pandas DataFrame to achieve a more balanced dataset.
 

@@ -8,7 +8,7 @@ import mlflow
 import pandas as pd
 import yaml
 
-from constants import TEXT_FEATURE, FRAMEWORK_CLASSES
+from constants import FRAMEWORK_CLASSES, TEXT_FEATURE
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from utils import get_root_path
 
@@ -65,16 +65,12 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
 
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
-                code_path=[
-                    "src/fasttext_classifier/",
-                    "src/base/"],
+                code_path=["src/fasttext_classifier/", "src/base/"],
                 python_model=FastTextWrapper(),
                 artifacts=artifacts,
             )
         elif model_type == "pytorch":
-            mlflow.pytorch.log_model(
-                pytorch_model=model,
-                artifact_path=run_name)
+            mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
         else:
             raise KeyError("Model type is not valid.")
 
@@ -90,15 +86,11 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         if model_type == "fasttext":
             evaluator = framework_classes["evaluator"](model)
         elif model_type == "pytorch":
-            evaluator = framework_classes["evaluator"](
-                model,
-                trainer.tokenizer
-            )
+            evaluator = framework_classes["evaluator"](model, trainer.tokenizer)
         else:
             raise KeyError("Model type is not valid.")
 
-
-        # TODO : gerer le split df_gu et la size df_gu  
+        # TODO : gerer le split df_gu et la size df_gu
         accuracies = evaluator.evaluate(
             df_test, Y, TEXT_FEATURE, categorical_features, 5
         )
@@ -116,7 +108,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
 
         # On guichet unique set
         gu_accuracies = evaluator.evaluate(
-            df_gu, Y, TEXT_FEATURE, categorical_features, 5
+            df_train, Y, TEXT_FEATURE, categorical_features, 5
         )
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
@@ -139,6 +131,3 @@ if __name__ == "__main__":
 # TODO : en créer un nouveau et faire tourner des tests dessus
 # TODO : Readapter la base avec les dernieres demandes
 # TODO : Reentrainer le modèle
-
-
-

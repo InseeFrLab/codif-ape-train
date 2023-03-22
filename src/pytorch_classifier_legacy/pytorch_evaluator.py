@@ -18,10 +18,7 @@ class PytorchEvaluator(Evaluator):
     PytorchEvaluator class.
     """
 
-    def __init__(
-        self,
-        model: PytorchModel
-    ) -> None:
+    def __init__(self, model: PytorchModel) -> None:
         """
         Constructor for the PytorchEvaluator class.
         """
@@ -60,7 +57,7 @@ class PytorchEvaluator(Evaluator):
             text=df[text_feature].to_list(),
             y=df[y].to_list(),
             fasttext_model=self.fasttext_model,
-            padding_idx=self.model.padding_idx
+            padding_idx=self.model.padding_idx,
         )
         dataloader = dataset.create_dataloader(batch_size=64)
 
@@ -88,8 +85,6 @@ class PytorchEvaluator(Evaluator):
         ]
 
         return {
-            rank_pred: [
-                (x[rank_pred], y[rank_pred]) for x, y in zip(preds, probas)
-            ]
+            rank_pred: [(x[rank_pred], y[rank_pred]) for x, y in zip(preds, probas)]
             for rank_pred in range(k)
         }

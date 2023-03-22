@@ -16,7 +16,9 @@ class Preprocessor(ABC):
     """
 
     def __init__(
-        self, stopwords: Tuple = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase)
+        self,
+        stopwords: Tuple = tuple(ntlk_stopwords.words("french"))
+        + tuple(string.ascii_lowercase),
     ) -> None:
         """
         Constructor for the Preprocessor class.

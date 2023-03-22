@@ -209,3 +209,5 @@ rsconnect/
 
 *.html
 doc/seminaire-dms-oct-2022/slides/index_files/
+
+data/

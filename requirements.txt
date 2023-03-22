@@ -4,3 +4,4 @@ torch
 seaborn
 mlflow
 unidecode
+pre-commit

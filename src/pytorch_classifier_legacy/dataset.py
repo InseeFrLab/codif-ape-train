@@ -7,19 +7,10 @@ from pytorch_classifier.pytorch_utils import indices_matrix
 
 
 class TorchDataset(torch.utils.data.Dataset):
-    """
-    """
+    """ """
 
-    def __init__(
-        self,
-        categorical_variables,
-        text,
-        y,
-        fasttext_model,
-        padding_idx
-    ):
-        """
-        """
+    def __init__(self, categorical_variables, text, y, fasttext_model, padding_idx):
+        """ """
         self.categorical_variables = categorical_variables
         self.text = text
         self.y = y
@@ -46,37 +37,36 @@ class TorchDataset(torch.utils.data.Dataset):
         batch = np.array(batch)
         text = batch[:, 1].tolist()
         y = batch[:, 0]
-        categorical_variables = [batch[:, 2 + i] for i in range(
-            len(self.categorical_variables)
-        )]
+        categorical_variables = [
+            batch[:, 2 + i] for i in range(len(self.categorical_variables))
+        ]
 
-        indices_batch = [indices_matrix(
-            sentence, self.fasttext_model
-        ) for sentence in text]
+        indices_batch = [
+            indices_matrix(sentence, self.fasttext_model) for sentence in text
+        ]
         max_tokens = max([len(indices) for indices in indices_batch])
-        padded_batch = [np.pad(
-            indices,
-            (0, max_tokens - len(indices)),
-            'constant',
-            constant_values=self.padding_idx
-        ) for indices in indices_batch]
+        padded_batch = [
+            np.pad(
+                indices,
+                (0, max_tokens - len(indices)),
+                "constant",
+                constant_values=self.padding_idx,
+            )
+            for indices in indices_batch
+        ]
         padded_batch = np.stack(padded_batch)
 
         # Cast
         x = torch.LongTensor(padded_batch.astype(np.int32))
-        categorical_tensors = [torch.LongTensor(
-            variable.astype(np.int32)
-        ) for variable in categorical_variables]
+        categorical_tensors = [
+            torch.LongTensor(variable.astype(np.int32))
+            for variable in categorical_variables
+        ]
         y = torch.LongTensor(y.astype(np.int32))
 
         return (x, *categorical_tensors, y)
 
-    def create_dataloader(
-        self,
-        batch_size,
-        shuffle=False,
-        drop_last=False
-    ):
+    def create_dataloader(self, batch_size, shuffle=False, drop_last=False):
         """_summary_
 
         Args:
@@ -88,5 +78,10 @@ class TorchDataset(torch.utils.data.Dataset):
             _type_: _description_
         """
         return torch.utils.data.DataLoader(
-            dataset=self, batch_size=batch_size, collate_fn=self.collate_fn,
-            shuffle=shuffle, drop_last=drop_last, pin_memory=True)
+            dataset=self,
+            batch_size=batch_size,
+            collate_fn=self.collate_fn,
+            shuffle=shuffle,
+            drop_last=drop_last,
+            pin_memory=True,
+        )

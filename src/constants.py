@@ -15,11 +15,11 @@ FRAMEWORK_CLASSES = {
     "fasttext": {
         "preprocessor": FastTextPreprocessor,
         "trainer": FastTextTrainer,
-        "evaluator": FastTextEvaluator
+        "evaluator": FastTextEvaluator,
     },
     "pytorch": {
         "preprocessor": PytorchPreprocessor,
         "trainer": PytorchTrainer,
-        "evaluator": PytorchEvaluator
-    }
+        "evaluator": PytorchEvaluator,
+    },
 }

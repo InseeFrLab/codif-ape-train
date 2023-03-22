@@ -19,9 +19,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         Args:
             context: MLflow context where the model artifact is stored.
         """
-        self.model = fasttext.load_model(
-            context.artifacts["fasttext_model_path"]
-        )
+        self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
         self.model_evaluator = FastTextEvaluator(self.model)
         # TODO : get artifacts to check right columns are there in `predict`
 

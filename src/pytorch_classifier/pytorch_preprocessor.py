@@ -23,7 +23,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
-        oversampling: Optional[Dict[str, int]] = None
+        oversampling: Optional[Dict[str, int]] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -44,7 +44,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
         """
         df = self.clean_lib(df, text_feature)
 
-        df[categorical_features] = df[categorical_features].fillna('NaN')
+        df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
             df[variable] = df[variable].apply(mappings[variable].get)
         df[y] = df[y].apply(mappings[y].get)
@@ -60,10 +60,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
 
         X_train, X_test, y_train, y_test = train_test_split(
             df[
-                features + [
-                    f"APE_NIV{i}"
-                    for i in range(1, 6) if str(i) not in [y[-1]]
-                    ]
+                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
             ],
             df[y],
             test_size=0.2,
@@ -77,9 +74,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
             t = time.time()
-            df_train = self.oversample_df(
-                df_train, oversampling["threshold"], y
-            )
+            df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(
                 f"\t*** Done! Oversampling lasted "
                 f"{round((time.time() - t)/60,1)} minutes.\n"

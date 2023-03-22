@@ -19,19 +19,13 @@ class PytorchEvaluator(Evaluator):
     PytorchEvaluator class.
     """
 
-    def __init__(
-        self,
-        model: PytorchModel,
-        tokenizer: Tokenizer
-    ) -> None:
+    def __init__(self, model: PytorchModel, tokenizer: Tokenizer) -> None:
         """
         Constructor for the PytorchEvaluator class.
         """
         self.tokenizer = tokenizer
         self.model = model
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu"
-        )
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def get_preds(
         self,
@@ -63,7 +57,7 @@ class PytorchEvaluator(Evaluator):
             ],
             text=df[text_feature].to_list(),
             y=df[y].to_list(),
-            tokenizer=self.tokenizer
+            tokenizer=self.tokenizer,
         )
         dataloader = dataset.create_dataloader(batch_size=64)
 
@@ -91,9 +85,7 @@ class PytorchEvaluator(Evaluator):
         ]
 
         return {
-            rank_pred: [
-                (x[rank_pred], y[rank_pred]) for x, y in zip(preds, probas)
-            ]
+            rank_pred: [(x[rank_pred], y[rank_pred]) for x, y in zip(preds, probas)]
             for rank_pred in range(k)
         }
 
@@ -109,7 +101,5 @@ class PytorchEvaluator(Evaluator):
             pd.DataFrame: DataFrame with remaped outputs.
         """
         reverse_mappings = {v: k for (k, v) in mappings["APE_NIV5"].items()}
-        df["APE_NIV5"] = [
-            reverse_mappings.get(pred) for pred in df["APE_NIV5"]
-        ]
+        df["APE_NIV5"] = [reverse_mappings.get(pred) for pred in df["APE_NIV5"]]
         return df

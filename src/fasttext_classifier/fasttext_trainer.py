@@ -66,4 +66,6 @@ class FastTextTrainer(Trainer):
             (root_path / "data/train_text.txt").as_posix(), **params, verbose=2
         )
         return model
-#TODO: SAVE THE TRAIN_TEXT file in S3
+
+
+# TODO: SAVE THE TRAIN_TEXT file in S3

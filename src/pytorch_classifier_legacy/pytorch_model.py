@@ -13,16 +13,18 @@ class PytorchModel(nn.Module):
     Pytorch Model.
     """
 
-    def __init__(self,
-                 embedding_dim: int,
-                 vocab_size: int,
-                 embedding_matrix: np.array,
-                 num_classes: int,
-                 y: str,
-                 categorical_features: List[str],
-                 fasttext_model,
-                 freeze_embeddings: bool = False,
-                 padding_idx: int = 0):
+    def __init__(
+        self,
+        embedding_dim: int,
+        vocab_size: int,
+        embedding_matrix: np.array,
+        num_classes: int,
+        y: str,
+        categorical_features: List[str],
+        fasttext_model,
+        freeze_embeddings: bool = False,
+        padding_idx: int = 0,
+    ):
         """
 
         Args:
@@ -50,17 +52,14 @@ class PytorchModel(nn.Module):
             embedding_dim=embedding_dim,
             num_embeddings=vocab_size,
             padding_idx=padding_idx,
-            _weight=embedding_matrix
+            _weight=embedding_matrix,
         )
         self.categorical_embeddings = {}
         for variable in categorical_features:
             vocab_size = len(mappings[variable])
-            emb = nn.Embedding(
-                embedding_dim=embedding_dim,
-                num_embeddings=vocab_size
-            )
+            emb = nn.Embedding(embedding_dim=embedding_dim, num_embeddings=vocab_size)
             self.categorical_embeddings[variable] = emb
-            setattr(self, 'emb_{}'.format(variable), emb)
+            setattr(self, "emb_{}".format(variable), emb)
 
         # Freeze embeddings or not
         if freeze_embeddings:

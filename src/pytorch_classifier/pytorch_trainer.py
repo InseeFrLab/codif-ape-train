@@ -32,9 +32,7 @@ class PytorchTrainer:
         Constructor for PytorchTrainer.
         """
         self.model = None
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu"
-        )
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.loss_fn = nn.CrossEntropyLoss()
         self.tokenizer = None
 
@@ -53,7 +51,6 @@ class PytorchTrainer:
 
         # Iterate over train batches
         for i, batch in tqdm(enumerate(dataloader)):
-
             # Step
             start_time = time.time()
             batch = [item.to(self.device) for item in batch]  # Set device
@@ -91,7 +88,6 @@ class PytorchTrainer:
         # Iterate over val batches
         with torch.inference_mode():
             for i, batch in tqdm(enumerate(dataloader)):
-
                 # Step
                 batch = [item.to(self.device) for item in batch]  # Set device
                 inputs, y_true = batch[:-1], batch[-1]
@@ -119,7 +115,6 @@ class PytorchTrainer:
         # Iterate over val batches
         with torch.inference_mode():
             for i, batch in tqdm(enumerate(dataloader)):
-
                 # Forward pass w/ inputs
                 inputs, _ = batch[:-1], batch[-1]
                 z = self.model(inputs)
@@ -173,48 +168,44 @@ class PytorchTrainer:
         X_train, X_val, y_train, y_val = train_test_split(
             df[features],
             df[y],
-            test_size=1-train_proportion,
+            test_size=1 - train_proportion,
             random_state=0,
-            shuffle=True
+            shuffle=True,
         )
 
         training_text = X_train[text_feature].to_list()
         self.tokenizer = Tokenizer(
-            min_count, min_n, max_n, buckets, word_ngrams, training_text)
+            min_count, min_n, max_n, buckets, word_ngrams, training_text
+        )
 
         train_dataset = TorchDataset(
             categorical_variables=[
-                X_train[column].to_list()
-                for column in X_train[categorical_features]
+                X_train[column].to_list() for column in X_train[categorical_features]
             ],
             text=training_text,
             y=y_train.to_list(),
-            tokenizer=self.tokenizer
+            tokenizer=self.tokenizer,
         )
         val_dataset = TorchDataset(
             categorical_variables=[
-                X_val[column].to_list()
-                for column in X_val[categorical_features]],
+                X_val[column].to_list() for column in X_val[categorical_features]
+            ],
             text=X_val[text_feature].to_list(),
             y=y_val.to_list(),
-            tokenizer=self.tokenizer
+            tokenizer=self.tokenizer,
         )
-        train_dataloader = train_dataset.create_dataloader(
-            batch_size=batch_size
-        )
-        val_dataloader = val_dataset.create_dataloader(
-            batch_size=batch_size
-        )
+        train_dataloader = train_dataset.create_dataloader(batch_size=batch_size)
+        val_dataloader = val_dataset.create_dataloader(batch_size=batch_size)
 
         # Model
         self.model = PytorchModel(
             embedding_dim=embedding_dim,
-            vocab_size=buckets+self.tokenizer.get_nwords()+1,
+            vocab_size=buckets + self.tokenizer.get_nwords() + 1,
             num_classes=num_classes,
             y=y,
             categorical_features=categorical_features,
-            padding_idx=buckets+self.tokenizer.get_nwords(),
-            sparse=sparse
+            padding_idx=buckets + self.tokenizer.get_nwords(),
+            sparse=sparse,
         ).to(self.device)
 
         # Define optimizer & scheduler
@@ -223,7 +214,8 @@ class PytorchTrainer:
         else:
             self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode="min", factor=0.1, patience=patience)
+            self.optimizer, mode="min", factor=0.1, patience=patience
+        )
 
         epochs = []
         train_losses = []
@@ -260,10 +252,10 @@ class PytorchTrainer:
             )
 
         fig = plt.figure()
-        plt.plot(epochs, train_losses, 'r', label='train loss')
-        plt.plot(epochs, val_losses, 'b', label='validation loss')
+        plt.plot(epochs, train_losses, "r", label="train loss")
+        plt.plot(epochs, val_losses, "b", label="validation loss")
         plt.legend()
-        plt.xlabel('Epoch')
+        plt.xlabel("Epoch")
         plt.xticks(epochs)
         mlflow.log_figure(fig, "losses.png")
 

@@ -162,7 +162,6 @@ class Evaluator(ABC):
     def get_manual_accuracy(
         aggregated_APE_dict: Dict[int, pd.DataFrame], method: str
     ) -> Dict[str, float]:
-
         """
         Returns accuracies after different rate of manual adjustments of the classification.
 

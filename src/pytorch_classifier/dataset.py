@@ -17,7 +17,7 @@ class TorchDataset(torch.utils.data.Dataset):
         categorical_variables: List,
         text: List[str],
         y: List[int],
-        tokenizer: Tokenizer
+        tokenizer: Tokenizer,
     ):
         """
         Constructor for the TorchDataset class.
@@ -83,39 +83,37 @@ class TorchDataset(torch.utils.data.Dataset):
         batch = np.array(batch)
         text = batch[:, 1].tolist()
         y = batch[:, 0]
-        categorical_variables = [batch[:, 2 + i] for i in range(
-            len(self.categorical_variables)
-        )]
+        categorical_variables = [
+            batch[:, 2 + i] for i in range(len(self.categorical_variables))
+        ]
 
-        indices_batch = [self.tokenizer.indices_matrix(
-            sentence
-        ) for sentence in text]
+        indices_batch = [self.tokenizer.indices_matrix(sentence) for sentence in text]
         max_tokens = max([len(indices) for indices in indices_batch])
 
-        padding_index = self.tokenizer.get_buckets() \
-            + self.tokenizer.get_nwords()
-        padded_batch = [np.pad(
-            indices,
-            (0, max_tokens - len(indices)),
-            'constant',
-            constant_values=padding_index
-        ) for indices in indices_batch]
+        padding_index = self.tokenizer.get_buckets() + self.tokenizer.get_nwords()
+        padded_batch = [
+            np.pad(
+                indices,
+                (0, max_tokens - len(indices)),
+                "constant",
+                constant_values=padding_index,
+            )
+            for indices in indices_batch
+        ]
         padded_batch = np.stack(padded_batch)
 
         # Cast
         x = torch.LongTensor(padded_batch.astype(np.int32))
-        categorical_tensors = [torch.LongTensor(
-            variable.astype(np.int32)
-        ) for variable in categorical_variables]
+        categorical_tensors = [
+            torch.LongTensor(variable.astype(np.int32))
+            for variable in categorical_variables
+        ]
         y = torch.LongTensor(y.astype(np.int32))
 
         return (x, *categorical_tensors, y)
 
     def create_dataloader(
-        self,
-        batch_size: int,
-        shuffle: bool = False,
-        drop_last: bool = False
+        self, batch_size: int, shuffle: bool = False, drop_last: bool = False
     ) -> torch.utils.data.DataLoader:
         """
         Creates a Dataloader.
@@ -129,5 +127,10 @@ class TorchDataset(torch.utils.data.Dataset):
             torch.utils.data.DataLoader: Dataloader.
         """
         return torch.utils.data.DataLoader(
-            dataset=self, batch_size=batch_size, collate_fn=self.collate_fn,
-            shuffle=shuffle, drop_last=drop_last, pin_memory=True)
+            dataset=self,
+            batch_size=batch_size,
+            collate_fn=self.collate_fn,
+            shuffle=shuffle,
+            drop_last=drop_last,
+            pin_memory=True,
+        )

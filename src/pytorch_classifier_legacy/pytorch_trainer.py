@@ -44,7 +44,6 @@ class PytorchTrainer:
 
         # Iterate over train batches
         for i, batch in enumerate(dataloader):
-
             # Step
             batch = [item.to(self.device) for item in batch]  # Set device
             inputs, targets = batch[:-1], batch[-1]
@@ -71,7 +70,6 @@ class PytorchTrainer:
         # Iterate over val batches
         with torch.inference_mode():
             for i, batch in enumerate(dataloader):
-
                 # Step
                 batch = [item.to(self.device) for item in batch]  # Set device
                 inputs, y_true = batch[:-1], batch[-1]
@@ -99,7 +97,6 @@ class PytorchTrainer:
         # Iterate over val batches
         with torch.inference_mode():
             for i, batch in enumerate(dataloader):
-
                 # Forward pass w/ inputs
                 inputs, _ = batch[:-1], batch[-1]
                 z = self.model(inputs)
@@ -144,20 +141,21 @@ class PytorchTrainer:
 
         self.model = PytorchModel(
             embedding_dim=input_matrix.shape[1],
-            vocab_size=len(input_matrix)+1,
+            vocab_size=len(input_matrix) + 1,
             embedding_matrix=padded_input_matrix,
             num_classes=num_classes,
             y=y,
             categorical_features=categorical_features,
             fasttext_model=fasttext_model,
             freeze_embeddings=False,
-            padding_idx=padding_idx
+            padding_idx=padding_idx,
         ).to(self.device)
 
         # Define optimizer & scheduler
         self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode="min", factor=0.1, patience=patience)
+            self.optimizer, mode="min", factor=0.1, patience=patience
+        )
 
         # Train/val split
         features = [text_feature]
@@ -166,31 +164,31 @@ class PytorchTrainer:
         X_train, X_val, y_train, y_val = train_test_split(
             df[features],
             df[y],
-            test_size=1-train_proportion,
+            test_size=1 - train_proportion,
             random_state=0,
-            shuffle=True
+            shuffle=True,
         )
 
         train_dataset = TorchDataset(
-            categorical_variables=[X_train[column].to_list() for column in X_train[categorical_features]],
+            categorical_variables=[
+                X_train[column].to_list() for column in X_train[categorical_features]
+            ],
             text=X_train[text_feature].to_list(),
             y=y_train.to_list(),
             fasttext_model=fasttext_model,
-            padding_idx=self.model.padding_idx
+            padding_idx=self.model.padding_idx,
         )
         val_dataset = TorchDataset(
-            categorical_variables=[X_val[column].to_list() for column in X_val[categorical_features]],
+            categorical_variables=[
+                X_val[column].to_list() for column in X_val[categorical_features]
+            ],
             text=X_val[text_feature].to_list(),
             y=y_val.to_list(),
             fasttext_model=fasttext_model,
-            padding_idx=self.model.padding_idx
+            padding_idx=self.model.padding_idx,
         )
-        train_dataloader = train_dataset.create_dataloader(
-            batch_size=batch_size
-        )
-        val_dataloader = val_dataset.create_dataloader(
-            batch_size=batch_size
-        )
+        train_dataloader = train_dataset.create_dataloader(batch_size=batch_size)
+        val_dataloader = val_dataset.create_dataloader(batch_size=batch_size)
 
         epochs = []
         train_losses = []
@@ -226,12 +224,12 @@ class PytorchTrainer:
                 f"_patience: {_patience}"
             )
 
-        plt.plot(epochs, train_losses, 'r', label='train loss')
-        plt.plot(epochs, val_losses, 'b', label='validation loss')
+        plt.plot(epochs, train_losses, "r", label="train loss")
+        plt.plot(epochs, val_losses, "b", label="validation loss")
         plt.legend()
-        plt.xlabel('Epoch')
+        plt.xlabel("Epoch")
         plt.xticks(epochs)
-        plt.savefig('losses.png')
+        plt.savefig("losses.png")
         plt.close()
 
         return best_model
