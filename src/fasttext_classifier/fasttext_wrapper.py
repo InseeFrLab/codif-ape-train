@@ -1,10 +1,16 @@
 """
 FastText wrapper for MLflow.
 """
+import sys
+
 import fasttext
 import mlflow
+import yaml
 
+from constants import TEXT_FEATURE
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
+
+sys.path.append("../")
 
 
 class FastTextWrapper(mlflow.pyfunc.PythonModel):
@@ -22,17 +28,11 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         """
         # pylint: disable=attribute-defined-outside-init
         self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
-        self.text_feature = context.artifacts["text_feature"]
         self.model_evaluator = FastTextEvaluator(self.model)
-        subset_dict = {
-            k: context.artifacts[k]
-            for k in context.artifacts.keys()
-            if k not in ["fasttext_model_path", "text_feature"]
-        }
-        for key, value in subset_dict:
-            setattr(self, key, value)
+        with open(context.artifacts["config_path"], "r", encoding="utf-8") as stream:
+            config = yaml.safe_load(stream)
+        self.categorical_features = config["categorical_features"]
         # pylint: enable=attribute-defined-outside-init
-        print(subset_dict)
 
     def predict(self, context, model_input):
         """
@@ -54,7 +54,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             self.categorical_features if self.categorical_features is not None else []
         )
         for item in model_input.iterrows():
-            formatted_item = item[1][self.text_feature]
+            formatted_item = item[1][TEXT_FEATURE]
             for feature in iterables_features:
                 if f"{item[1][feature]}".endswith(".0"):
                     formatted_item += f" {feature}_{item[1][feature]}"[:-2]

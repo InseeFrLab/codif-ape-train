@@ -63,10 +63,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
 
             artifacts = {
                 "fasttext_model_path": fasttext_model_path,
-                "text_feature": TEXT_FEATURE,
-            } | {
-                f"categorical_feature_{idx+1}": feature
-                for idx, feature in enumerate(categorical_features)
+                "config_path": get_root_path() / config_path,
             }
 
             print(artifacts)
