@@ -20,7 +20,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
     with mlflow.start_run(run_name=run_name):
-        with open(get_root_path() / config_path, "r") as stream:
+        with open(get_root_path() / config_path, "r", encoding="utf-8") as stream:
             config = yaml.safe_load(stream)
         model_type = config["model_type"]
         framework_classes = FRAMEWORK_CLASSES[model_type]
@@ -63,10 +63,13 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
 
             artifacts = {
                 "fasttext_model_path": fasttext_model_path,
-                "categorical_features": categorical_features,
                 "text_feature": TEXT_FEATURE,
+            } | {
+                f"categorical_feature_{idx+1}": feature
+                for idx, feature in enumerate(categorical_features)
             }
 
+            print(artifacts)
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/"],
@@ -126,8 +129,8 @@ if __name__ == "__main__":
     )
 
 
-# TODO : refaire marcher le code
-# TODO : nettoyer les experiments sur Mlflow
-# TODO : en créer un nouveau et faire tourner des tests dessus
-# TODO : Readapter la base avec les dernieres demandes
-# TODO : Reentrainer le modèle
+# TODO: refaire marcher le code
+# TODO: nettoyer les experiments sur Mlflow
+# TODO: en créer un nouveau et faire tourner des tests dessus
+# TODO: Readapter la base avec les dernieres demandes
+# TODO: Reentrainer le modèle

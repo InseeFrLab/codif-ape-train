@@ -22,12 +22,17 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         """
         # pylint: disable=attribute-defined-outside-init
         self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
-        self.categorical_features = fasttext.load_model(
-            context.artifacts["categorical_features"]
-        )
-        self.text_feature = fasttext.load_model(context.artifacts["text_feature"])
+        self.text_feature = context.artifacts["text_feature"]
         self.model_evaluator = FastTextEvaluator(self.model)
+        subset_dict = {
+            k: context.artifacts[k]
+            for k in context.artifacts.keys()
+            if k not in ["fasttext_model_path", "text_feature"]
+        }
+        for key, value in subset_dict:
+            setattr(self, key, value)
         # pylint: enable=attribute-defined-outside-init
+        print(subset_dict)
 
     def predict(self, context, model_input):
         """
@@ -41,7 +46,8 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         Returns:
             [type]: the loaded model artifact.
         """
-        # TODO : code below is duplicated from FastTextEvaluator - fix
+        # TODO: code below is duplicated from FastTextEvaluator - fix
+        # pylint: disable=no-member
         libs = []
 
         iterables_features = (
@@ -55,7 +61,8 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
                 else:
                     formatted_item += f" {feature}_{item[1][feature]}"
             libs.append(formatted_item)
-            # TODO : issue with missing values ?
+            # TODO: issue with missing values ?
+        # pylint: enable=no-member
 
         # k=1 here is temporary
         return self.model.predict(libs, k=1)

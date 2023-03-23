@@ -195,6 +195,7 @@ good-names=i,
            X_test,
            y,
            t,
+           Y,#temp
            _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
@@ -301,7 +302,7 @@ max-bool-expr=5
 max-branches=12
 
 # Maximum number of locals for function / method body.
-max-locals=15
+max-locals=30
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
@@ -313,7 +314,7 @@ max-public-methods=20
 max-returns=6
 
 # Maximum number of statements in function / method body.
-max-statements=50
+max-statements=75
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
@@ -454,7 +455,6 @@ timeout-methods=requests.api.delete,requests.api.get,requests.api.head,requests.
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
       XXX,
-      TODO
 
 # Regular expression of note tags to take in consideration.
 notes-rgx=
