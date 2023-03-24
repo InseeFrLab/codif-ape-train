@@ -63,10 +63,9 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
 
             artifacts = {
                 "fasttext_model_path": fasttext_model_path,
-                "config_path": get_root_path() / config_path,
+                "config_path": config_path,
             }
 
-            print(artifacts)
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/"],
