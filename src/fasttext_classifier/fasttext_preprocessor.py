@@ -141,7 +141,7 @@ class FastTextPreprocessor(Preprocessor):
 
         # apply replacements to text_feature column
         for pattern, replacement in replacements.items():
-            df[text_feature] = df[text_feature].str.replace(
+            df[text_feature] = df[text_feature].replace(
                 pattern, replacement, regex=True
             )
 
