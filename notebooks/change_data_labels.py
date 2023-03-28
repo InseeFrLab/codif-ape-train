@@ -5,6 +5,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 df = pd.read_parquet(
     "../data/extraction_sirene_20220712_harmonized_20221014.parquet", engine="pyarrow"
@@ -27,7 +28,7 @@ replacements = {
 df["LIB_CLEAN"] = df["LIB_SICORE"].str.lower()
 
 # apply replacements to LIB_CLEAN column
-for pattern, replacement in replacements.items():
+for pattern, replacement in tqdm(replacements.items()):
     df["LIB_CLEAN"] = df["LIB_CLEAN"].str.replace(pattern, replacement, regex=True)
 
 df["LIB_CLEAN"] = df["LIB_CLEAN"].apply(lambda x: re.sub(r"\b\w\b", "", x))
@@ -43,8 +44,8 @@ replacements = {
 }
 
 # apply replacements to LIB_CLEAN column
-for pattern, replacement in replacements.items():
-    df["LIB_CLEAN"] = df["LIB_CLEAN"].str.replace(pattern, replacement, regex=True)
+for pattern, replacement in tqdm(replacements.items()):
+    df["LIB_CLEAN"] = df["LIB_CLEAN"].replace(pattern, replacement, regex=True)
 
 df.dropna(subset=["APE_SICORE", "LIB_CLEAN"], inplace=True)
 
@@ -57,4 +58,6 @@ idx = (
 ) & ((df["AUTO"].isin(["E", "L", "S", "X", "I"])) | (df["AUTO"].isnull()))
 
 df["APE_SICORE"] = np.where(idx, "6820A", df["APE_SICORE"])
-df.to_parquet("data_sirene3.parquet")
+df[
+    ["DATE", "APE_SICORE", "LIB_SICORE", "AUTO", "NAT_SICORE", "EVT_SICORE", "SURF"]
+].to_parquet("data/data_sirene3.parquet")
