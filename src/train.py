@@ -64,6 +64,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             artifacts = {
                 "fasttext_model_path": fasttext_model_path,
                 "config_path": config_path,
+                "train_data": "data/train_text.txt",
             }
 
             mlflow.pyfunc.log_model(
@@ -125,8 +126,5 @@ if __name__ == "__main__":
     )
 
 
-# TODO: refaire marcher le code
-# TODO: nettoyer les experiments sur Mlflow
-# TODO: en créer un nouveau et faire tourner des tests dessus
 # TODO: Readapter la base avec les dernieres demandes
 # TODO: Reentrainer le modèle
