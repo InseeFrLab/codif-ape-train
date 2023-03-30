@@ -3,7 +3,7 @@
 export MLFLOW_S3_ENDPOINT_URL='https://minio.lab.sspcloud.fr'
 
 # Set MLFLOW_TRACKING_URI environment variable
-export MLFLOW_TRACKING_URI="https://projet-ape-537858.user.lab.sspcloud.fr"
+export MLFLOW_TRACKING_URI="https://projet-ape-496146.user.lab.sspcloud.fr"
 
 # Set MLFLOW_EXPERIMENT_NAME environment variable
 export MLFLOW_EXPERIMENT_NAME="Production"
