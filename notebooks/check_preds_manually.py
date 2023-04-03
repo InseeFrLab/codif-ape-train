@@ -1,14 +1,16 @@
+"""Module providingFunction printing python version."""
+
+import fasttext
 import pandas as pd
 import yaml
-import fasttext
 
 from constants import TEXT_FEATURE
-from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
+from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from utils import get_root_path
 
-config_path = "config/config_fasttext39.yaml"
-with open(get_root_path() / config_path, "r") as stream:
+CONFIG_PATH = "config/config_fasttext39.yaml"
+with open(get_root_path() / CONFIG_PATH, "r", encoding="utf-8") as stream:
     config = yaml.safe_load(stream)
 categorical_features = config["categorical_features"]
 Y = config["Y"][0]
@@ -34,7 +36,8 @@ for i in range(df_prepro.shape[0]):
 
 
 # Loading the model
-# mc cp minio/projet-ape/mlflow-artifacts/1/5490ebb3b62a43e494517f819cf20322/artifacts/default/artifacts/default.bin models/model.bin
+# mc cp minio/projet-ape/mlflow-artifacts/1/5490ebb3b62a43e494517f819cf20322/
+# artifacts/default/artifacts/default.bin models/model.bin
 model = fasttext.load_model("../models/model.bin")
 evaluator = FastTextEvaluator(model)
 Results = evaluator.get_aggregated_preds(
