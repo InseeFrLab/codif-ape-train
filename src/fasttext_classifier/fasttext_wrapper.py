@@ -1,7 +1,6 @@
 """
 FastText wrapper for MLflow.
 """
-import sys
 
 import fasttext
 import mlflow
@@ -10,22 +9,29 @@ import yaml
 
 from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 
-sys.path.append("../")
-
 
 class FastTextWrapper(mlflow.pyfunc.PythonModel):
     """
-    Class to train and use FastText Models.
+    Class to wrap and use FastText Models.
     """
 
-    def load_context(self, context):
+    def __init__(self):
+        self.preprocessor = FastTextPreprocessor()
+        self.categorical_features = None
+
+    def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
-        This method is called when loading an MLflow model with
+        Load the FastText model and its configuration file from an MLflow model
+        artifact. This method is called when loading an MLflow model with
         pyfunc.load_model(), as soon as the Python Model is constructed.
 
         Args:
-            context: MLflow context where the model artifact is stored.
+            context (mlflow.pyfunc.PythonModelContext): MLflow context where the
+                model artifact is stored. It should contain the following artifacts:
+                    - "fasttext_model_path": path to the FastText model file.
+                    - "config_path": path to the configuration file.
         """
+
         # pylint: disable=attribute-defined-outside-init
         self.model = fasttext.load_model(context.artifacts["fasttext_model_path"])
         with open(context.artifacts["config_path"], "r", encoding="utf-8") as stream:
@@ -33,22 +39,26 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         self.categorical_features = config["categorical_features"]
         # pylint: enable=attribute-defined-outside-init
 
-    def predict(self, context, query, k):
+    def predict(
+        self, context: mlflow.pyfunc.PythonModelContext, query: dict, k: int
+    ) -> tuple:
         """
-        This is an abstract function. We customized it into
-        a method to fetch the FastText model.
+        Predicts the k most likely codes to a query using a pre-trained model.
 
         Args:
-            context ([type]): MLflow context where the model artifact
-                is stored.
-            model_input ([type]): the input data to fit into the model.
-        Returns:
-            [type]: the loaded model artifact.
-        """
-        self.load_context(context)
-        preprocessor = FastTextPreprocessor()
+            context (mlflow.pyfunc.PythonModelContext): The MLflow model context.
+            query (dict): A dictionary containing the query features.
+            k (int): The number of most likely codes to return.
 
-        df = preprocessor.clean_lib(df=pd.DataFrame(query), text_feature="TEXT_FEATURE")
+        Returns:
+            A tuple containing the k most likely codes to the query.
+        """
+        if self.categorical_features is None:
+            self.load_context(context)
+
+        df = self.preprocessor.clean_lib(
+            df=pd.DataFrame(query), text_feature="TEXT_FEATURE"
+        )
 
         df[self.categorical_features] = df[self.categorical_features].fillna(
             value="NaN"
@@ -58,14 +68,26 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             self.categorical_features if self.categorical_features is not None else []
         )
 
-        libs = []
-        for item in df.iterrows():
-            formatted_item = item[1]["TEXT_FEATURE"]
-            for feature in iterables_features:
-                if f"{item[1][feature]}".endswith(".0"):
-                    formatted_item += f" {feature}_{item[1][feature]}"[:-2]
-                else:
-                    formatted_item += f" {feature}_{item[1][feature]}"
-            libs.append(formatted_item)
+        libs = df.apply(self._format_item, columns=iterables_features, axis=1).to_list()
 
         return self.model.predict(libs, k=k)
+
+    def _format_item(self, row: pd.Series, columns: list[str]) -> str:
+        """
+        Formats a row of data into a string.
+
+        Args:
+            row (pandas.Series): A pandas series containing the row data.
+            columns (list of str): A list of column names to include in the formatted item.
+
+        Returns:
+            A formatted item string.
+        """
+        formatted_item = row["TEXT_FEATURE"]
+        formatted_item += "".join(
+            f" {feature}_{row[feature]:.0f}"
+            if isinstance(row[feature], float)
+            else f" {feature}_{row[feature]}"
+            for feature in columns
+        )
+        return formatted_item
