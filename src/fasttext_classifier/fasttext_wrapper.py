@@ -40,15 +40,17 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         # pylint: enable=attribute-defined-outside-init
 
     def predict(
-        self, context: mlflow.pyfunc.PythonModelContext, query: dict, k: int
+        self, context: mlflow.pyfunc.PythonModelContext, model_input: dict
     ) -> tuple:
         """
         Predicts the k most likely codes to a query using a pre-trained model.
 
         Args:
             context (mlflow.pyfunc.PythonModelContext): The MLflow model context.
-            query (dict): A dictionary containing the query features.
-            k (int): The number of most likely codes to return.
+        model_input (dict): A dictionary containing the input data for the model.
+            It should have the following keys:
+            - 'query': A dictionary containing the query features.
+            - 'k': An integer representing the number of predicted codes to return.
 
         Returns:
             A tuple containing the k most likely codes to the query.
@@ -57,7 +59,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             self.load_context(context)
 
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(query), text_feature="TEXT_FEATURE"
+            df=pd.DataFrame(model_input["query"]), text_feature="TEXT_FEATURE"
         )
 
         df[self.categorical_features] = df[self.categorical_features].fillna(
@@ -70,7 +72,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
 
         libs = df.apply(self._format_item, columns=iterables_features, axis=1).to_list()
 
-        return self.model.predict(libs, k=k)
+        return self.model.predict(libs, k=model_input["k"])
 
     def _format_item(self, row: pd.Series, columns: list[str]) -> str:
         """
