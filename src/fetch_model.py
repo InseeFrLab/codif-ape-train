@@ -26,6 +26,8 @@ def fetch_model(
 
     """
     os.environ["MLFLOW_TRACKING_URI"] = server_uri
+    endpoint = os.environ["AWS_S3_ENDPOINT"]
+    os.environ["MLFLOW_S3_ENDPOINT_URL"] = f"https://{endpoint}"
     try:
         model = mlflow.pyfunc.load_model(
             model_uri=f"models:/{model_name}/{model_version}"
