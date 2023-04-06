@@ -4,7 +4,7 @@ sys.path.append('./src')
 from fetch_model import fetch_model
 
 # model = fetch_model("https://projet-ape-543061.user.lab.sspcloud.fr", "FastText-APE", "4")
-model = fetch_model("https://projet-ape-543061.user.lab.sspcloud.fr", "test", "1")
+model = fetch_model("https://projet-ape-654210.user.lab.sspcloud.fr", "test", "1")
 
 query = {"query" : {'TEXT_FEATURE': ["LMNPPPP 64415 ape meubleee", "cac PORTH s,o"],
  'AUTO': [None, "C"],
