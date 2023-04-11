@@ -51,14 +51,12 @@ class FastTextTrainer(Trainer):
         iterables_features = (
             categorical_features if categorical_features is not None else []
         )
-        with open(root_path / "data/train_text.txt", "w") as f:
+        with open(root_path / "data/train_text.txt", "w", encoding="utf-8") as file:
             for item in df.iterrows():
-                formatted_item = "__label__{} {}".format(
-                    item[1][y], item[1][text_feature]
-                )
+                formatted_item = f"__label__{item[1][y]} {item[1][text_feature]}"
                 for feature in iterables_features:
                     formatted_item += f" {feature}_{item[1][feature]}"
-                f.write("%s\n" % formatted_item)
+                file.write(f"{formatted_item}\n")
 
         print(f"\t*** Training over {df.shape[0]} observations\n")
 
@@ -66,6 +64,3 @@ class FastTextTrainer(Trainer):
             (root_path / "data/train_text.txt").as_posix(), **params, verbose=2
         )
         return model
-
-
-# TODO: SAVE THE TRAIN_TEXT file in S3

@@ -123,7 +123,3 @@ if __name__ == "__main__":
         str(sys.argv[4]),
         str(sys.argv[5]),
     )
-
-
-# TODO: Readapter la base avec les dernieres demandes
-# TODO: Reentrainer le modèle
