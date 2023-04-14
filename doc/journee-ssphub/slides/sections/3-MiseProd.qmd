@@ -2,7 +2,7 @@
 ## Organisation actuelle
 
 - [**3 parties prenantes**]{.orange} autour du projet :
-  - [**Équipe métier**]{.blue2} Sirene
+  - [**Équipe métier**]{.blue2}
   - [**Développeur**]{.blue2} Sirene 4
   - [**SSP Lab**]{.blue2}
 
@@ -16,7 +16,7 @@
   1) Expérimentations par le [**SSP Lab**]{.orange} et optimisation d'un modèle avec *MLflow Tracking*
   2) Validation du modèle par l'[**équipe métier**]{.orange}
   3) Le [**SSP Lab**]{.orange} transmet le binaire aux [**développeurs**]{.orange} Sirene 4
-  4) Les [**développeurs**]{.orange} traduisent de python à Java le *preprocessing* à effectuer en amont et intègre le modèle dans le module de codification
+  4) Les [**développeurs**]{.orange} traduisent de Python à Java le *preprocessing* à effectuer en amont et intègre le modèle dans le module de codification
 
 ## Une fois le modèle en production
 
@@ -30,18 +30,27 @@
 
 ## Retour d'expérience
 
-- [**API Java**]{.orange} vs. expérimentation Python : duplication de code.
-- Utilisation de [**FastText**]{.orange} : maintenance, reproductibilité, sécurité.
+- [**API Java**]{.orange} vs. expérimentation Python :
+  - Duplication de code
+  - Risque d'erreurs accru
+- Problèmes liés à l'utilisation de [**FastText**]{.orange} :
+  - [**maintenance**]{.blue2}
+  - [**reproductibilité**]{.blue2}
+  - [**sécurité**]{.blue2}
 - Infrastructure de production [**rigide**]{.orange}.
+
+## Retour d'expérience
+
 - [**Méconnaissance des problèmes métier**]{.orange} côté SSP Lab pour la maintenance.
 - [**Contrôle de version**]{.orange} et [**transmission**]{.orange} des modèles.
-- [**Confiance**]{.orange} et compréhension du classifier côté métier.
+- [**Confiance**]{.orange} et compréhension du classifieur côté métier/gestionnaires Sirene.
 - Logs [**difficilement accessibles**]{.orange} et au format variable.
 - Pas d'accès aux [**bases Sirene**]{.orange} (réentraînement).
 
 ## Organisation visée
 
 - [**Observabilité, maintenance**]{.orange} du modèle côté Sirene (appui technique du SSP Lab)
-- Développement d'une [**API Python**]{.orange} et utilisation du plein potentiel de [**MLflow**]{.orange}
 - Cluster Kubernetes de production
 - S'affranchir de [**FastText**]{.orange}
+- Utilisation du plein potentiel de [**MLflow**]{.orange} pour la gestion des modèles en production
+- Développement d'une [API](https://codification-ape.lab.sspcloud.fr/docs#/Predict/predict_predict_get){preview-link="true"} Python
