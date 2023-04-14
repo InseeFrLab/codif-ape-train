@@ -5,7 +5,7 @@ subtitle: |
 author: |
   [Thomas Faria](https://github.com/ThomasFaria),
   [Tom Seimandi](https://github.com/tomseimandi/)
-date: 17 avril 2023
+date: 17 april 2023
 slide-number: true
 # uncomment for French presentations:
 lang: fr-FR
