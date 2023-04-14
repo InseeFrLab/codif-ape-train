@@ -10,4 +10,4 @@
 ![](img/fastText_desc_ape.png){height="400" fig-align="center"}
 
 - Modèle [**simple**]{.orange} qui fonctionne bien dans notre contexte.
-- [**Indice de confiance**]{.orange} pour chaque prédiction.
+- [**Indice de confiance**]{.orange} calculé pour chaque prédiction.

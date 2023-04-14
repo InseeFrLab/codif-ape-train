@@ -1,11 +1,12 @@
 ---
-title: Codification automatique de l’APE dans le cadre du projet Sirene 4 
+title: Codification automatique de l’APE dans le cadre du projet Sirene 4
 subtitle: |
   **[Journée SSP Hub]{.orange}**
 author: |
   [Thomas Faria](https://github.com/ThomasFaria),
   [Tom Seimandi](https://github.com/tomseimandi/)
-date: 17 april 2023
+date: "04/17/2023"
+date-format: "D MMMM YYYY"
 slide-number: true
 # uncomment for French presentations:
 lang: fr-FR
