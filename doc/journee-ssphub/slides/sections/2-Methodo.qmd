@@ -1,0 +1,81 @@
+
+
+## Vectorisation des libellés
+
+- [**Plongements lexicaux**]{.orange} : méthode de [**vectorisation**]{.blue2}.
+- Plongements [**pré-entraînés**]{.orange} disponibles en open-source.
+- On apprend [**nos propres**]{.orange} plongements de [**mots**]{.blue2}.
+- Mais aussi des plongements pour :
+  - Les [**n-grams de mots**]{.blue2} et [**n-grams de caractères**]{.blue2}.
+
+![](img/n-grams.png){height="250" fig-align="center"}
+
+## Classifieur linéaire
+
+- [**2 méthodes**]{.orange} pour la classification : 
+  - [**Softmax**]{.blue2} : un [**unique**]{.green2} classifieur multiclasse.
+  - [**One-vs-all**]{.blue2} : de [**multiples**]{.green2} classifieurs binaires.
+- [**Optimisation**]{.orange} : algorithme de type [**descente de gradient stochastique**]{.blue2}.
+- [**Fonction de perte**]{.orange} : [**entropie croisée**]{.blue2}.
+
+## Classification à partir de plongements lexicaux
+
+![](img/fastText_desc_ape.png){height="400" fig-align="center"}
+
+## Implémentation, entraînement
+
+::: {layout-ncol=2}
+![](img/fasttext.png){height="100"}
+
+![](img/mlflow.png){height="100"}
+:::
+
+- [**fastText**]{.blue2} : librairie rapide (`C++`) et facilement utilisable.
+- Optimisation des paramètres d'entraînement et hyperparamètres avec [**mlflow**]{.blue2}.
+
+## Prise en compte des variables catégorielles
+
+- [**Concaténation**]{.orange} du libellé avec les noms et valeurs des variables annexes :
+
+Libellé | NAT | TYP | EVT | SUR | 
+--------|-----|-----|-----|-----|
+Cours de musique | NaN | X | 01P |NaN
+
+<center>
+&#129155;
+</center>
+
+"Cours de musique [NAT]{.green2}\_[NaN]{.blue2} [TYP]{.green2}\_[X]{.blue2} [EVT]{.green2}\_[01P]{.blue2} [SUR]{.green2}\_[NaN]{.blue2}"
+
+- [**Méthode imparfaite**]{.orange} : 3-grams "AT_" ou "T_0" utilisés.
+
+## Prétraitements effectués
+
+-  [**Nettoyage**]{.orange} indispensable pour l'analyse textuelle.
+- [**Contrainte**]{.orange} : [**simple**]{.blue2}, [**léger**]{.blue2} et facilement [**reproductible**]{.blue2} en Java.
+
+
+Transformation | Libellé |
+--|-------------|
+Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
+Passage en minuscule | 3 d : la deratisation - la desinsectisation - la desinfection |
+Suppression des ponctuations | 3 d la deratisation la desinsectisation la desinfection |
+
+## Prétraitements effectués
+
+Transformation | Libellé |
+--|-------------|
+Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
+... | ... |
+Suppression des chiffres | d la deratisation la desinsectisation la desinfection |
+Suppression des mots à une lettre | la deratisation la desinsectisation la desinfection |
+Suppression des *stopwords* | deratisation desinsectisation desinfection |
+
+## Prétraitements effectués
+
+Transformation | Libellé |
+--|-------------|
+Entrée | 3 D : La Deratisation - La Desinsectisation - La Desinfection |
+... | ... |
+Suppression des NaN | deratisation desinsectisation desinfection |
+Racinisation des mots | deratis desinsectis desinfect |

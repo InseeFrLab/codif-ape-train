@@ -82,11 +82,11 @@ pages:
   stage: deploy
   image: inseefrlab/onyxia-r-minimal
   script:
-    - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
+    # - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
-    - file -bi doc/seminaire-dms-oct-2022/slides/index.qmd
-    - quarto render doc/seminaire-dms-oct-2022/slides/index.qmd
-    - mv doc/seminaire-dms-oct-2022/slides public
+    - file -bi doc/journee-ssphub/slides/index.qmd
+    - quarto render doc/journee-ssphub/slides/index.qmd
+    - mv doc/journee-ssphub/slides public
     - mv setup.sh public/setup.sh
     - cat public/index.html
   artifacts:

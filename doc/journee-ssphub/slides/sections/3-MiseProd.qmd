@@ -1,0 +1,30 @@
+
+## Organisation prévue
+
+- Intégration dans [**Sirene 4**]{.orange} pour coder le guichet unique.
+- Module de codification : API construite sur `JFastText`.
+- Définition du contenu des [**logs**]{.orange} pour contrôle futur.
+- [**Double rôle**]{.orange} du SSP Lab à moyen terme :
+  - [**Livraison**]{.blue2} des modèles entraînés.
+  - [**Contrôle**]{.blue2} qualité.
+
+
+:::{.callout-important}
+## À clarifier
+
+1) Identification des liasses non-codables.
+2) Utilisation du module comme aide à la reprise manuelle.
+:::
+
+## Organisation à terme ?
+
+![](img/orga_ape.png)
+
+## Problématiques pour la codification en production
+
+- [**Gestion des versions**]{.orange} des modèles en production ?
+- [**Contrôle du modèle**]{.orange} en production : quoi et à quelle fréquence ?
+- [**Contrôle des entrées**]{.orange} à coder ?
+- [**Réentraînement**]{.orange} d'un modèle : comment et à quelle fréquence ?
+- Utilisation et maintenance des différents modules ?
+- Gestion des [**changements de nomenclature**]{.orange} ?
