@@ -9,5 +9,5 @@
 
 ![](img/fastText_desc_ape.png){height="400" fig-align="center"}
 
-- Modèle très simple qui fonctionne bien dans notre contexte.
-- Indice de confiance pour chaque prédiction.
+- Modèle [**simple**]{.orange} qui fonctionne bien dans notre contexte.
+- [**Indice de confiance**]{.orange} pour chaque prédiction.

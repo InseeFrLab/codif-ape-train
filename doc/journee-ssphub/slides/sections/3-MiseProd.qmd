@@ -20,11 +20,20 @@
 
 ![](img/orga_ape.png)
 
-## Problématiques pour la codification en production
+## Retour d'expérience
 
-- [**Gestion des versions**]{.orange} des modèles en production ?
-- [**Contrôle du modèle**]{.orange} en production : quoi et à quelle fréquence ?
-- [**Contrôle des entrées**]{.orange} à coder ?
-- [**Réentraînement**]{.orange} d'un modèle : comment et à quelle fréquence ?
-- Utilisation et maintenance des différents modules ?
-- Gestion des [**changements de nomenclature**]{.orange} ?
+- [**API Java**]{.orange} vs. expérimentation Python : duplication de code.
+- Utilisation de [**FastText**]{.orange} : maintenance, reproductibilité, sécurité.
+- Infrastructure de production [**rigide**]{.orange}.
+- [**Méconnaissance des problèmes métier**]{.orange} côté SSP Lab pour la maintenance.
+- [**Contrôle de version**]{.orange} et [**transmission**]{.orange} des modèles.
+- [**Confiance**]{.orange} et compréhension du classifier côté métier.
+- Logs [**difficilement accessibles**]{.orange} et au format variable.
+- Pas d'accès aux [**bases Sirene**]{.orange} (réentraînement).
+
+## Organisation visée
+
+- [**Observabilité, maintenance**]{.orange} du modèle côté Sirene (appui technique du SSP Lab)
+- Développement d'une [**API Python**]{.orange} et utilisation du plein potentiel de [**MLflow**]{.orange}
+- Cluster Kubernetes de production
+- S'affranchir de [**FastText**]{.orange}
