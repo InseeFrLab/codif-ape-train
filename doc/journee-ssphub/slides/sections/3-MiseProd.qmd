@@ -30,7 +30,7 @@
 
 ## Retour d'expérience
 
-- [**API Java**]{.orange} vs. expérimentation Python :
+- API [**Java**]{.orange} vs. expérimentation [**Python**]{.orange} :
   - Duplication de code
   - Risque d'erreurs accru
 - Problèmes liés à l'utilisation de [**FastText**]{.orange} :
@@ -43,7 +43,7 @@
 
 - [**Méconnaissance des problèmes métier**]{.orange} côté SSP Lab pour la maintenance.
 - [**Contrôle de version**]{.orange} et [**transmission**]{.orange} des modèles.
-- [**Confiance**]{.orange} et compréhension du classifieur côté métier/gestionnaires Sirene.
+- [**Confiance**]{.orange} et compréhension du classifieur nécessaires côté métier/gestionnaires Sirene.
 - Logs [**difficilement accessibles**]{.orange} et au format variable.
 - Pas d'accès aux [**bases Sirene**]{.orange} (réentraînement).
 
