@@ -83,7 +83,8 @@ pages:
   image: inseefrlab/onyxia-r-minimal
   script:
     # - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
-    - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/common-scripts/install-quarto.sh | sudo bash
+    - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/base/scripts/install-quarto.sh | sudo bash
+    - file -bi doc/journee-ssphub/slides/index.qmd
     - quarto render doc/journee-ssphub/slides/index.qmd
     - mv doc/journee-ssphub/slides public
     - mv setup.sh public/setup.sh
