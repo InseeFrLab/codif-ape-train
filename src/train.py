@@ -10,6 +10,7 @@ import yaml
 
 from constants import FRAMEWORK_CLASSES, TEXT_FEATURE
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
+from tests.test_main import run_test
 from utils import get_root_path
 
 
@@ -32,6 +33,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         t = time.time()
         # Load data, assumed to be stored in a .parquet file
         df = pd.read_parquet(data_path, engine="pyarrow")
+        df = df.sample(frac=0.001)
 
         params = config["params"]
         categorical_features = config["categorical_features"]
@@ -113,6 +115,18 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             mlflow.log_metric(metric + "_gu", value)
 
         print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
+
+        # Tests
+        print("*** 4- Performing standard tests...\n")
+        t = time.time()
+        with open(
+            get_root_path() / "src/tests/tests.yaml", "r", encoding="utf-8"
+        ) as stream:
+            tests = yaml.safe_load(stream)
+        for case in tests.keys():
+            run_test(tests[case], preprocessor, evaluator)
+
+        print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
 
 
 if __name__ == "__main__":
