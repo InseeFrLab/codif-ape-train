@@ -70,7 +70,7 @@ class Evaluator(ABC):
                 each level of the NAF classification.
         """
         preds = self.get_preds(df, y, text_feature, categorical_features, k)
-        level = int(y[-1])
+        level = 5  # Hard code for now because we only predict level 5
 
         predicted_classes = {
             f"predictions_{level}_k{rank_pred+1}": [
@@ -82,13 +82,13 @@ class Evaluator(ABC):
             f"probabilities_k{rank_pred+1}": [prob[1] for prob in preds[rank_pred]]
             for rank_pred in range(k)
         }
-        liasseNb = df.index
+        liasse_nb = df.index
 
         preds_df = pd.DataFrame(predicted_classes)
-        preds_df.set_index(liasseNb, inplace=True)
+        preds_df.set_index(liasse_nb, inplace=True)
 
         proba_df = pd.DataFrame(probs_prediction)
-        proba_df.set_index(liasseNb, inplace=True)
+        proba_df.set_index(liasse_nb, inplace=True)
 
         try:
             df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
@@ -134,7 +134,7 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
-    def compute_accuracies(self, df: pd.DataFrame, y: str) -> Dict[str, float]:
+    def compute_accuracies(self, df: pd.DataFrame, level: int) -> Dict[str, float]:
         """
         Computes accuracies (for different levels of the NAF classification)
         of the trained model on DataFrame `df`.
@@ -148,25 +148,24 @@ class Evaluator(ABC):
             Dict[str, float]: Accuracies dictionary.
         """
 
-        level = int(y[-1])
         accuracies = {
-            f"accuracy_level_{aLevel}": np.mean(
-                (df[f"predictions_{aLevel}_k1"] == df[f"ground_truth_{aLevel}"])
+            f"accuracy_level_{lvl}": np.mean(
+                (df[f"predictions_{lvl}_k1"] == df[f"ground_truth_{lvl}"])
             )
-            for aLevel in range(1, level + 1)
+            for lvl in range(1, level + 1)
         }
 
         return accuracies
 
     @staticmethod
     def get_manual_accuracy(
-        aggregated_APE_dict: Dict[int, pd.DataFrame], method: str
+        aggregated_ape_dict: Dict[int, pd.DataFrame], method: str
     ) -> Dict[str, float]:
         """
         Returns accuracies after different rate of manual adjustments of the classification.
 
         Args:
-            aggregated_APE_dict (Dict[int, pd.DataFrame]): Dictionary
+            aggregated_ape_dict (Dict[int, pd.DataFrame]): Dictionary
                 of true and predicted labels.
             method ("gap"|"proba"): The method used for manual adjustment
 
@@ -175,30 +174,30 @@ class Evaluator(ABC):
         """
 
         accuracies = {}
-        for q in [0.05, 0.10, 0.15, 0.20, 0.25]:
+        for quantile in [0.05, 0.10, 0.15, 0.20, 0.25]:
             if method == "gap":
                 # On définit ceux qu'on ne reprend pas manuellement
-                idx = aggregated_APE_dict[0]["probabilities"] >= aggregated_APE_dict[0][
+                idx = aggregated_ape_dict[0]["probabilities"] >= aggregated_ape_dict[0][
                     "probabilities"
-                ].quantile(q=q)
+                ].quantile(q=quantile)
             else:
-                idx = aggregated_APE_dict[0]["probabilities"] - aggregated_APE_dict[1][
+                idx = aggregated_ape_dict[0]["probabilities"] - aggregated_ape_dict[1][
                     "probabilities"
                 ] >= (
-                    aggregated_APE_dict[0]["probabilities"]
-                    - aggregated_APE_dict[1]["probabilities"]
+                    aggregated_ape_dict[0]["probabilities"]
+                    - aggregated_ape_dict[1]["probabilities"]
                 ).quantile(
-                    q=q
+                    q=quantile
                 )
 
             for level in range(1, 6):
-                accuracies[f"accuracy_level_{level}_{method}_{q}"] = (
+                accuracies[f"accuracy_level_{level}_{method}_{quantile}"] = (
                     np.sum(
-                        aggregated_APE_dict[0][f"predictions_{level}"].loc[idx]
-                        == aggregated_APE_dict[0][f"ground_truth_{level}"].loc[idx]
+                        aggregated_ape_dict[0][f"predictions_{level}"].loc[idx]
+                        == aggregated_ape_dict[0][f"ground_truth_{level}"].loc[idx]
                     )
-                    + aggregated_APE_dict[0].loc[~idx].shape[0]
-                ) / aggregated_APE_dict[0].shape[0]
+                    + aggregated_ape_dict[0].loc[~idx].shape[0]
+                ) / aggregated_ape_dict[0].shape[0]
 
         return accuracies
 
@@ -227,5 +226,5 @@ class Evaluator(ABC):
         all_preds_df = self.get_aggregated_preds(
             df, y, text_feature, categorical_features, k
         )
-        accuracies = self.compute_accuracies(all_preds_df, y)
+        accuracies = self.compute_accuracies(all_preds_df, 5)
         return accuracies
