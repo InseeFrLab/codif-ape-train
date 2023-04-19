@@ -1,9 +1,199 @@
 Case 1:
   Titre: Test 1
   Data:
-    LIB_SICORE: "CREATION  DIFFUSION  GESTION DE MEDIAS ET DE RESEAUX SOCIAUX  RESTAURATION RAPIDE SANS BOISSON ALCOOLISEE EN VENTE A EMPORTER ET EN LIVRAISO"
+    LIB_SICORE: CREATION  DIFFUSION  GESTION DE MEDIAS ET DE RESEAUX SOCIAUX  RESTAURATION RAPIDE SANS BOISSON ALCOOLISEE EN VENTE A EMPORTER ET EN LIVRAISO
     AUTO: G
     NAT_SICORE: 99
     SURF: null
     EVT_SICORE: 01M
     Target: 5610C
+
+Case 2:
+  Titre: Test 2
+  Data:
+    LIB_SICORE: BOULANGER PATISSIER
+    AUTO: C
+    NAT_SICORE: 10
+    SURF: 50
+    EVT_SICORE: 01P
+    Target: 1071C
+
+Case 3:
+  Titre: Test 3
+  Data:
+    LIB_SICORE: Institut Minouche sera un institut de prothésiste cilaire
+    AUTO: M
+    NAT_SICORE: 99
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 9602B
+
+Case 4:
+  Titre: Test 4
+  Data:
+    LIB_SICORE: Assemblages et réparations par procède de soudage a l'arc avec électrode enrobée
+    AUTO: M
+    NAT_SICORE: 99
+    SURF: null
+    EVT_SICORE: 01M
+    Target: 2562B
+
+Case 5:
+  Titre: Test 5
+  Data:
+    LIB_SICORE: Worldly offre une grande variété des articles et de services aux clients du monde entier, avec une livraison rapide et des prix compétitifs
+    AUTO: C
+    NAT_SICORE: 9
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 8299C
+
+Case 6:
+  Titre: Test 6
+  Data:
+    LIB_SICORE: Livreur(coursier) à vélo ou en voiture (par ex. pour Uber Eats ou Deliveroo)
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 5320Z
+
+Case 7:
+  Titre: Test 7
+  Data:
+    LIB_SICORE: Agent commercial en immobilier
+    AUTO: R
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 6831Z
+
+Case 8:
+  Titre: Test 8
+  Data:
+    LIB_SICORE: Avocat Director Royal Monarch Queen Congo Zaïre Kabika Moukoumani Yakete Kabila Kabenge And Kings  Joseph Kabila
+    AUTO: E
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 07P
+    Target: 6910Z
+
+Case 9:
+  Titre: Test 9
+  Data:
+    LIB_SICORE: petit entretien et petit travaux  d'espace vert service cher des particulier ou des entreprise
+    AUTO: C
+    NAT_SICORE: 99
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 9529Z
+
+Case 10:
+  Titre: Test 10
+  Data:
+    LIB_SICORE: Fabrication, préparation d'entremet, tarte, biscuit moelleux, brioche, viennoiserie, crème, ganache, petit gâteau individuel, decor chocola
+    AUTO: M
+    NAT_SICORE: 04
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 1071D
+
+Case 11:
+  Titre: Test 11
+  Data:
+    LIB_SICORE: Préparation et vente d’un plat végétarien froid
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 5610C
+
+Case 12:
+  Titre: Test 12
+  Data:
+    LIB_SICORE: offrir des services de conseil aux organisations liées à la sociologie et aux études sociales
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 7022Z
+
+Case 13:
+  Titre: Test 13
+  Data:
+    LIB_SICORE: prise de participation dans toutes sociétés
+    AUTO: C
+    NAT_SICORE: 99
+    SURF: null
+    EVT_SICORE: 01M
+    Target: 6420Z
+
+Case 14:
+  Titre: Test 14
+  Data:
+    LIB_SICORE: Location immobilière de gîtes et chambres d'hôtes avec prestation para hôtellière
+    AUTO: C
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01M
+    Target: 5520Z
+
+Case 15:
+  Titre: Test 15
+  Data:
+    LIB_SICORE: Prestation de service d'animation dans le domaine du jeu de société
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 9329Z
+
+Case 16:
+  Titre: Test 16
+  Data:
+    LIB_SICORE: Product Design. Design de produits web et d'interfaces digitales avec des outils digitaux (figma, sketch..)
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 7410Z
+
+Case 17:
+  Titre: Test 17
+  Data:
+    LIB_SICORE: Wedding planner / organisation de mariage de A à Z
+    AUTO: X
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 9609Z
+
+Case 18:
+  Titre: Test 18
+  Data:
+    LIB_SICORE: Fourniture de prestations de services dans le domaine de l'informatique tels que audit, conseil, expertise, conception de logiciels
+    AUTO: C
+    NAT_SICORE: 04
+    SURF: null
+    EVT_SICORE: 01M
+    Target: 6202A
+
+Case 19:
+  Titre: Test 19
+  Data:
+    LIB_SICORE: Animalerie
+    AUTO: C
+    NAT_SICORE: 99
+    SURF: null
+    EVT_SICORE: 01M
+    Target: 4776Z
+
+Case 20:
+  Titre: Test 20
+  Data:
+    LIB_SICORE: LOUEUR MEUBLE NON PROFESSIONNEL EN RESIDENCE DE SERVICES (CODE APE 6820A Location de logements)
+    AUTO: I
+    NAT_SICORE: null
+    SURF: null
+    EVT_SICORE: 01P
+    Target: 6820A
