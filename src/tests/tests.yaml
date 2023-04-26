@@ -6,7 +6,7 @@ Case 1:
     NAT_SICORE: 99
     SURF: null
     EVT_SICORE: 01M
-    Target: 5610C
+    Target: 7021Z
 
 Case 2:
   Titre: Test 2
@@ -14,7 +14,7 @@ Case 2:
     LIB_SICORE: BOULANGER PATISSIER
     AUTO: C
     NAT_SICORE: 10
-    SURF: 50
+    SURF: 1
     EVT_SICORE: 01P
     Target: 1071C
 
@@ -36,17 +36,17 @@ Case 4:
     NAT_SICORE: 99
     SURF: null
     EVT_SICORE: 01M
-    Target: 2562B
+    Target: 3311Z
 
 Case 5:
   Titre: Test 5
   Data:
     LIB_SICORE: Worldly offre une grande variété des articles et de services aux clients du monde entier, avec une livraison rapide et des prix compétitifs
     AUTO: C
-    NAT_SICORE: 9
+    NAT_SICORE: 09
     SURF: null
     EVT_SICORE: 01P
-    Target: 8299C
+    Target: 4690Z
 
 Case 6:
   Titre: Test 6
@@ -86,7 +86,7 @@ Case 9:
     NAT_SICORE: 99
     SURF: null
     EVT_SICORE: 01P
-    Target: 9529Z
+    Target: 8121Z
 
 Case 10:
   Titre: Test 10
@@ -126,7 +126,7 @@ Case 13:
     NAT_SICORE: 99
     SURF: null
     EVT_SICORE: 01M
-    Target: 6420Z
+    Target: 7010Z
 
 Case 14:
   Titre: Test 14
@@ -166,7 +166,7 @@ Case 17:
     NAT_SICORE: null
     SURF: null
     EVT_SICORE: 01P
-    Target: 9609Z
+    Target: 9329Z
 
 Case 18:
   Titre: Test 18
