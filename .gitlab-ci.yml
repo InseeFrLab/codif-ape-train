@@ -73,7 +73,7 @@ pages:
   stage: deploy
   image: inseefrlab/onyxia-r-minimal
   script:
-    # - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
+    - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/scripts/install-quarto.sh | sudo bash
     - file -bi doc/unece-conf/slides/index.qmd
     - quarto render doc/unece-conf/slides/index.qmd
