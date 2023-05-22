@@ -32,9 +32,9 @@ library(ggplot2)
 library(dplyr)
 source("theme_custom.R")
 
-Accuracy_lvl <- readr::read_csv("data/Accuracy_lvl.csv")
-TOPK_Accuracy <- readr::read_csv("data/top-k.csv")
-Accuracy_reprise <- readr::read_csv("data/Accuracy_reprise.csv")
+Accuracy_lvl <- readr::read_csv("data/accuracy_lvl.csv")
+TOPK_Accuracy <- readr::read_csv("data/accuracy_top-k.csv")
+Accuracy_reprise <- readr::read_csv("data/accuracy_reprise.csv")
 ```
 
 # Context

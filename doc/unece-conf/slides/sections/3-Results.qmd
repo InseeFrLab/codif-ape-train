@@ -81,41 +81,40 @@ ANNEXE
 ## Une performance hétérogène en fonction des classes
 
 ```{r  fig.width=13,fig.height=7, fig.align="center"}
+# F1_distrib_by_cat <- F1_distrib_by_cat %>%
+#      mutate(
+#           Group = factor(Group, levels = c("Catégories représentant 50% des données",
+#                                            "Catégories représentant 25% des données",
+#                                            "Catégories représentant 20% des données",
+#                                            "Catégories représentant 5% des données"
+#                                            
+#           ))
+#           )
 
-F1_distrib_by_cat <- F1_distrib_by_cat %>%
-      mutate(
-           Group = factor(Group, levels = c("Catégories représentant 50% des données",
-                                            "Catégories représentant 25% des données",
-                                            "Catégories représentant 20% des données",
-                                            "Catégories représentant 5% des données"
-                                            
-           ))
-           )
-
-plot_F1_distrib_by_cat <- function(data){
-  ggplot(data) + 
-    ggtitle("Distribution du F1-score en fonction de la fréquence des classes")+
-    geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
-    facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
-    theme_custom()+
-    xlim(c(0,1))+
-    scale_fill_manual(values = Palette_col)+
-    theme(strip.placement = "outside",
-          strip.text.y = element_blank(),
-          text = element_text(size = 16),
-          plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
-          legend.text = element_text(size = 22),
-          axis.text.y = element_text(size = 18),
-          axis.text.x = element_text(size = 18),
-          panel.spacing = unit(1, "lines")
-    )+
-    guides(fill=guide_legend(nrow=2, byrow=TRUE))
+#plot_F1_distrib_by_cat <- function(data){
+#  ggplot(data) + 
+#    ggtitle("Distribution du F1-score en fonction de la fréquence des classes")+
+#    geom_histogram(aes(x=value, fill=Group),binwidth=.05, position="identity") +
+#    facet_wrap(. ~ Group,ncol = 1, strip.position="left") +
+#    theme_custom()+
+#    xlim(c(0,1))+
+#    scale_fill_manual(values = Palette_col)+
+#    theme(strip.placement = "outside",
+#          strip.text.y = element_blank(),
+#          text = element_text(size = 16),
+#          plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+#          legend.text = element_text(size = 22),
+#          axis.text.y = element_text(size = 18),
+#          axis.text.x = element_text(size = 18),
+#          panel.spacing = unit(1, "lines")
+#    )+
+#    guides(fill=guide_legend(nrow=2, byrow=TRUE))
   
-}
+#}
 
 
 
-plot_F1_distrib_by_cat(F1_distrib_by_cat)
+#plot_F1_distrib_by_cat(F1_distrib_by_cat)
 
 
 ```
