@@ -1,6 +1,6 @@
 
 
-## Une bonne performance globale
+## A good performance overall
 
 
 ```{r}
@@ -8,6 +8,7 @@
 #| fig-cap: Accuracy for various level of the NACE nomenclature.
 #| fig-width: 13
 #| fig-height: 5
+#| fis-pos: center
 
 Accuracy_lvl <- Accuracy_lvl %>%
     mutate(Level = factor(Level, levels = paste("Level", paste(seq(5,1,-1))))
@@ -37,10 +38,10 @@ plot_Accuracy_lvl(Accuracy_lvl)
 ```
 
 
-- Près de [**80%**]{.orange} des libellés issus du guichet unique sont correctement codifiés.
-- Erreurs de prédiction [**proches**]{.orange} dans la nomenclature.
+- Nearly [**80%**]{.orange} of labels from the one-stop shop are correctly coded.
+- Most prediction errors are [**close**]{.orange} in the nomenclature
 
-## Une aide à la reprise manuelle
+## Streamlining the manual coding process
 
 
 ```{r}
@@ -48,6 +49,7 @@ plot_Accuracy_lvl(Accuracy_lvl)
 #| fig-cap: Top-$k$ accuracy per sample.
 #| fig-width: 13
 #| fig-height: 5
+#| fis-pos: center
 
 plot_TOPK_Accuracy <- function(data){
   plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Topk))+
@@ -71,8 +73,86 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 
 ```
 
-- Connaissance des probabilités pour chaque classe.
-- Dans [**94%**]{.orange} des cas, la bonne classification se trouve dans les 5 prédictions les plus probables. 
+- Knowledge of probabilities for each class.
+- The correct classification is among the top 5 most probable predictions in [**94%**]{.orange} of cases.
+
+
+
+## Building a confidence index {.scrollable}
+
+
+```{r}
+#| label: fig-ic-distrib
+#| fig-cap: Distribution of confidence index based on prediction results
+#| fig-width: 13
+#| fig-height: 5
+#| fis-pos: center
+
+plot_IC_distrib <- function(data, thresholds, ypos){
+  plot <- ggplot(data)+
+    geom_histogram(aes(x=Score, fill=Results, y=..density..),binwidth=.01, alpha=.5, position="identity") +
+    scale_fill_manual(values=c(Palette_col),labels=c("Bad predictions", "Good predictions"))+
+    geom_vline(xintercept = thresholds$x, color = rgb(83, 83, 83, maxColorValue = 255))+
+    theme_custom()+
+    theme(
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 24),
+      axis.text.y = element_text(size = 24),
+      axis.text.x = element_text(size = 24),
+    )+
+    annotate("text", x = thresholds$x+0.03, y = ypos, label = c("5%", "10%", "15%", "20%", "25%"), size = 7)
+  
+  return(plot)
+  
+}
+
+plot_IC_distrib(IC_distrib, IC_thresholds, 51)
+
+
+```
+
+- [**Objective**]{.orange}: [**discriminate**]{.blue2} between *bad* and *good* predictions.
+- [**Selected Confidence Index**]{.orange}: difference between the two highest probabilities.
+
+
+## Efficiency of the manual coding process
+
+
+```{r}
+#| label: fig-reprise
+#| fig-cap: Accuracy for various share of manual coding.
+#| fig-width: 13
+#| fig-height: 5
+#| fis-pos: center
+
+Accuracy_reprise <- Accuracy_reprise %>%
+      mutate(
+           Rate = factor(Rate, levels = paste0(paste(seq(0,25,5)), "%"))
+      )
+plot_Accuracy_reprise <- function(data){
+  plot<- ggplot(data , aes(x=Type, y=Accuracy, fill=Rate))+
+    geom_bar(stat = "identity", position = position_dodge())+
+    geom_text(aes(label=round(Accuracy,2)), position=position_dodge(width=0.9), vjust=-0.25, size= 5)+
+    scale_fill_manual(values=c(Palette_col))+
+    guides(fill=guide_legend(nrow=1, byrow=TRUE))+
+    theme_custom()+
+    theme(
+      text = element_text(size = 16),
+      plot.title=element_text(size=26, margin=margin(b=0.7, unit='cm')),
+      legend.text = element_text(size = 18),
+      axis.text.y = element_text(size = 18),
+      axis.text.x = element_text(size = 18),
+    )
+  return(plot)
+}
+
+
+plot_Accuracy_reprise(Accuracy_reprise)
+
+
+```
+
+- Optimisation of manual coding process ➨ [**Performance improvement gain**]{.orange}
 
 
 <!-- 
