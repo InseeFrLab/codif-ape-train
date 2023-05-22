@@ -1,15 +1,11 @@
 ---
-title: Codification automatique de l’APE dans le cadre du projet Sirene 4
+title: Classifying companies in France using machine learning
 subtitle: |
-  **[Journée SSP Hub]{.orange}**
-author: |
-  [Thomas Faria](https://github.com/ThomasFaria),
-  [Tom Seimandi](https://github.com/tomseimandi/)
-date: "04/17/2023"
+  **[UNECE Machine Learning for Official Statistics Workshop 2023]{.orange}**
+author: "[Thomas Faria](https://github.com/ThomasFaria), [Tom Seimandi](https://github.com/tomseimandi/)"
+date: "06/05/2023"
 date-format: "D MMMM YYYY"
 slide-number: true
-# uncomment for French presentations:
-lang: fr-FR
 # for blind readers:
 slide-tone: false
 chalkboard: # press the B key to toggle chalkboard
@@ -25,9 +21,9 @@ from: markdown+emoji
 ascii: true
 ---
 
-# Contexte
+# Context
 
-{{< include sections/1-Contexte.qmd >}}
+{{< include sections/1-Context.qmd >}}
 
 # Méthodologie
 
