@@ -1,0 +1,38 @@
+---
+title: Codification automatique de l’APE dans le cadre du projet Sirene 4
+subtitle: |
+  **[Journée SSP Hub]{.orange}**
+author: |
+  [Thomas Faria](https://github.com/ThomasFaria),
+  [Tom Seimandi](https://github.com/tomseimandi/)
+date: "04/17/2023"
+date-format: "D MMMM YYYY"
+slide-number: true
+# uncomment for French presentations:
+lang: fr-FR
+# for blind readers:
+slide-tone: false
+chalkboard: # press the B key to toggle chalkboard
+  theme: whiteboard
+# uncomment to use the multiplex mode:
+# multiplex: true
+format:
+  onyxia-revealjs:
+    output-file: index.html
+controls: true
+css: custom.css
+from: markdown+emoji
+ascii: true
+---
+
+# Contexte
+
+{{< include sections/1-Contexte.qmd >}}
+
+# Méthodologie
+
+{{< include sections/2-Methodo.qmd >}}
+
+# Mise en production
+
+{{< include sections/3-MiseProd.qmd >}}

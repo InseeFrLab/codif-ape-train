@@ -1,0 +1,13 @@
+## Vectorisation des libellés
+
+- [**Plongements lexicaux**]{.orange} : méthode de [**vectorisation**]{.blue2}.
+- Modèle [**"Bag of n-grams"**]{.orange}. On apprend des plongements pour les [**mots**]{.blue2}, les [**n-grams de mots**]{.blue2} et [**n-grams de caractères**]{.blue2}.
+
+![](img/n-grams.png){height="250" fig-align="center"}
+
+## Classification
+
+![](img/fastText_desc_ape.png){height="400" fig-align="center"}
+
+- Modèle [**simple**]{.orange} qui fonctionne bien dans notre contexte.
+- [**Indice de confiance**]{.orange} calculé pour chaque prédiction.

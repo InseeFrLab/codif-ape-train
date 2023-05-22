@@ -75,9 +75,9 @@ pages:
   script:
     # - Rscript -e "install.packages(c('rmarkdown','readr','dplyr','ggplot2'))"
     - curl https://raw.githubusercontent.com/InseeFrLab/images-datascience/main/scripts/install-quarto.sh | sudo bash
-    - file -bi doc/journee-ssphub/slides/index.qmd
-    - quarto render doc/journee-ssphub/slides/index.qmd
-    - mv doc/journee-ssphub/slides public
+    - file -bi doc/unece-conf/slides/index.qmd
+    - quarto render doc/unece-conf/slides/index.qmd
+    - mv doc/unece-conf/slides public
     - mv setup.sh public/setup.sh
     - cat public/index.html
   artifacts:
