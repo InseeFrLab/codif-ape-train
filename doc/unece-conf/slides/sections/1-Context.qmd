@@ -7,7 +7,7 @@
 
 - [**Observation**]{.orange}: [**Sicore**]{.blue2} is no longer the suitable tool ➨ 30% automated coding.
 
-- [**Conséquence**]{.orange}: Ideal moment to propose a new methodology for automated APE coding.
+- [**Consequence**]{.orange}: Ideal moment to propose a new methodology for automated APE coding.
 
 ## Data
 
@@ -21,7 +21,7 @@
     - The [**type of event**]{.blue2} -- [EVT]{.green2} (24 categories)
     - The [**area ($m^2$)**]{.blue2} -- [SUR]{.green2} (4 categories)
   
-## La nomenclature hiérarchique de l'APE
+## Hierarchical structure of NACE Rev. 2
 
 | Level | NACE | Title | Size |
 |-------|------|----------------------|-|
