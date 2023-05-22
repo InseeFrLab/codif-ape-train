@@ -27,7 +27,7 @@
 |-------|------|----------------------|-|
 | Section     | H     |Transportation and storage|21|
 | Division    | 52    |Warehousing and support activities for transportation|88|
-| Groupe      | 522   |Support activities for transportation|272|
-| Classe      | 5224  |Cargo handling |615|
-| **Sous-classe** | [**5224A**]{.red2} |**Harbour handling**|[**732**]{.orange}|
+| Group      | 522   |Support activities for transportation|272|
+| Class      | 5224  |Cargo handling |615|
+| **Subclass** | [**5224A**]{.red2} |**Harbour handling**|[**732**]{.orange}|
 : {.responsive}

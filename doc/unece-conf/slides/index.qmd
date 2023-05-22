@@ -19,16 +19,36 @@ controls: true
 css: custom.css
 from: markdown+emoji
 ascii: true
+execute: 
+  echo: false
+  warning: false
 ---
+
+
+```{r, echo=FALSE}
+## Initialisation
+
+library(ggplot2)
+library(dplyr)
+source("theme_custom.R")
+
+Accuracy_lvl <- readr::read_csv("data/Accuracy_lvl.csv")
+TOPK_Accuracy <- readr::read_csv("data/top-k.csv")
+Accuracy_reprise <- readr::read_csv("data/Accuracy_reprise.csv")
+```
 
 # Context
 
 {{< include sections/1-Context.qmd >}}
 
-# Méthodologie
+# Methodology
 
 {{< include sections/2-Methodo.qmd >}}
 
-# Mise en production
+# Results
+
+{{< include sections/3-Results.qmd >}}
+
+# Mise en depookdc
 
 {{< include sections/3-MiseProd.qmd >}}
