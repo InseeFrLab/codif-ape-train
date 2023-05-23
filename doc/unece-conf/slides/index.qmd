@@ -35,6 +35,8 @@ source("theme_custom.R")
 Accuracy_lvl <- readr::read_csv("data/accuracy_lvl.csv")
 TOPK_Accuracy <- readr::read_csv("data/accuracy_top-k.csv")
 Accuracy_reprise <- readr::read_csv("data/accuracy_reprise.csv")
+IC_distrib <- readr::read_csv("../../../graphs/data_graphs/IC_distrib.csv")
+IC_thresholds <- readr::read_csv("../../../graphs/data_graphs/IC_thresholds.csv")
 ```
 
 # Context
@@ -49,6 +51,6 @@ Accuracy_reprise <- readr::read_csv("data/accuracy_reprise.csv")
 
 {{< include sections/3-Results.qmd >}}
 
-# Mise en depookdc
+# From experiment to production
 
-{{< include sections/3-MiseProd.qmd >}}
+{{< include sections/4-Deployment.qmd >}}
