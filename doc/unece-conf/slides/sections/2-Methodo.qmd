@@ -17,13 +17,10 @@
 - [**Optimisation**]{.orange}: [**stochastic gradient descent**]{.blue2} algorithm.
 - [**Loss function**]{.orange}: [**cross-entropy**]{.blue2}.
 
-## fastText model
+## fastText model {background-image="img/diag-fasttext.png" background-size="95%" background-position="50% 75%"} 
 
 - [**fastText**]{.orange}: very [**simple**]{.blue2} and [**fast**]{.blue2} (`C++`) "bag of n-gram" model
 
-:::{.column-page}
-![](img/diag-fasttext.png){fig-align="center"}
-:::
 
 ## Handling categorical variables
 
