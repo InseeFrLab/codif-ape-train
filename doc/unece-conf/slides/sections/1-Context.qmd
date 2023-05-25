@@ -3,9 +3,9 @@
 
 - [**Several major changes**]{.orange}:
     - [**Internal**]{.blue2}: Revamping of the French company registry, [**Sirene 4**]{.green2}.
-    - [**External**]{.blue2}: Implementation of a [**one-stop shop**]{.green2}.
+    - [**External**]{.blue2}: Implementation of a [**one-stop shop**]{.green2} to declare the creation of a business.
 
-- [**Observation**]{.orange}: [**Sicore**]{.blue2} is no longer the suitable tool ➨ 30% automated coding.
+- [**Observation**]{.orange}: [**Sicore**]{.blue2} is no longer a suitable tool ➨ 30% automated coding.
 
 - [**Consequence**]{.orange}: Ideal moment to propose a new methodology for automated APE coding.
 

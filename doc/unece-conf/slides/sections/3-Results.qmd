@@ -1,6 +1,6 @@
 
 
-## A good performance overall
+## A good overall performance
 
 
 ```{r}
@@ -39,7 +39,7 @@ plot_Accuracy_lvl(Accuracy_lvl)
 
 
 - Nearly [**80%**]{.orange} of labels from the one-stop shop are correctly coded.
-- Most prediction errors are [**close**]{.orange} in the nomenclature
+- Most prediction errors are [**close**]{.orange} in the nomenclature.
 
 ## Streamlining the manual coding process
 
@@ -83,7 +83,7 @@ plot_TOPK_Accuracy(TOPK_Accuracy)
 
 ```{r}
 #| label: fig-ic-distrib
-#| fig-cap: Distribution of confidence index based on prediction results
+#| fig-cap: Distribution of the confidence index based on prediction results.
 #| fig-width: 13
 #| fig-height: 5
 #| fis-pos: center
@@ -120,7 +120,7 @@ plot_IC_distrib(IC_distrib, IC_thresholds, 51)
 
 ```{r}
 #| label: fig-reprise
-#| fig-cap: Accuracy for various share of manual coding.
+#| fig-cap: Accuracy for various shares of manual coding.
 #| fig-width: 13
 #| fig-height: 5
 #| fis-pos: center
@@ -152,7 +152,7 @@ plot_Accuracy_reprise(Accuracy_reprise)
 
 ```
 
-- Optimisation of manual coding process ➨ [**Performance improvement gain**]{.orange}
+- Optimisation of manual coding process ➨ [**Performance improvement**]{.orange}.
 
 
 <!-- 

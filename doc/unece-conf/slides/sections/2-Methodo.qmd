@@ -7,7 +7,7 @@
 - Additionally, embeddings for:
   - [**word n-grams**]{.blue2} and [**character n-grams**]{.blue2}.
 
-![](img/n-grams.png){height="250" fig-align="center"}
+![](img/n-grams_eng.png){height="250" fig-align="center"}
 
 ## Linear classifer
 
@@ -19,7 +19,7 @@
 
 ## fastText model {background-image="img/diag-fasttext.png" background-size="95%" background-position="50% 75%"} 
 
-- [**fastText**]{.orange}: very [**simple**]{.blue2} and [**fast**]{.blue2} (`C++`) "bag of n-gram" model
+- [**fastText**]{.orange}: very [**simple**]{.blue2} and [**fast**]{.blue2} (`C++`) "bag of n-grams" model.
 
 
 ## Handling categorical variables

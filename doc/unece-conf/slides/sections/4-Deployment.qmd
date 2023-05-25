@@ -1,9 +1,9 @@
 ## Deployment of the model
 
-- Model has been deployed in a [**production environment**]{.orange} since November 2022.
+- Models have been deployed in a [**production environment**]{.orange} since November 2022.
 - Emerging [**new challenges**]{.orange} include:
-  - [**Organisational**]{.blue2} issues
-  - Real-time [**Monitoring**]{.blue2}
-  - Regular [**re-training**]{.blue2}
+  - [**Organisational**]{.blue2} issues.
+  - Real-time [**monitoring**]{.blue2}.
+  - Regular [**re-training**]{.blue2}.
 - [**MLOps**]{.orange} approach is required:
-  - Join us on [**Wednesday June 7th**]{.blue2} for a [**Hands-on Lab**]{.blue2}
+  - Join us on [**Wednesday, June 7th**]{.blue2} for a [**Hands-on Lab**]{.blue2}!
