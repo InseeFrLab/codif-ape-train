@@ -7,7 +7,7 @@
 
 - [**Observation**]{.orange}: [**Sicore**]{.blue2} is no longer a suitable tool ➨ 30% automated coding.
 
-- [**Consequence**]{.orange}: Ideal moment to propose a new methodology for automated APE coding.
+- [**Consequence**]{.orange}: Ideal moment to propose a new methodology for automated NACE coding.
 
 ## Data
 
