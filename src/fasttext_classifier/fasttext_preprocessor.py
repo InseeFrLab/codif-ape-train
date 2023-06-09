@@ -45,7 +45,7 @@ class FastTextPreprocessor(Preprocessor):
             evaluation
         """
 
-        df = self.clean_lib(df, text_feature)
+        df = self.clean_lib(df, text_feature, "training")
 
         # Adding missing APE codes in the database by adding the official label as text feature
         df_train = self.add_missing_codes(df, df_naf, y, text_feature)
@@ -83,13 +83,17 @@ class FastTextPreprocessor(Preprocessor):
 
         return df_train, df_test
 
-    def clean_lib(self, df: pd.DataFrame, text_feature: str) -> pd.DataFrame:
+    def clean_lib(
+        self, df: pd.DataFrame, text_feature: str, method: str
+    ) -> pd.DataFrame:
         """
         Cleans a text feature for pd.DataFrame `df` at index idx.
 
         Args:
             df (pd.DataFrame): DataFrame.
             text_feature (str): Name of the text feature.
+            method (str): The method when the function is used (training or
+            evaluation)
 
         Returns:
             df (pd.DataFrame): DataFrame.
@@ -145,8 +149,11 @@ class FastTextPreprocessor(Preprocessor):
                 pattern, replacement, regex=True
             )
 
-        # On supprime les NaN
-        df = df.dropna(subset=[text_feature])
+        if method == "training":
+            # On supprime les NaN
+            df = df.dropna(subset=[text_feature])
+        elif method == "evaluation":
+            df[text_feature] = df[text_feature].fillna(value="")
 
         # On tokenize tous les libellés
         libs_token = [lib.split() for lib in df[text_feature].to_list()]
@@ -216,7 +223,7 @@ class FastTextPreprocessor(Preprocessor):
         fake_obs = df_naf[df_naf[y].isin(missing_codes)]
         fake_obs.loc[:, text_feature] = fake_obs.LIB_NIV5
         fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(fake_obs.shape[0])]
-        fake_obs = self.clean_lib(fake_obs, text_feature)
+        fake_obs = self.clean_lib(fake_obs, text_feature, "training")
         df = pd.concat([df, fake_obs])
 
         print(

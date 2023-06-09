@@ -32,7 +32,7 @@ def run_test(test: dict, preprocessor: Preprocessor, evaluator: Evaluator) -> No
     df = pd.DataFrame(test["Data"], index=[0])
 
     # Clean the data using the preprocessor
-    df = preprocessor.clean_lib(df=df, text_feature=df.columns[0])
+    df = preprocessor.clean_lib(df=df, text_feature=df.columns[0], method="evaluation")
     df.fillna(value="NaN", inplace=True)
 
     # Get predictions and probabilities using the evaluator

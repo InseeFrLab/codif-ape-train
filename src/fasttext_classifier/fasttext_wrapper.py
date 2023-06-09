@@ -59,7 +59,9 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             self.load_context(context)
 
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input["query"]), text_feature="TEXT_FEATURE"
+            df=pd.DataFrame(model_input["query"]),
+            text_feature="TEXT_FEATURE",
+            method="evaluation",
         )
 
         df[self.categorical_features] = df[self.categorical_features].fillna(
