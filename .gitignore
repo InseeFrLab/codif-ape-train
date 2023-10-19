@@ -214,3 +214,5 @@ doc/unece-conf/slides/index_files/
 
 data/
 !doc/unece-conf/slides/data/
+
+log_files/
