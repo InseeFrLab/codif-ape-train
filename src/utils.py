@@ -12,6 +12,3 @@ def get_root_path() -> Path:
         Path: Root path.
     """
     return Path(__file__).parent.parent
-
-
-# Donnons tort à lino
