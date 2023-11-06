@@ -8,7 +8,7 @@ variables:
 
 unit-test:
     stage: test
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install pytest pytest-cov
         - python -m pytest --cov-report=html --cov=src .
@@ -21,7 +21,7 @@ unit-test:
 
 mypy:
     stage: static
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install mypy
         - mypy src
@@ -31,7 +31,7 @@ mypy:
 
 flake8:
     stage: static
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install flake8
         - flake8
@@ -41,7 +41,7 @@ flake8:
 
 pylint:
     stage: static
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install pylint
         - find . -type f -name "*.py" | xargs pylint
@@ -51,7 +51,7 @@ pylint:
 
 black:
     stage: static
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install black
         - black --check .
@@ -61,7 +61,7 @@ black:
 
 isort:
     stage: static
-    image: python:3.9
+    image: python:3.12
     script:
         - pip install isort
         - isort . --check-only
