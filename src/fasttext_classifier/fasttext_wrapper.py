@@ -39,9 +39,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         self.categorical_features = config["categorical_features"]
         # pylint: enable=attribute-defined-outside-init
 
-    def predict(
-        self, context: mlflow.pyfunc.PythonModelContext, model_input: dict
-    ) -> tuple:
+    def predict(self, context: mlflow.pyfunc.PythonModelContext, model_input: dict) -> tuple:
         """
         Predicts the k most likely codes to a query using a pre-trained model.
 
@@ -64,9 +62,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             method="evaluation",
         )
 
-        df[self.categorical_features] = df[self.categorical_features].fillna(
-            value="NaN"
-        )
+        df[self.categorical_features] = df[self.categorical_features].fillna(value="NaN")
 
         iterables_features = (
             self.categorical_features if self.categorical_features is not None else []

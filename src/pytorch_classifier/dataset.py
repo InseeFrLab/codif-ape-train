@@ -62,9 +62,7 @@ class TorchDataset(torch.utils.data.Dataset):
         Returns:
             List[int, str]: Observation with given index.
         """
-        categorical_variables = [
-            variable[index] for variable in self.categorical_variables
-        ]
+        categorical_variables = [variable[index] for variable in self.categorical_variables]
         text = self.text[index]
         y = self.y[index]
         return [y, text, *categorical_variables]
@@ -83,9 +81,7 @@ class TorchDataset(torch.utils.data.Dataset):
         batch = np.array(batch)
         text = batch[:, 1].tolist()
         y = batch[:, 0]
-        categorical_variables = [
-            batch[:, 2 + i] for i in range(len(self.categorical_variables))
-        ]
+        categorical_variables = [batch[:, 2 + i] for i in range(len(self.categorical_variables))]
 
         indices_batch = [self.tokenizer.indices_matrix(sentence) for sentence in text]
         max_tokens = max([len(indices) for indices in indices_batch])
@@ -105,8 +101,7 @@ class TorchDataset(torch.utils.data.Dataset):
         # Cast
         x = torch.LongTensor(padded_batch.astype(np.int32))
         categorical_tensors = [
-            torch.LongTensor(variable.astype(np.int32))
-            for variable in categorical_variables
+            torch.LongTensor(variable.astype(np.int32)) for variable in categorical_variables
         ]
         y = torch.LongTensor(y.astype(np.int32))
 

@@ -168,9 +168,7 @@ class Tokenizer:
         for word_ngram_len in range(2, self.word_ngrams + 1):
             for i in range(len(words) - word_ngram_len + 1):
                 hashes = tuple(get_hash(word) for word in words[i : i + word_ngram_len])
-                word_ngram_id = int(
-                    get_word_ngram_id(hashes, self.buckets, self.nwords)
-                )
+                word_ngram_id = int(get_word_ngram_id(hashes, self.buckets, self.nwords))
                 word_ngram_ids.append(word_ngram_id)
 
         all_indices = indices + word_ngram_ids

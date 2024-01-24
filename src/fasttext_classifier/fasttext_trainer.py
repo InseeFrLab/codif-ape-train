@@ -48,9 +48,7 @@ class FastTextTrainer(Trainer):
             "Setuptools is replacing distutils.",
         )
         root_path = get_root_path()
-        iterables_features = (
-            categorical_features if categorical_features is not None else []
-        )
+        iterables_features = categorical_features if categorical_features is not None else []
         with open(root_path / "data/train_text.txt", "w", encoding="utf-8") as file:
             for item in df.iterrows():
                 formatted_item = f"__label__{item[1][y]} {item[1][text_feature]}"

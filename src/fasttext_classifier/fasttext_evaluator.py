@@ -46,9 +46,7 @@ class FastTextEvaluator(Evaluator):
         """
         libs = []
 
-        iterables_features = (
-            categorical_features if categorical_features is not None else []
-        )
+        iterables_features = categorical_features if categorical_features is not None else []
         for item in df.iterrows():
             formatted_item = item[1][text_feature]
             for feature in iterables_features:

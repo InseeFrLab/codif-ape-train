@@ -73,9 +73,7 @@ class Evaluator(ABC):
         level = 5  # Hard code for now because we only predict level 5
 
         predicted_classes = {
-            f"predictions_{level}_k{rank_pred+1}": [
-                pred[0] for pred in preds[rank_pred]
-            ]
+            f"predictions_{level}_k{rank_pred+1}": [pred[0] for pred in preds[rank_pred]]
             for rank_pred in range(k)
         }
         probs_prediction = {
@@ -102,10 +100,7 @@ class Evaluator(ABC):
 
         for rank_pred in range(k):
             df_naf_renamed = df_naf.rename(
-                columns={
-                    f"NIV{i}": f"predictions_{i}_k{rank_pred+1}"
-                    for i in range(1, level + 1)
-                }
+                columns={f"NIV{i}": f"predictions_{i}_k{rank_pred+1}" for i in range(1, level + 1)}
             )
             preds_df = preds_df.join(
                 df_naf_renamed.set_index(f"predictions_{level}_k{rank_pred+1}"),
@@ -114,9 +109,7 @@ class Evaluator(ABC):
             preds_df = preds_df[~preds_df.index.duplicated(keep="first")]
 
         df = self.remap_labels(df)
-        df = df.rename(
-            columns={f"APE_NIV{i}": f"ground_truth_{i}" for i in range(1, level + 1)}
-        )
+        df = df.rename(columns={f"APE_NIV{i}": f"ground_truth_{i}" for i in range(1, level + 1)})
 
         return df.join(preds_df.join(proba_df))
 
@@ -186,9 +179,7 @@ class Evaluator(ABC):
                 ] >= (
                     aggregated_ape_dict[0]["probabilities"]
                     - aggregated_ape_dict[1]["probabilities"]
-                ).quantile(
-                    q=quantile
-                )
+                ).quantile(q=quantile)
 
             for level in range(1, 6):
                 accuracies[f"accuracy_level_{level}_{method}_{quantile}"] = (
@@ -223,8 +214,6 @@ class Evaluator(ABC):
         Returns:
             Dict[str, float]: Dictionary of evaluation metrics.
         """
-        all_preds_df = self.get_aggregated_preds(
-            df, y, text_feature, categorical_features, k
-        )
+        all_preds_df = self.get_aggregated_preds(df, y, text_feature, categorical_features, k)
         accuracies = self.compute_accuracies(all_preds_df, 5)
         return accuracies

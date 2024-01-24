@@ -59,9 +59,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
             features += categorical_features
 
         X_train, X_test, y_train, y_test = train_test_split(
-            df[
-                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
-            ],
+            df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
             df[y],
             test_size=0.2,
             random_state=0,
@@ -75,9 +73,6 @@ class PytorchPreprocessor(FastTextPreprocessor):
             print("\t*** Oversampling the train database...\n")
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
-            print(
-                f"\t*** Done! Oversampling lasted "
-                f"{round((time.time() - t)/60,1)} minutes.\n"
-            )
+            print(f"\t*** Done! Oversampling lasted " f"{round((time.time() - t)/60,1)} minutes.\n")
 
         return df_train, df_test, df_gu

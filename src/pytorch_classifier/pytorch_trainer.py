@@ -174,9 +174,7 @@ class PytorchTrainer:
         )
 
         training_text = X_train[text_feature].to_list()
-        self.tokenizer = Tokenizer(
-            min_count, min_n, max_n, buckets, word_ngrams, training_text
-        )
+        self.tokenizer = Tokenizer(min_count, min_n, max_n, buckets, word_ngrams, training_text)
 
         train_dataset = TorchDataset(
             categorical_variables=[

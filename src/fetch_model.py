@@ -7,9 +7,7 @@ import os
 import mlflow
 
 
-def fetch_model(
-    server_uri: str, model_name: str, model_version: str
-) -> mlflow.pyfunc.PyFuncModel:
+def fetch_model(server_uri: str, model_name: str, model_version: str) -> mlflow.pyfunc.PyFuncModel:
     """
     Fetches a trained MLflow model from a remote server.
 
@@ -29,9 +27,7 @@ def fetch_model(
     endpoint = os.environ["AWS_S3_ENDPOINT"]
     os.environ["MLFLOW_S3_ENDPOINT_URL"] = f"https://{endpoint}"
     try:
-        model = mlflow.pyfunc.load_model(
-            model_uri=f"models:/{model_name}/{model_version}"
-        )
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{model_version}")
         return model
     except Exception as error:
         raise Exception(

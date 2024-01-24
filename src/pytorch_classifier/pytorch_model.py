@@ -69,9 +69,7 @@ class PytorchModel(nn.Module):
         x_1 = self.embeddings(x_1)
 
         x_cat = []
-        for i, (variable, embedding_layer) in enumerate(
-            self.categorical_embeddings.items()
-        ):
+        for i, (variable, embedding_layer) in enumerate(self.categorical_embeddings.items()):
             x_cat.append(embedding_layer(inputs[i + 1]))
 
         # Mean of tokens

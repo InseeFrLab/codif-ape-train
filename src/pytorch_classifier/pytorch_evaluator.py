@@ -52,9 +52,7 @@ class PytorchEvaluator(Evaluator):
                 given text.
         """
         dataset = TorchDataset(
-            categorical_variables=[
-                df[column].to_list() for column in df[categorical_features]
-            ],
+            categorical_variables=[df[column].to_list() for column in df[categorical_features]],
             text=df[text_feature].to_list(),
             y=df[y].to_list(),
             tokenizer=self.tokenizer,
@@ -79,10 +77,7 @@ class PytorchEvaluator(Evaluator):
         preds = [output.argsort()[-k:][::-1] for output in y_probs]
         probas = [probs[pred] for (pred, probs) in zip(preds, y_probs)]
         reverse_mappings = {v: k for (k, v) in mappings[y].items()}
-        preds = [
-            [reverse_mappings.get(output_class) for output_class in pred]
-            for pred in preds
-        ]
+        preds = [[reverse_mappings.get(output_class) for output_class in pred] for pred in preds]
 
         return {
             rank_pred: [(x[rank_pred], y[rank_pred]) for x, y in zip(preds, probas)]

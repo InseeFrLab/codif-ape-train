@@ -56,9 +56,7 @@ class FastTextPreprocessor(Preprocessor):
             features += categorical_features
 
         X_train, X_test, y_train, y_test = train_test_split(
-            df[
-                features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]
-            ],
+            df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
             df[y],
             test_size=0.2,
             random_state=0,
@@ -77,15 +75,11 @@ class FastTextPreprocessor(Preprocessor):
             print("\t*** Oversampling the train database...\n")
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
-            print(
-                f"\t*** Done! Oversampling lasted {round((time.time() - t)/60,1)} minutes.\n"
-            )
+            print(f"\t*** Done! Oversampling lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         return df_train, df_test
 
-    def clean_lib(
-        self, df: pd.DataFrame, text_feature: str, method: str
-    ) -> pd.DataFrame:
+    def clean_lib(self, df: pd.DataFrame, text_feature: str, method: str) -> pd.DataFrame:
         """
         Cleans a text feature for pd.DataFrame `df` at index idx.
 
@@ -124,9 +118,7 @@ class FastTextPreprocessor(Preprocessor):
 
         # apply replacements to text_feature column
         for pattern, replacement in replacements.items():
-            df[text_feature] = df[text_feature].str.replace(
-                pattern, replacement, regex=True
-            )
+            df[text_feature] = df[text_feature].str.replace(pattern, replacement, regex=True)
 
         # On supprime les mots d'une seule lettre
         df[text_feature] = df[text_feature].apply(
@@ -145,9 +137,7 @@ class FastTextPreprocessor(Preprocessor):
 
         # apply replacements to text_feature column
         for pattern, replacement in replacements.items():
-            df[text_feature] = df[text_feature].replace(
-                pattern, replacement, regex=True
-            )
+            df[text_feature] = df[text_feature].replace(pattern, replacement, regex=True)
 
         if method == "training":
             # On supprime les NaN
@@ -160,18 +150,13 @@ class FastTextPreprocessor(Preprocessor):
 
         # On supprime les mots duppliqué dans un même libellé
         libs_token = [
-            sorted(set(libs_token[i]), key=libs_token[i].index)
-            for i in range(len(libs_token))
+            sorted(set(libs_token[i]), key=libs_token[i].index) for i in range(len(libs_token))
         ]
 
         # Pour chaque libellé on supprime les stopword et on racinise les mots
         df[text_feature] = [
             " ".join(
-                [
-                    self.stemmer.stem(word)
-                    for word in libs_token[i]
-                    if word not in self.stopwords
-                ]
+                [self.stemmer.stem(word) for word in libs_token[i] if word not in self.stopwords]
             )
             for i in range(len(libs_token))
         ]
@@ -191,9 +176,7 @@ class FastTextPreprocessor(Preprocessor):
         Returns:
             pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
         """
-        code_to_oversample = df.value_counts(y)[
-            df.value_counts(y) < threshold
-        ].index.to_list()
+        code_to_oversample = df.value_counts(y)[df.value_counts(y) < threshold].index.to_list()
         df_oversampled = pd.DataFrame(columns=df.columns)
 
         for code in code_to_oversample:
@@ -204,9 +187,7 @@ class FastTextPreprocessor(Preprocessor):
 
         return pd.concat([df, df_oversampled])
 
-    def add_missing_codes(
-        self, df: pd.DataFrame, df_naf: pd.DataFrame, y: str, text_feature: str
-    ):
+    def add_missing_codes(self, df: pd.DataFrame, df_naf: pd.DataFrame, y: str, text_feature: str):
         """
         Oversamples the minority classes in a pandas DataFrame to achieve a more balanced dataset.
 
@@ -226,7 +207,5 @@ class FastTextPreprocessor(Preprocessor):
         fake_obs = self.clean_lib(fake_obs, text_feature, "training")
         df = pd.concat([df, fake_obs])
 
-        print(
-            f"\t*** {len(missing_codes)} missing codes have been added in the database...\n"
-        )
+        print(f"\t*** {len(missing_codes)} missing codes have been added in the database...\n")
         return df

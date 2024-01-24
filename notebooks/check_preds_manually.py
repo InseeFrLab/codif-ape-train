@@ -17,9 +17,7 @@ Y = config["Y"][0]
 iterables_features = categorical_features if categorical_features is not None else []
 
 # Read in data to predict
-df = pd.read_csv(
-    "../data/data_gu_check_API.csv", dtype={"NAT_SICORE": "object", "SURF": "object"}
-)
+df = pd.read_csv("../data/data_gu_check_API.csv", dtype={"NAT_SICORE": "object", "SURF": "object"})
 df[categorical_features] = df[categorical_features].fillna(value="NaN")
 
 preprocessor = FastTextPreprocessor()
@@ -40,9 +38,7 @@ for i in range(df_prepro.shape[0]):
 # artifacts/default/artifacts/default.bin models/model.bin
 model = fasttext.load_model("../models/model.bin")
 evaluator = FastTextEvaluator(model)
-Results = evaluator.get_aggregated_preds(
-    df_prepro, Y, TEXT_FEATURE, categorical_features, 5
-)
+Results = evaluator.get_aggregated_preds(df_prepro, Y, TEXT_FEATURE, categorical_features, 5)
 
 tmp = Results.loc[
     :,

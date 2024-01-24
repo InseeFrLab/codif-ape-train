@@ -47,9 +47,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
             categorical_features=categorical_features,
             oversampling=oversampling,
         )
-        print(
-            f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n"
-        )
+        print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         # Run training of the model
         print("*** 2- Training the model...\n")
@@ -98,18 +96,14 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         df_gu = df_test[df_test.index.str.startswith("J")]
         df_test = df_test[~df_test.index.str.startswith("J")]
 
-        accuracies = evaluator.evaluate(
-            df_test, Y, TEXT_FEATURE, categorical_features, 5
-        )
+        accuracies = evaluator.evaluate(df_test, Y, TEXT_FEATURE, categorical_features, 5)
 
         # Log metrics
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
         # On guichet unique set
-        gu_accuracies = evaluator.evaluate(
-            df_gu, Y, TEXT_FEATURE, categorical_features, 5
-        )
+        gu_accuracies = evaluator.evaluate(df_gu, Y, TEXT_FEATURE, categorical_features, 5)
         for metric, value in gu_accuracies.items():
             mlflow.log_metric(metric + "_gu", value)
 
@@ -118,9 +112,7 @@ def main(remote_server_uri, experiment_name, run_name, data_path, config_path):
         # Tests
         print("*** 4- Performing standard tests...\n")
         t = time.time()
-        with open(
-            get_root_path() / "src/tests/tests.yaml", "r", encoding="utf-8"
-        ) as stream:
+        with open(get_root_path() / "src/tests/tests.yaml", "r", encoding="utf-8") as stream:
             tests = yaml.safe_load(stream)
         for case in tests.keys():
             run_test(tests[case], preprocessor, evaluator)

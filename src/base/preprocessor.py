@@ -17,8 +17,7 @@ class Preprocessor(ABC):
 
     def __init__(
         self,
-        stopwords: Tuple = tuple(ntlk_stopwords.words("french"))
-        + tuple(string.ascii_lowercase),
+        stopwords: Tuple = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase),
     ) -> None:
         """
         Constructor for the Preprocessor class.
@@ -68,10 +67,7 @@ class Preprocessor(ABC):
         if categorical_features is not None:
             variables += categorical_features
             df[categorical_features] = df[categorical_features].fillna(value="NaN")
-        df = df[
-            variables
-            + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]
-        ]
+        df = df[variables + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]]
         df = df.dropna(subset=[y] + [text_feature])
 
         # Specific preprocessing for model

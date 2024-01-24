@@ -10,9 +10,7 @@ from tqdm import tqdm
 df = pd.read_parquet(
     "../data/extraction_sirene_20220712_harmonized_20221014.parquet", engine="pyarrow"
 )
-df = df[
-    ["DATE", "APE_SICORE", "LIB_SICORE", "AUTO", "NAT_SICORE", "EVT_SICORE", "SURF"]
-]
+df = df[["DATE", "APE_SICORE", "LIB_SICORE", "AUTO", "NAT_SICORE", "EVT_SICORE", "SURF"]]
 
 # define replacement patterns
 replacements = {
@@ -58,6 +56,6 @@ idx = (
 ) & ((df["AUTO"].isin(["E", "L", "S", "X", "I"])) | (df["AUTO"].isnull()))
 
 df["APE_SICORE"] = np.where(idx, "6820A", df["APE_SICORE"])
-df[
-    ["DATE", "APE_SICORE", "LIB_SICORE", "AUTO", "NAT_SICORE", "EVT_SICORE", "SURF"]
-].to_parquet("data/data_sirene3.parquet")
+df[["DATE", "APE_SICORE", "LIB_SICORE", "AUTO", "NAT_SICORE", "EVT_SICORE", "SURF"]].to_parquet(
+    "data/data_sirene3.parquet"
+)
