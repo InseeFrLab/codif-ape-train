@@ -4,4 +4,5 @@ torch
 seaborn
 mlflow
 unidecode
-pre-commit
+ruff==0.1.11
+pre-commit==3.6.0

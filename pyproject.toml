@@ -1,2 +1,3 @@
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 100
+extend-include = ["*.ipynb"]
