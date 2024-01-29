@@ -3,10 +3,42 @@ name: ape-classifier
 entry_points:
   main:
     parameters:
-      remote_server_uri: {type: str, default: https://projet-ape-***.user.lab.sspcloud.fr}
+      remote_server_uri: {type: str, default: projet-ape-mlflow.user.lab.sspcloud.fr}
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
       data_path: {type: str, default: data/extraction_sirene_sample.parquet}
-      config_path: {type: str, default: config/config_fasttext.yaml}
+      dim: {type: str, default: 170}
+      lr: {type: str, default: 0.2}
+      epoch: {type: str, default: 50}
+      wordNgrams: {type: str, default: 3}
+      minn: {type: str, default: 3}
+      maxn: {type: str, default: 4}
+      minCount: {type: str, default: 3}
+      bucket: {type: str, default: 2000000}
+      loss: {type: str, default: ova}
+      label_prefix: {type: str, default: __label__}
+      categorical_features_1: {type: str, default: AUTO}
+      categorical_features_2: {type: str, default: NAT_SICORE}
+      categorical_features_3: {type: str, default: SURF}
+      categorical_features_4: {type: str, default: EVT_SICORE}
 
-    command: "python src/train.py {remote_server_uri} {experiment_name} {run_name} {data_path} {config_path}"
+    command: |
+          python src/train.py \
+            --remote_server_uri {remote_server_uri} \
+            --experiment_name {experiment_name} \
+            --run_name {run_name} \
+            --data_path {data_path} \
+            --dim {dim} \
+            --lr {lr} \
+            --epoch {epoch} \
+            --wordNgrams {wordNgrams} \
+            --minn {minn} \
+            --maxn {maxn} \
+            --minCount {minCount} \
+            --bucket {bucket} \
+            --loss {loss} \
+            --label_prefix {label_prefix} \
+            --categorical_features_1 {categorical_features_1} \
+            --categorical_features_2 {categorical_features_2} \
+            --categorical_features_3 {categorical_features_3} \
+            --categorical_features_4 {categorical_features_4}
