@@ -7,8 +7,7 @@ import os
 import fasttext
 import numpy as np
 
-from file_system import FileSystem
-from utils import get_root_path
+from utils.data import get_file_system, get_root_path
 
 
 def get_hash(subword):
@@ -72,7 +71,7 @@ def load_ft_from_minio(path: str):
         os.mkdir(root_path / "model/")
 
     local_path = str(root_path / "model/pretrained_model.bin")
-    fs = FileSystem().get_file_system()
+    fs = get_file_system()
     fs.get(path, local_path)
     model = fasttext.load_model(local_path)
     os.remove(local_path)

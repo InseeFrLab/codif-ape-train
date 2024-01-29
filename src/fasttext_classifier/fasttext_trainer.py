@@ -8,7 +8,6 @@ import fasttext
 import pandas as pd
 
 from base.trainer import Trainer
-from utils import get_root_path
 
 
 class FastTextTrainer(Trainer):
@@ -47,18 +46,15 @@ class FastTextTrainer(Trainer):
             "ignore",
             "Setuptools is replacing distutils.",
         )
-        root_path = get_root_path()
         iterables_features = categorical_features if categorical_features is not None else []
-        with open(root_path / "data/train_text.txt", "w", encoding="utf-8") as file:
+        with open("train_text.txt", "w", encoding="utf-8") as file:
             for item in df.iterrows():
-                formatted_item = f"__label__{item[1][y]} {item[1][text_feature]}"
+                formatted_item = f"""{params["label_prefix"]}{item[1][y]} {item[1][text_feature]}"""
                 for feature in iterables_features:
                     formatted_item += f" {feature}_{item[1][feature]}"
                 file.write(f"{formatted_item}\n")
 
         print(f"\t*** Training over {df.shape[0]} observations\n")
 
-        model = fasttext.train_supervised(
-            (root_path / "data/train_text.txt").as_posix(), **params, verbose=2
-        )
+        model = fasttext.train_supervised("train_text.txt", **params, verbose=2)
         return model

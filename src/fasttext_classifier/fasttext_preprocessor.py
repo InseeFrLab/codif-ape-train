@@ -200,8 +200,8 @@ class FastTextPreprocessor(Preprocessor):
         Returns:
             pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
         """
-        missing_codes = set(df_naf[y]) - set(df[y])
-        fake_obs = df_naf[df_naf[y].isin(missing_codes)]
+        missing_codes = set(df_naf["APE_NIV5"]) - set(df[y])
+        fake_obs = df_naf[df_naf["APE_NIV5"].isin(missing_codes)]
         fake_obs.loc[:, text_feature] = fake_obs.LIB_NIV5
         fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(fake_obs.shape[0])]
         fake_obs = self.clean_lib(fake_obs, text_feature, "training")

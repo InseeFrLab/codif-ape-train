@@ -5,9 +5,11 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+import pyarrow.parquet as pq
 import string
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
+from utils.data import get_file_system
 
 
 class Preprocessor(ABC):
@@ -49,17 +51,10 @@ class Preprocessor(ABC):
                 and evaluation.
         """
         # Adding APE codes at each level
-        df = df.rename(columns={"APE_SICORE": "APE_NIV5"})
-        try:
-            df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
-        except FileNotFoundError:
-            df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
-
-        df_naf[["NIV3", "NIV4", "NIV5"]] = df_naf[["NIV3", "NIV4", "NIV5"]].apply(
-            lambda x: x.str.replace(".", "", regex=False)
-        )
-        df_naf = df_naf.rename(columns={f"NIV{i}": f"APE_NIV{i}" for i in range(1, 6)})
-        df_naf = df_naf[[f"APE_NIV{i}" for i in range(1, 6)] + ["LIB_NIV5"]]
+        df["APE_NIV5"] = df[y]
+        df_naf = pq.read_table(
+            "projet-ape/data/naf_extended.parquet", filesystem=get_file_system()
+        ).to_pandas()
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
