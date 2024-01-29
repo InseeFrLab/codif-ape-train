@@ -6,8 +6,8 @@ entry_points:
       remote_server_uri: {type: str, default: projet-ape-mlflow.user.lab.sspcloud.fr}
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
-      data_path: {type: str, default: data/extraction_sirene_sample.parquet}
-      dim: {type: str, default: 170}
+      Y: {type: str, default: APE_NIV5}
+      dim: {type: str, default: 180}
       lr: {type: str, default: 0.2}
       epoch: {type: str, default: 50}
       wordNgrams: {type: str, default: 3}
@@ -27,7 +27,7 @@ entry_points:
             --remote_server_uri {remote_server_uri} \
             --experiment_name {experiment_name} \
             --run_name {run_name} \
-            --data_path {data_path} \
+            --Y {Y} \
             --dim {dim} \
             --lr {lr} \
             --epoch {epoch} \
