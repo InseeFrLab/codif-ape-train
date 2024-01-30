@@ -11,7 +11,4 @@ AWS_SECRET_ACCESS_KEY=`vault kv get -field=SECRET_KEY onyxia-kv/projet-ape/s3` &
 unset AWS_SESSION_TOKEN
 export MC_HOST_s3=https://$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY@$AWS_S3_ENDPOINT
 
-python - <<'END_SCRIPT'
-import nltk
-nltk.download('stopwords')
-END_SCRIPT
+python -m nltk.downloader stopwords
