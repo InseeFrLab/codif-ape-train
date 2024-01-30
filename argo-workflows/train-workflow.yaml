@@ -1,0 +1,133 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: parallel-training-
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: training-conf-list
+        value: '[
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": ova},
+            { "DIM": 200, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": ova}
+            ]'
+
+  templates:
+    # Entrypoint DAG template
+    - name: main
+      dag:
+        tasks:
+          # Task 0: Start pipeline
+          - name: start-pipeline
+            template: start-pipeline-wt
+          # Task 1: Preprocess images
+          - name: run-training-with-params
+            dependencies: [ start-pipeline ]
+            template: run-training-wt
+            arguments:
+              parameters:
+                - name: DIM
+                  value: "{{item.DIM}}"
+                - name: LR
+                  value: "{{item.LR}}"
+                - name: EPOCHS
+                  value: "{{item.EPOCHS}}"
+                - name: WORDNGRAMS
+                  value: "{{item.WORDNGRAMS}}"
+                - name: MINN
+                  value: "{{item.MINN}}"
+                - name: MAXN
+                  value: "{{item.MAXN}}"
+                - name: MINCOUNT
+                  value: "{{item.MINCOUNT}}"
+                - name: BUCKET
+                  value: "{{item.BUCKET}}"
+                - name: LOSS
+                  value: "{{item.LOSS}}"
+
+            # Pass the inputs to the task using "withParam"
+            withParam: "{{workflow.parameters.training-conf-list}}"
+
+    # Now task container templates are defined
+    # Worker template for task 0 : start-pipeline
+    - name: start-pipeline-wt
+      inputs:
+      container:
+        image: busybox
+        command: [ sh, -c ]
+        args: [ "echo Starting pipeline" ]
+
+    # Worker template for task-1 : train model with params
+    - name: run-training-wt
+      inputs:
+        parameters:
+          - name: DIM
+          - name: LR
+          - name: EPOCHS
+          - name: WORDNGRAMS
+          - name: MINN
+          - name: MAXN
+          - name: MINCOUNT
+          - name: BUCKET
+          - name: LOSS
+      container:
+        image: inseefrlab/codif-ape-train:v0.0.1
+        imagePullPolicy: Always
+        command: ["/bin/bash", -c]
+        args: ["mlflow run ~/work/codif-ape-train/ \
+                  --env-manager=local \
+                  --entry-point $ENTRY_POINT \
+                  -P remote_server_uri=$MLFLOW_TRACKING_URI \
+                  -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+                  -P Y=$Y \
+                  -P dim=$DIM \
+                  -P lr=$LR \
+                  -P epoch=$EPOCHS \
+                  -P wordNgrams=$WORDNGRAMS \
+                  -P minn=$MINN \
+                  -P maxn=$MAXN \
+                  -P minCount=$MINCOUNT \
+                  -P bucket=$BUCKET \
+                  -P loss=$LOSS \
+                  -P label_prefix=$PREFIX \
+                  -P categorical_features_1=$FEATURE1 \
+                  -P categorical_features_2=$FEATURE2 \
+                  -P categorical_features_3=$FEATURE3 \
+                  -P categorical_features_4=$FEATURE4"
+              ]
+        env:
+          # env var for s3 connexion
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: accessKey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: secretKey
+          - name: AWS_DEFAULT_REGION
+            value: us-east-1
+          - name: AWS_S3_ENDPOINT
+            value: minio.lab.sspcloud.fr
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: https://minio.lab.sspcloud.fr
+          - name: MLFLOW_TRACKING_URI
+            value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: test
+          - name: ENTRY_POINT
+            value: main
+          - name: "Y"
+            value: apet_finale
+          - name: PREFIX
+            value: __label__
+          - name: FEATURE1
+            value: liasse_type
+          - name: FEATURE2
+            value: activ_nat_et
+          - name: FEATURE3
+            value: activ_surf_et
+          - name: FEATURE4
+            value: evenement_type

@@ -4,7 +4,7 @@ export MLFLOW_S3_ENDPOINT_URL=https://minio.lab.sspcloud.fr
 export MLFLOW_EXPERIMENT_NAME=test
 ENTRY_POINT=main
 
-Y=apet_finale
+# Parameters
 DIM=180
 LR=0.2
 EPOCHS=50
@@ -14,6 +14,9 @@ MAXN=4
 MINCOUNT=3
 BUCKET=2000000
 LOSS=ova
+
+# Database arguments
+Y=apet_finale
 PREFIX=__label__
 FEATURE1=liasse_type
 FEATURE2=activ_nat_et
