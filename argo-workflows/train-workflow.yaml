@@ -8,8 +8,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": "180", "LR": "0.2", "EPOCHS": "50", "WORDNGRAMS": "3", "MINN": "3", "MAXN": "4", "MINCOUNT": "3", "BUCKET": "20000000", "LOSS": "ova"},
-            { "DIM": "200", "LR": "0.2", "EPOCHS": "50", "WORDNGRAMS": "3", "MINN": "3", "MAXN": "4", "MINCOUNT": "3", "BUCKET": "20000000", "LOSS": "ova"}
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": "ova"},
+            { "DIM": 200, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": "ova"}
             ]'
 
   templates:
@@ -82,15 +82,15 @@ spec:
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
                           -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
                           -P Y=$Y \
-                          -P dim=$DIM \
-                          -P lr=$LR \
-                          -P epoch=$EPOCHS \
-                          -P wordNgrams=$WORDNGRAMS \
-                          -P minn=$MINN \
-                          -P maxn=$MAXN \
-                          -P minCount=$MINCOUNT \
-                          -P bucket=$BUCKET \
-                          -P loss=$LOSS \
+                          -P dim={{inputs.parameters.DIM}} \
+                          -P lr={{inputs.parameters.LR}} \
+                          -P epoch={{inputs.parameters.EPOCHS}} \
+                          -P wordNgrams={{inputs.parameters.WORDNGRAMS}} \
+                          -P minn={{inputs.parameters.MINN}} \
+                          -P maxn={{inputs.parameters.MAXN}} \
+                          -P minCount={{inputs.parameters.MINCOUNT}} \
+                          -P bucket={{inputs.parameters.BUCKET}} \
+                          -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
