@@ -27,8 +27,8 @@ parser.add_argument(
 parser.add_argument(
     "--experiment_name",
     type=str,
-    choices=["experimentation", "Production", "test"],
-    default="test",
+    choices=["Experimentation", "Production", "Test"],
+    default="Test",
     help="Experiment name in MLflow",
 )
 parser.add_argument(
