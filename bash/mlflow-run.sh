@@ -1,7 +1,7 @@
 #! /bin/bash
 export MLFLOW_TRACKING_URI=https://projet-ape-mlflow.user.lab.sspcloud.fr/
-export MLFLOW_S3_ENDPOINT_URL='https://minio.lab.sspcloud.fr'
-export MLFLOW_EXPERIMENT_NAME="test"
+export MLFLOW_S3_ENDPOINT_URL=https://minio.lab.sspcloud.fr
+export MLFLOW_EXPERIMENT_NAME=test
 ENTRY_POINT=main
 
 Y=apet_finale
@@ -21,7 +21,7 @@ FEATURE3=activ_surf_et
 FEATURE4=evenement_type
 
 
-mlflow run ~/work/codification-ape/ \
+mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
     --entry-point $ENTRY_POINT \
     -P remote_server_uri=$MLFLOW_TRACKING_URI \

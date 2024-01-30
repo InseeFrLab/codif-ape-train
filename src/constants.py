@@ -8,7 +8,7 @@ from pytorch_classifier.pytorch_evaluator import PytorchEvaluator
 from pytorch_classifier.pytorch_preprocessor import PytorchPreprocessor
 from pytorch_classifier.pytorch_trainer import PytorchTrainer
 
-TEXT_FEATURE = "LIB_SICORE"
+TEXT_FEATURE = "libelle_activite_apet"
 FRAMEWORK_CLASSES = {
     "fasttext": {
         "preprocessor": FastTextPreprocessor,

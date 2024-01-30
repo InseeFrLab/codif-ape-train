@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from utils.data import get_file_system
+import pyarrow.parquet as pq
 
 
 class Evaluator(ABC):
@@ -88,19 +90,17 @@ class Evaluator(ABC):
         proba_df = pd.DataFrame(probs_prediction)
         proba_df.set_index(liasse_nb, inplace=True)
 
-        try:
-            df_naf = pd.read_csv(r"./data/naf_extended.csv", dtype=str)
-        except FileNotFoundError:
-            df_naf = pd.read_csv(r"../data/naf_extended.csv", dtype=str)
-
-        df_naf[["NIV3", "NIV4", "NIV5"]] = df_naf[["NIV3", "NIV4", "NIV5"]].apply(
-            lambda x: x.str.replace(".", "", regex=False)
-        )
-        df_naf = df_naf[[f"NIV{i}" for i in range(1, level + 1)]]
+        df_naf = pq.read_table(
+            "projet-ape/data/naf_extended.parquet",
+            columns=[f"APE_NIV{i}" for i in range(1, level + 1)],
+            filesystem=get_file_system(),
+        ).to_pandas()
 
         for rank_pred in range(k):
             df_naf_renamed = df_naf.rename(
-                columns={f"NIV{i}": f"predictions_{i}_k{rank_pred+1}" for i in range(1, level + 1)}
+                columns={
+                    f"APE_NIV{i}": f"predictions_{i}_k{rank_pred+1}" for i in range(1, level + 1)
+                }
             )
             preds_df = preds_df.join(
                 df_naf_renamed.set_index(f"predictions_{level}_k{rank_pred+1}"),
