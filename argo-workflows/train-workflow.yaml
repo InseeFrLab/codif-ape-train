@@ -8,8 +8,46 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": "ova"},
-            { "DIM": 200, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 20000000, "LOSS": "ova"}
+            { "DIM": 50, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 100, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 150, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 200, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 250, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 500, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 1000, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 10, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 15, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 20, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 30, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 75, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 100, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 150, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.01, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.05, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.1, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.15, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.25, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.3, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.5, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ns"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "hs"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "softmax"},
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"}
             ]'
 
   templates:
@@ -118,7 +156,7 @@ spec:
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
           - name: MLFLOW_EXPERIMENT_NAME
-            value: test
+            value: Test
           - name: ENTRY_POINT
             value: main
           - name: "Y"
