@@ -71,7 +71,7 @@ spec:
           - name: BUCKET
           - name: LOSS
       container:
-        image: inseefrlab/codif-ape-train:v0.0.1
+        image: inseefrlab/codif-ape-train:v0.0.2
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\
