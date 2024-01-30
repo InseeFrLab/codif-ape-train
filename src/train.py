@@ -4,14 +4,14 @@ Main script.
 import os
 import time
 import argparse
-
+import yaml
 import mlflow
 import pyarrow.parquet as pq
 
 from constants import FRAMEWORK_CLASSES, TEXT_FEATURE
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
+from tests.test_main import run_test
 
-# from tests.test_main import run_test
 from utils.data import get_file_system
 
 parser = argparse.ArgumentParser(
@@ -162,7 +162,6 @@ def main(
     mlflow.set_experiment(experiment_name)
     fs = get_file_system()
 
-    print(run_name)
     with mlflow.start_run(run_name=run_name):
         framework_classes = FRAMEWORK_CLASSES[model_type]
 
@@ -235,15 +234,15 @@ def main(
 
         print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        # # Tests
-        # print("*** 4- Performing standard tests...\n")
-        # t = time.time()
-        # with open(get_root_path() / "src/tests/tests.yaml", "r", encoding="utf-8") as stream:
-        #     tests = yaml.safe_load(stream)
-        # for case in tests.keys():
-        #     run_test(tests[case], preprocessor, evaluator)
+        # Tests
+        print("*** 4- Performing standard tests...\n")
+        t = time.time()
+        with open("src/tests/tests.yaml", "r", encoding="utf-8") as stream:
+            tests = yaml.safe_load(stream)
+        for case in tests.keys():
+            run_test(tests[case], preprocessor, evaluator)
 
-        # print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
+        print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
 
 
 if __name__ == "__main__":
