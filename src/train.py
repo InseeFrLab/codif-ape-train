@@ -8,7 +8,7 @@ import yaml
 import mlflow
 import pyarrow.parquet as pq
 
-from constants import FRAMEWORK_CLASSES, TEXT_FEATURE
+from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from tests.test_main import run_test
 
@@ -93,6 +93,12 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "--text_feature",
+    type=str,
+    help="Description of company's activity",
+    required=True,
+)
+parser.add_argument(
     "--categorical_features_1",
     type=str,
     default="AUTO",
@@ -138,6 +144,7 @@ def main(
     bucket: int,
     loss: str,
     label_prefix: str,
+    text_feature: str,
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
@@ -150,7 +157,17 @@ def main(
     params = {
         key: value
         for key, value in locals().items()
-        if (key not in ["remote_server_uri", "experiment_name", "run_name", "Y", "model_type"])
+        if (
+            key
+            not in [
+                "remote_server_uri",
+                "experiment_name",
+                "run_name",
+                "Y",
+                "model_type",
+                "text_feature",
+            ]
+        )
         and not key.startswith("categorical_features")
     }
     params["thread"] = os.cpu_count()
@@ -181,7 +198,7 @@ def main(
         df_train, df_test = preprocessor.preprocess(
             df=df,
             y=Y,
-            text_feature=TEXT_FEATURE,
+            text_feature=text_feature,
             categorical_features=categorical_features,
         )
         print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
@@ -189,7 +206,7 @@ def main(
         # Run training of the model
         print("*** 2- Training the model...\n")
         t = time.time()
-        model = trainer.train(df_train, Y, TEXT_FEATURE, categorical_features, params)
+        model = trainer.train(df_train, Y, text_feature, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         if model_type == "fasttext":
@@ -212,7 +229,7 @@ def main(
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
-                python_model=FastTextWrapper(TEXT_FEATURE, categorical_features),
+                python_model=FastTextWrapper(text_feature, categorical_features),
                 artifacts=artifacts,
                 signature=signature,
             )
@@ -237,7 +254,7 @@ def main(
         else:
             raise KeyError("Model type is not valid.")
 
-        accuracies = evaluator.evaluate(df_test, Y, TEXT_FEATURE, categorical_features, 5)
+        accuracies = evaluator.evaluate(df_test, Y, text_feature, categorical_features, 5)
 
         # Log metrics
         for metric, value in accuracies.items():

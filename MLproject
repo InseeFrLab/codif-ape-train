@@ -17,6 +17,7 @@ entry_points:
       bucket: {type: str, default: 2000000}
       loss: {type: str, default: ova}
       label_prefix: {type: str, default: __label__}
+      text_feature: {type: str, default: LMNP}
       categorical_features_1: {type: str, default: AUTO}
       categorical_features_2: {type: str, default: NAT_SICORE}
       categorical_features_3: {type: str, default: SURF}
@@ -38,6 +39,7 @@ entry_points:
             --bucket {bucket} \
             --loss {loss} \
             --label_prefix {label_prefix} \
+            --text_feature {text_feature} \
             --categorical_features_1 {categorical_features_1} \
             --categorical_features_2 {categorical_features_2} \
             --categorical_features_3 {categorical_features_3} \

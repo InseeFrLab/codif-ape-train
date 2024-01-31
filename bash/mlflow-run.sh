@@ -1,7 +1,7 @@
 #! /bin/bash
 export MLFLOW_TRACKING_URI=https://projet-ape-mlflow.user.lab.sspcloud.fr/
 export MLFLOW_S3_ENDPOINT_URL=https://minio.lab.sspcloud.fr
-export MLFLOW_EXPERIMENT_NAME=test
+export MLFLOW_EXPERIMENT_NAME=Test
 ENTRY_POINT=main
 
 # Parameters
@@ -18,6 +18,7 @@ LOSS=ova
 # Database arguments
 Y=apet_finale
 PREFIX=__label__
+TEXT_FEATURE=libelle_activite_apet
 FEATURE1=liasse_type
 FEATURE2=activ_nat_et
 FEATURE3=activ_surf_et
@@ -40,6 +41,7 @@ mlflow run ~/work/codif-ape-train/ \
     -P bucket=$BUCKET \
     -P loss=$LOSS \
     -P label_prefix=$PREFIX \
+    -P text_feature=$TEXT_FEATURE \
     -P categorical_features_1=$FEATURE1 \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \

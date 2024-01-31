@@ -130,6 +130,7 @@ spec:
                           -P bucket={{inputs.parameters.BUCKET}} \
                           -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
+                          -P text_feature=$TEXT_FEATURE \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
@@ -163,6 +164,8 @@ spec:
             value: apet_finale
           - name: PREFIX
             value: __label__
+          - name: TEXT_FEATURE
+            value: libelle_activite_apet
           - name: FEATURE1
             value: liasse_type
           - name: FEATURE2
