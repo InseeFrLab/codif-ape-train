@@ -2,7 +2,7 @@
 FastText wrapper for MLflow.
 """
 
-from typing import Tuple, Optional, Dict, Any, List
+from typing import Tuple, Optional, Dict, Any
 import fasttext
 import mlflow
 import pandas as pd
@@ -39,7 +39,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
     def predict(
         self,
         context: mlflow.pyfunc.PythonModelContext,
-        model_input: List,
+        model_input: Dict,
         params: Optional[Dict[str, Any]] = None,
     ) -> Tuple:
         """
@@ -47,7 +47,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
 
         Args:
             context (mlflow.pyfunc.PythonModelContext): The MLflow model context.
-            model_input (List): A list of text observations.
+            model_input (List): A dictionary containing the query features.
             params (Optional[Dict[str, Any]]): Additional parameters to
                 pass to the model for inference.
 
@@ -58,7 +58,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             self.load_context(context)
 
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input, columns=[self.text_feature]),
+            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.categorical_features),
             text_feature=self.text_feature,
             method="evaluation",
         )
