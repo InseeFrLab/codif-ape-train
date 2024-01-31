@@ -171,9 +171,11 @@ def main(
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data
-        df = pq.read_table(
-            "projet-ape/extractions/20240124_sirene4.parquet", filesystem=fs
-        ).to_pandas()
+        df = (
+            pq.read_table("projet-ape/extractions/20240124_sirene4.parquet", filesystem=fs)
+            .to_pandas()
+            .head(5000)
+        )
 
         # Preprocess data
         df_train, df_test = preprocessor.preprocess(
@@ -199,11 +201,20 @@ def main(
                 "train_data": "train_text.txt",
             }
 
+            inference_params = {
+                "k": 1,
+            }
+            # Infer the signature including parameters
+            signature = mlflow.models.infer_signature(
+                params=inference_params,
+            )
+
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
-                code_path=["src/fasttext_classifier/", "src/base/"],
-                python_model=FastTextWrapper(),
+                code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
+                python_model=FastTextWrapper(TEXT_FEATURE, categorical_features),
                 artifacts=artifacts,
+                signature=signature,
             )
         elif model_type == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)

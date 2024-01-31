@@ -9,7 +9,8 @@ import pyarrow.parquet as pq
 import string
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
-from utils.data import get_file_system
+from s3fs import S3FileSystem
+import os
 
 
 class Preprocessor(ABC):
@@ -53,7 +54,12 @@ class Preprocessor(ABC):
         # Adding APE codes at each level
         df["APE_NIV5"] = df[y]
         df_naf = pq.read_table(
-            "projet-ape/data/naf_extended.parquet", filesystem=get_file_system()
+            "projet-ape/data/naf_extended.parquet",
+            filesystem=S3FileSystem(
+                client_kwargs={"endpoint_url": f"https://{os.environ['AWS_S3_ENDPOINT']}"},
+                key=os.environ["AWS_ACCESS_KEY_ID"],
+                secret=os.environ["AWS_SECRET_ACCESS_KEY"],
+            ),
         ).to_pandas()
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
