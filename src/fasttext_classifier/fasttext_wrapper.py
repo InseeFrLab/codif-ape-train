@@ -15,9 +15,9 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
     Class to wrap and use FastText Models.
     """
 
-    def __init__(self, text_features, categorical_features):
+    def __init__(self, text_feature, categorical_features):
         self.preprocessor = FastTextPreprocessor()
-        self.text_features = text_features
+        self.text_feature = text_feature
         self.categorical_features = categorical_features
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
