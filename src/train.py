@@ -188,11 +188,9 @@ def main(
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data
-        df = (
-            pq.read_table("projet-ape/extractions/20240124_sirene4.parquet", filesystem=fs)
-            .to_pandas()
-            .head(5000)
-        )
+        df = pq.read_table(
+            "projet-ape/extractions/20240124_sirene4.parquet", filesystem=fs
+        ).to_pandas()
 
         # Preprocess data
         df_train, df_test = preprocessor.preprocess(
