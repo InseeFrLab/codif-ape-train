@@ -195,7 +195,7 @@ class FastTextPreprocessor(Preprocessor):
             df (pd.DataFrame): The input DataFrame to be oversampled.
             threshold (int): The minimum number of samples for each class. Classes with fewer
                 samples than the threshold will be oversampled.
-            Y (str): The name of the column containing the class labels.
+            y (str): The name of the column containing the class labels.
 
         Returns:
             pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
@@ -205,6 +205,7 @@ class FastTextPreprocessor(Preprocessor):
         fake_obs.loc[:, text_feature] = fake_obs.LIB_NIV5
         fake_obs.index = [f"FAKE_TRAIN_{i}" for i in range(fake_obs.shape[0])]
         fake_obs = self.clean_lib(fake_obs, text_feature, "training")
+        fake_obs[y] = fake_obs["APE_NIV5"]
         df = pd.concat([df, fake_obs])
 
         print(f"\t*** {len(missing_codes)} missing codes have been added in the database...\n")
