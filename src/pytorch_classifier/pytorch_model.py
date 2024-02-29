@@ -4,7 +4,7 @@ Pytorch model without fastText dependency.
 from typing import List
 import torch
 from torch import nn
-from pytorch_classifier.mappings import mappings
+from utils.mappings import mappings
 
 
 class PytorchModel(nn.Module):

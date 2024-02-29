@@ -1,17 +1,17 @@
 """
-FastTextPreprocessor class.
+CamembertPreprocessor class.
 """
 from typing import List, Optional, Tuple, Dict
 
 import time
 import pandas as pd
 
-from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
+from base.preprocessor import Preprocessor
 from utils.mappings import mappings
 from sklearn.model_selection import train_test_split
 
 
-class PytorchPreprocessor(FastTextPreprocessor):
+class CamembertPreprocessor(Preprocessor):
     """
     FastTextPreprocessor class.
     """
@@ -26,8 +26,7 @@ class PytorchPreprocessor(FastTextPreprocessor):
         oversampling: Optional[Dict[str, int]] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Preprocesses data to feed to a classifier of the
-        fasttext library for training and evaluation.
+        Preprocesses data to feed to a Camembert classifier.
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
@@ -42,8 +41,6 @@ class PytorchPreprocessor(FastTextPreprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df = self.clean_lib(df, text_feature)
-
         df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
             df[variable] = df[variable].apply(mappings[variable].get)
