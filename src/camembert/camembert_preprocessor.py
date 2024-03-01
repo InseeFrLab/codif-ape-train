@@ -46,9 +46,8 @@ class CamembertPreprocessor(Preprocessor):
             df[variable] = df[variable].apply(mappings[variable].get)
         df[y] = df[y].apply(mappings[y].get)
 
-        # Guichet unique split
-        df_gu = df[df.index.str.startswith("J")]
-        df = df[~df.index.str.startswith("J")]
+        # On passe tout en minuscule
+        df[text_feature] = df[text_feature].str.lower()
 
         # Train/test split
         features = [text_feature]
@@ -72,4 +71,4 @@ class CamembertPreprocessor(Preprocessor):
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(f"\t*** Done! Oversampling lasted " f"{round((time.time() - t)/60,1)} minutes.\n")
 
-        return df_train, df_test, df_gu
+        return df_train, df_test

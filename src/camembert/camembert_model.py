@@ -13,18 +13,17 @@ from utils.mappings import mappings
 class CamembertClassificationHead(nn.Module):
     """Head for sentence-level classification tasks."""
 
-    def __init__(self, config):
+    def __init__(self, config, num_labels):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         classifier_dropout = (
             config.classifier_dropout if config.classifier_dropout is not None else config.hidden_dropout_prob
         )
         self.dropout = nn.Dropout(classifier_dropout)
-        self.out_proj = nn.Linear(config.hidden_size, config.num_labels)
+        self.out_proj = nn.Linear(config.hidden_size, num_labels)
 
     def forward(self, features, **kwargs):
-        x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
-        x = self.dropout(x)
+        x = self.dropout(features)
         x = self.dense(x)
         x = torch.tanh(x)
         x = self.dropout(x)
@@ -41,7 +40,7 @@ class CustomCamembertModel(CamembertPreTrainedModel):
     def __init__(
         self,
         config: CamembertConfig,
-        num_classes: int,
+        num_labels: int,
         categorical_features: List[str],
     ):
         """
@@ -49,14 +48,15 @@ class CustomCamembertModel(CamembertPreTrainedModel):
 
         Args:
             config (CamembertConfig): Model configuration.
-            num_classes (int): Number of classes.
+            num_labels (int): Number of classes.
             categorical_features (List[str]): List of categorical features.
         """
-        super(CustomCamembertModel, self).__init__()
+        super().__init__(config)
         self.categorical_features = categorical_features
+        self.num_labels = num_labels
 
         self.text_encoder = CamembertModel(config, add_pooling_layer=False)
-        self.classifier = CamembertClassificationHead(config)
+        self.classifier = CamembertClassificationHead(config, num_labels)
 
         self.categorical_embeddings = {}
         for variable in categorical_features:
@@ -67,8 +67,6 @@ class CustomCamembertModel(CamembertPreTrainedModel):
             )
             self.categorical_embeddings[variable] = emb
             setattr(self, "emb_{}".format(variable), emb)
-
-        self.fc = nn.Linear(config.hidden_size, num_classes)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -107,16 +105,19 @@ class CustomCamembertModel(CamembertPreTrainedModel):
 
         x_cat = []
         for i, (variable, embedding_layer) in enumerate(self.categorical_embeddings.items()):
-            x_cat.append(embedding_layer(categorical_inputs[i]))
+            embedding = embedding_layer(categorical_inputs[:, i])
+            x_cat.append(embedding)
 
         # Mean of tokens
         cat_output = torch.stack(x_cat, dim=0).sum(dim=0)
-        logits = self.classifier(sequence_output + cat_output)
+        logits = self.classifier(sequence_output[:, 0, :] + cat_output)
+        print(logits.shape)
 
         loss = None
         if labels is not None:
             # move labels to correct device to enable model parallelism
             labels = labels.to(logits.device)
+            print(labels.shape)
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 
