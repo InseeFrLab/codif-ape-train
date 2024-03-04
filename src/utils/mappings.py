@@ -806,3 +806,11 @@ mappings = {
         "5122Z": 727,
     },
 }
+
+
+mappings["liasse_type"] = mappings["AUTO"]
+mappings["activ_nat_et"] = mappings["NAT_SICORE"]
+mappings["activ_surf_et"] = mappings["SURF"]
+mappings["evenement_type"] = mappings["EVT_SICORE"]
+mappings["apet_finale"] = mappings["APE_NIV5"]
+mappings["Target"] = mappings["APE_NIV5"]
