@@ -149,7 +149,7 @@ def main(
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
-    model_type: str = "fasttext",
+    model_type: str = "camembert",
 ):
     """
     Main method.
@@ -233,6 +233,8 @@ def main(
             )
         elif model_type == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
+        elif model_type == "camembert":
+            mlflow.pytorch.log_model(pytorch_model=model.model, artifact_path=run_name)
         else:
             raise KeyError("Model type is not valid.")
 
@@ -245,7 +247,7 @@ def main(
         # Evaluation
         print("*** 3- Evaluating the model...\n")
         t = time.time()
-        if model_type == "fasttext":
+        if model_type in ["fasttext", "camembert"]:
             evaluator = framework_classes["evaluator"](model)
         elif model_type == "pytorch":
             evaluator = framework_classes["evaluator"](model, trainer.tokenizer)
