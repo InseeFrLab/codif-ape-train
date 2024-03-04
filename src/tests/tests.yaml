@@ -93,7 +93,7 @@ Case 10:
   Data:
     LIB_SICORE: Fabrication, préparation d'entremet, tarte, biscuit moelleux, brioche, viennoiserie, crème, ganache, petit gâteau individuel, decor chocola
     AUTO: M
-    NAT_SICORE: 04
+    NAT_SICORE: "04"
     SURF: null
     EVT_SICORE: 01P
     Target: 1071D
@@ -173,7 +173,7 @@ Case 18:
   Data:
     LIB_SICORE: Fourniture de prestations de services dans le domaine de l'informatique tels que audit, conseil, expertise, conception de logiciels
     AUTO: C
-    NAT_SICORE: 04
+    NAT_SICORE: "04"
     SURF: null
     EVT_SICORE: 01M
     Target: 6202A

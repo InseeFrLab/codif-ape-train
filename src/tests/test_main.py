@@ -34,6 +34,12 @@ def run_test(test: dict, preprocessor: Preprocessor, evaluator: Evaluator) -> No
     # Clean the data using the preprocessor
     df = preprocessor.clean_lib(df=df, text_feature=df.columns[0], method="evaluation")
     df.fillna(value="NaN", inplace=True)
+    df["NAT_SICORE"] = df["NAT_SICORE"].astype(str)
+    df.fillna(value="NaN", inplace=True)
+    df["SURF"] = "1"
+    df = preprocessor.clean_categorical_features(
+        df=df, y="Target", categorical_features=df.columns[1:-1].to_list()
+    )
 
     # Get predictions and probabilities using the evaluator
     preds = evaluator.get_aggregated_preds(
