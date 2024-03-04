@@ -9,7 +9,6 @@ from utils.mappings import mappings
 
 
 class CamembertTrainer:
-
     def __init__(
         self,
     ):
@@ -33,15 +32,15 @@ class CamembertTrainer:
     ) -> CustomCamembertModel:
         if self.model is None:
             self.model = CustomCamembertModel.from_pretrained(
-                "camembert/camembert-base",
-                num_classes=len(mappings.get("APE_NIV5")),
+                "camembert/camembert-base-wikipedia-4gb",
+                num_labels=len(mappings.get("APE_NIV5")),
                 categorical_features=categorical_features,
             )
 
         num_epochs = params["epoch"]
-        train_proportion = params["train_proportion"]
-        batch_size = params["batch_size"]
         learning_rate = params["lr"]
+        train_proportion = 0.9
+        batch_size = 16
 
         # Train/val split
         features = [text_feature]
@@ -52,16 +51,16 @@ class CamembertTrainer:
         df["categorical_inputs"] = df[categorical_features].apply(lambda x: x.tolist(), axis=1)
         df = df.drop(columns=categorical_features)
         train_df, val_df = train_test_split(
-            df["text", "labels", "categorical_inputs"],
+            df[["text", "labels", "categorical_inputs"]],
             test_size=1 - train_proportion,
             random_state=0,
             shuffle=True,
         )
 
-        train_ds = Dataset.from_pandas(train_df, split="train")
-        test_ds = Dataset.from_pandas(val_df, split="test")
+        train_ds = Dataset.from_pandas(train_df)
+        val_ds = Dataset.from_pandas(val_df)
         tokenized_train_ds = train_ds.map(self.tokenize)
-        tokenized_test_ds = test_ds.map(self.tokenize)
+        tokenized_val_ds = val_ds.map(self.tokenize)
 
         training_args = TrainingArguments(
             output_dir="camembert_model",
@@ -73,15 +72,16 @@ class CamembertTrainer:
             evaluation_strategy="epoch",
             save_strategy="epoch",
             load_best_model_at_end=True,
+            run_name="default",
         )
 
         trainer = Trainer(
             model=self.model,
             args=training_args,
             train_dataset=tokenized_train_ds,
-            eval_dataset=tokenized_test_ds,
+            eval_dataset=tokenized_val_ds,
             tokenizer=self.tokenizer,
         )
 
         trainer.train()
-        return self.model
+        return trainer

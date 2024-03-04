@@ -16,6 +16,53 @@ class CamembertPreprocessor(Preprocessor):
     FastTextPreprocessor class.
     """
 
+    def clean_lib(self, df: pd.DataFrame, text_feature: str, method: str) -> pd.DataFrame:
+        """
+        Cleans a text feature for pd.DataFrame `df` at index idx.
+
+        Args:
+            df (pd.DataFrame): DataFrame.
+            text_feature (str): Name of the text feature.
+            method (str): The method when the function is used (training or
+            evaluation)
+
+        Returns:
+            df (pd.DataFrame): DataFrame.
+        """
+        # On passe tout en minuscule
+        df[text_feature] = df[text_feature].str.lower()
+
+        if method == "training":
+            # On supprime les NaN
+            df = df.dropna(subset=[text_feature])
+        elif method == "evaluation":
+            df[text_feature] = df[text_feature].fillna(value="")
+
+        return df
+
+    @staticmethod
+    def clean_categorical_features(
+        df: pd.DataFrame, y: str, categorical_features: List[str]
+    ) -> pd.DataFrame:
+        """
+        Cleans the categorical features for pd.DataFrame `df`.
+
+        Args:
+            df (pd.DataFrame): DataFrame.
+            y (str): Name of the variable to predict.
+            categorical_features (List[str]): Names of the categorical features.
+
+        Returns:
+            df (pd.DataFrame): DataFrame.
+        """
+        if "activ_surf_et" in categorical_features:
+            df["activ_surf_et"] = "1"
+        df[categorical_features] = df[categorical_features].fillna("NaN")
+        for variable in categorical_features:
+            df[variable] = df[variable].apply(mappings[variable].get)
+        df[y] = df[y].apply(mappings[y].get)
+        return df
+
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
@@ -41,13 +88,8 @@ class CamembertPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df[categorical_features] = df[categorical_features].fillna("NaN")
-        for variable in categorical_features:
-            df[variable] = df[variable].apply(mappings[variable].get)
-        df[y] = df[y].apply(mappings[y].get)
-
-        # On passe tout en minuscule
-        df[text_feature] = df[text_feature].str.lower()
+        df = self.clean_lib(df, text_feature, "training")
+        df = self.clean_categorical_features(df, y, categorical_features)
 
         # Train/test split
         features = [text_feature]

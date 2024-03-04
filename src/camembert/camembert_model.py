@@ -10,17 +10,19 @@ from typing import List, Optional
 from utils.mappings import mappings
 
 
-class CamembertClassificationHead(nn.Module):
+class ClassificationHead(nn.Module):
     """Head for sentence-level classification tasks."""
 
-    def __init__(self, config, num_labels):
+    def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         classifier_dropout = (
-            config.classifier_dropout if config.classifier_dropout is not None else config.hidden_dropout_prob
+            config.classifier_dropout
+            if config.classifier_dropout is not None
+            else config.hidden_dropout_prob
         )
         self.dropout = nn.Dropout(classifier_dropout)
-        self.out_proj = nn.Linear(config.hidden_size, num_labels)
+        self.out_proj = nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self, features, **kwargs):
         x = self.dropout(features)
@@ -40,7 +42,6 @@ class CustomCamembertModel(CamembertPreTrainedModel):
     def __init__(
         self,
         config: CamembertConfig,
-        num_labels: int,
         categorical_features: List[str],
     ):
         """
@@ -52,19 +53,17 @@ class CustomCamembertModel(CamembertPreTrainedModel):
             categorical_features (List[str]): List of categorical features.
         """
         super().__init__(config)
+        self.config = config
         self.categorical_features = categorical_features
-        self.num_labels = num_labels
+        self.num_labels = config.num_labels
 
-        self.text_encoder = CamembertModel(config, add_pooling_layer=False)
-        self.classifier = CamembertClassificationHead(config, num_labels)
+        self.roberta = CamembertModel(config, add_pooling_layer=False)
+        self.classifier = ClassificationHead(config)
 
         self.categorical_embeddings = {}
         for variable in categorical_features:
             vocab_size = len(mappings[variable])
-            emb = nn.Embedding(
-                embedding_dim=config.hidden_size,
-                num_embeddings=vocab_size
-            )
+            emb = nn.Embedding(embedding_dim=config.hidden_size, num_embeddings=vocab_size)
             self.categorical_embeddings[variable] = emb
             setattr(self, "emb_{}".format(variable), emb)
 
@@ -90,7 +89,7 @@ class CustomCamembertModel(CamembertPreTrainedModel):
         """
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        outputs = self.text_encoder(
+        outputs = self.roberta(
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
@@ -111,13 +110,11 @@ class CustomCamembertModel(CamembertPreTrainedModel):
         # Mean of tokens
         cat_output = torch.stack(x_cat, dim=0).sum(dim=0)
         logits = self.classifier(sequence_output[:, 0, :] + cat_output)
-        print(logits.shape)
 
         loss = None
         if labels is not None:
             # move labels to correct device to enable model parallelism
             labels = labels.to(logits.device)
-            print(labels.shape)
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 
