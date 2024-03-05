@@ -1,14 +1,23 @@
 from transformers import CamembertTokenizer, Trainer, TrainingArguments
-from camembert.camembert_model import CustomCamembertModel
+from camembert.camembert_model import (
+    CustomCamembertModel,
+    OneHotCategoricalCamembertModel,
+    EmbeddedCategoricalCamembertModel,
+)
 import torch
 import pandas as pd
 from typing import Dict, List, Optional
 from sklearn.model_selection import train_test_split
 from datasets import Dataset
 from utils.mappings import mappings
+import abc
 
 
-class CamembertTrainer:
+class CamembertTrainer(abc.ABC):
+    """
+    Trainer class for Camembert.
+    """
+
     def __init__(
         self,
     ):
@@ -20,7 +29,22 @@ class CamembertTrainer:
         self.tokenizer = CamembertTokenizer.from_pretrained("camembert/camembert-base")
 
     def tokenize(self, examples):
+        """
+        Tokenize text field of observation.
+        """
         return self.tokenizer(examples["text"], truncation=True)
+
+    def set_model(
+        self,
+        categorical_features: Optional[List[str]],
+    ):
+        """
+        Set model.
+
+        Args:
+            categorical_features (Optional[List[str]]): Categorical features.
+        """
+        raise NotImplementedError()
 
     def train(
         self,
@@ -31,11 +55,7 @@ class CamembertTrainer:
         params: Dict,
     ) -> CustomCamembertModel:
         if self.model is None:
-            self.model = CustomCamembertModel.from_pretrained(
-                "camembert/camembert-base-wikipedia-4gb",
-                num_labels=len(mappings.get("APE_NIV5")),
-                categorical_features=categorical_features,
-            )
+            self.set_model(categorical_features)
 
         num_epochs = params["epoch"]
         learning_rate = params["lr"]
@@ -73,6 +93,8 @@ class CamembertTrainer:
             save_strategy="epoch",
             load_best_model_at_end=True,
             run_name="default",
+            dataloader_num_workers=30,
+            gradient_accumulation_steps=4,
         )
 
         trainer = Trainer(
@@ -85,3 +107,73 @@ class CamembertTrainer:
 
         trainer.train()
         return trainer
+
+
+class CustomCamembertTrainer(CamembertTrainer):
+    """
+    Trainer class for CustomCamembertModel
+    """
+
+    def set_model(
+        self,
+        categorical_features: Optional[List[str]],
+    ):
+        """
+        Set model.
+
+        Args:
+            categorical_features (Optional[List[str]]): Categorical features.
+        """
+        self.model = CustomCamembertModel.from_pretrained(
+            "camembert/camembert-base-wikipedia-4gb",
+            num_labels=len(mappings.get("APE_NIV5")),
+            categorical_features=categorical_features,
+        )
+        return
+
+
+class OneHotCamembertTrainer(CamembertTrainer):
+    """
+    Trainer class for CustomCamembertModel
+    """
+
+    def set_model(
+        self,
+        categorical_features: Optional[List[str]],
+    ):
+        """
+        Set model.
+
+        Args:
+            categorical_features (Optional[List[str]]): Categorical features.
+        """
+        self.model = OneHotCategoricalCamembertModel.from_pretrained(
+            "camembert/camembert-base-wikipedia-4gb",
+            num_labels=len(mappings.get("APE_NIV5")),
+            categorical_features=categorical_features,
+        )
+        return
+
+
+class EmbeddedCamembertTrainer(CamembertTrainer):
+    """
+    Trainer class for CustomCamembertModel
+    """
+
+    def set_model(
+        self,
+        categorical_features: Optional[List[str]],
+    ):
+        """
+        Set model.
+
+        Args:
+            categorical_features (Optional[List[str]]): Categorical features.
+        """
+        self.model = EmbeddedCategoricalCamembertModel.from_pretrained(
+            "camembert/camembert-base-wikipedia-4gb",
+            num_labels=len(mappings.get("APE_NIV5")),
+            categorical_features=categorical_features,
+            embedding_dims=[3] * len(categorical_features),  # TODO: test variations ?
+        )
+        return
