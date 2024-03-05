@@ -95,6 +95,7 @@ class CamembertTrainer(abc.ABC):
             run_name="default",
             dataloader_num_workers=30,
             gradient_accumulation_steps=4,
+            fp16=False,  # True not supported for now
         )
 
         trainer = Trainer(

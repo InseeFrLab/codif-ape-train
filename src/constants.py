@@ -10,7 +10,7 @@ from pytorch_classifier.pytorch_trainer import PytorchTrainer
 from camembert.camembert_evaluator import CamembertEvaluator
 from camembert.camembert_preprocessor import CamembertPreprocessor
 from camembert.camembert_trainer import (
-    CamembertTrainer,
+    CustomCamembertTrainer,
     OneHotCamembertTrainer,
     EmbeddedCamembertTrainer,
 )
@@ -29,7 +29,7 @@ FRAMEWORK_CLASSES = {
     },
     "camembert": {
         "preprocessor": CamembertPreprocessor,
-        "trainer": CamembertTrainer,
+        "trainer": CustomCamembertTrainer,
         "evaluator": CamembertEvaluator,
     },
     "camembert_one_hot": {

@@ -231,6 +231,9 @@ def main(
                 artifacts=artifacts,
                 signature=signature,
             )
+            # Log parameters
+            for param_name, param_value in params.items():
+                mlflow.log_param(param_name, param_value)
         elif model_type == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
         elif model_type == "camembert":
@@ -238,9 +241,7 @@ def main(
         else:
             raise KeyError("Model type is not valid.")
 
-        # Log parameters
-        for param_name, param_value in params.items():
-            mlflow.log_param(param_name, param_value)
+        # Log additional params
         mlflow.log_param("features", categorical_features)
         mlflow.log_param("Y", Y)
 
