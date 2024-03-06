@@ -13,7 +13,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "EPOCHS": 3, "LR": 5e-5},
+            { "EPOCHS": 3, "LR": 5e-5, "MODEL_TYPE": "camembert"}
             ]'
 
   templates:
@@ -34,6 +34,8 @@ spec:
                   value: "{{item.LR}}"
                 - name: EPOCHS
                   value: "{{item.EPOCHS}}"
+                - name: MODEL_TYPE
+                  value: "{{item.MODEL_TYPE}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -79,8 +81,9 @@ spec:
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
-                          -P categorical_features_4=$FEATURE4"
-              ]
+                          -P categorical_features_4=$FEATURE4 \
+                          -P model_type={{inputs.parameters.MODEL_TYPE}}
+              "]
         env:
           # env var for s3 connexion
           - name: AWS_ACCESS_KEY_ID
