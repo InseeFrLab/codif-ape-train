@@ -3,6 +3,11 @@ kind: Workflow
 metadata:
   generateName: parallel-training-
 spec:
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 32Gi
   entrypoint: main
   arguments:
     parameters:
@@ -51,6 +56,14 @@ spec:
       container:
         image: inseefrlab/codif-ape-train:v0.0.2
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 100m
+          limits:
+            memory: 64Gi
+            cpu: 40000m
+            nvidia.com/gpu: 1
         command: ["/bin/bash", -c]
         args: ["git clone -b camembert https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
