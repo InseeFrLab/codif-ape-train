@@ -1,0 +1,108 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: parallel-training-
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: training-conf-list
+        value: '[
+            { "EPOCHS": 3, "LR": 5e-5},
+            ]'
+
+  templates:
+    # Entrypoint DAG template
+    - name: main
+      dag:
+        tasks:
+          # Task 0: Start pipeline
+          - name: start-pipeline
+            template: start-pipeline-wt
+          # Task 1: Preprocess images
+          - name: run-training-with-params
+            dependencies: [ start-pipeline ]
+            template: run-training-wt
+            arguments:
+              parameters:
+                - name: LR
+                  value: "{{item.LR}}"
+                - name: EPOCHS
+                  value: "{{item.EPOCHS}}"
+
+            # Pass the inputs to the task using "withParam"
+            withParam: "{{workflow.parameters.training-conf-list}}"
+
+    # Now task container templates are defined
+    # Worker template for task 0 : start-pipeline
+    - name: start-pipeline-wt
+      inputs:
+      container:
+        image: busybox
+        command: [ sh, -c ]
+        args: [ "echo Starting pipeline" ]
+
+    # Worker template for task-1 : train model with params
+    - name: run-training-wt
+      inputs:
+        parameters:
+          - name: LR
+          - name: EPOCHS
+      container:
+        image: inseefrlab/codif-ape-train:v0.0.2
+        imagePullPolicy: Always
+        command: ["/bin/bash", -c]
+        args: ["git clone -b camembert https://github.com/InseeFrLab/codif-ape-train.git &&\
+                cd codif-ape-train/ &&\
+                mlflow run ~/work/codif-ape-train/ \
+                          --env-manager=local \
+                          --entry-point $ENTRY_POINT \
+                          -P remote_server_uri=$MLFLOW_TRACKING_URI \
+                          -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+                          -P Y=$Y \
+                          -P lr={{inputs.parameters.LR}} \
+                          -P epoch={{inputs.parameters.EPOCHS}} \
+                          -P text_feature=$TEXT_FEATURE \
+                          -P categorical_features_1=$FEATURE1 \
+                          -P categorical_features_2=$FEATURE2 \
+                          -P categorical_features_3=$FEATURE3 \
+                          -P categorical_features_4=$FEATURE4"
+              ]
+        env:
+          # env var for s3 connexion
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: accessKey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: secretKey
+          - name: AWS_DEFAULT_REGION
+            value: us-east-1
+          - name: AWS_S3_ENDPOINT
+            value: minio.lab.sspcloud.fr
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: https://minio.lab.sspcloud.fr
+          - name: MLFLOW_TRACKING_URI
+            value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: Test
+          - name: ENTRY_POINT
+            value: main
+          - name: "Y"
+            value: apet_finale
+          - name: PREFIX
+            value: __label__
+          - name: TEXT_FEATURE
+            value: libelle_activite_apet
+          - name: FEATURE1
+            value: liasse_type
+          - name: FEATURE2
+            value: activ_nat_et
+          - name: FEATURE3
+            value: activ_surf_et
+          - name: FEATURE4
+            value: evenement_type

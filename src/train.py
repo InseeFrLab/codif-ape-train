@@ -126,6 +126,20 @@ parser.add_argument(
     help="Event of the observation",
     required=True,
 )
+parser.add_argument(
+    "--model_type",
+    type=str,
+    choices=[
+        "fasttext",
+        "pytorch",
+        "camembert",
+        "camembert_one_hot",
+        "camembert_embedded",
+    ],
+    default="fasttext",
+    help="Model type",
+    required=True,
+)
 args = parser.parse_args()
 
 
@@ -149,7 +163,7 @@ def main(
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
-    model_type: str = "camembert",
+    model_type: str,
 ):
     """
     Main method.
