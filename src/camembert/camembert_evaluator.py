@@ -1,7 +1,7 @@
 """
 Evaluate the model on the test set.
 """
-from transformers import CamembertTokenizer, Trainer
+from transformers import Trainer
 from typing import Optional, Dict, List, Tuple
 import pandas as pd
 from base.evaluator import Evaluator
@@ -20,7 +20,7 @@ class CamembertEvaluator(Evaluator):
         Constructor for the CamembertEvaluator class.
         """
         self.model = model
-        self.tokenizer = CamembertTokenizer.from_pretrained("camembert/camembert-base")
+        self.tokenizer = model.tokenizer
 
     def tokenize(self, examples):
         return self.tokenizer(examples["text"], truncation=True)

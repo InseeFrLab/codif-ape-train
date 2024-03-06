@@ -24,9 +24,10 @@ class CamembertTrainer(abc.ABC):
         """
         Constructor for CamembertTrainer.
         """
+        self.pre_training_weights = "camembert/camembert-base"
         self.model = None
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = CamembertTokenizer.from_pretrained("camembert/camembert-base")
+        self.tokenizer = CamembertTokenizer.from_pretrained(self.pre_training_weights)
 
     def tokenize(self, examples):
         """
@@ -126,7 +127,7 @@ class CustomCamembertTrainer(CamembertTrainer):
             categorical_features (Optional[List[str]]): Categorical features.
         """
         self.model = CustomCamembertModel.from_pretrained(
-            "camembert/camembert-base-wikipedia-4gb",
+            self.pre_training_weights,
             num_labels=len(mappings.get("APE_NIV5")),
             categorical_features=categorical_features,
         )
@@ -149,7 +150,7 @@ class OneHotCamembertTrainer(CamembertTrainer):
             categorical_features (Optional[List[str]]): Categorical features.
         """
         self.model = OneHotCategoricalCamembertModel.from_pretrained(
-            "camembert/camembert-base-wikipedia-4gb",
+            self.pre_training_weights,
             num_labels=len(mappings.get("APE_NIV5")),
             categorical_features=categorical_features,
         )
@@ -172,7 +173,7 @@ class EmbeddedCamembertTrainer(CamembertTrainer):
             categorical_features (Optional[List[str]]): Categorical features.
         """
         self.model = EmbeddedCategoricalCamembertModel.from_pretrained(
-            "camembert/camembert-base-wikipedia-4gb",
+            self.pre_training_weights,
             num_labels=len(mappings.get("APE_NIV5")),
             categorical_features=categorical_features,
             embedding_dims=[3] * len(categorical_features),  # TODO: test variations ?
