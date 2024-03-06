@@ -13,8 +13,11 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "EPOCHS": 3, "LR": 5e-5, "MODEL_TYPE": "camembert"}
-            ]'
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_TYPE": "camembert"
+          }
+          ]'
 
   templates:
     # Entrypoint DAG template
@@ -55,6 +58,7 @@ spec:
         parameters:
           - name: LR
           - name: EPOCHS
+          - name: MODEL_TYPE
       container:
         image: inseefrlab/codif-ape-train:v0.0.2
         imagePullPolicy: Always
