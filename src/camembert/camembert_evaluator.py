@@ -55,7 +55,7 @@ class CamembertEvaluator(Evaluator):
         df["categorical_inputs"] = df[categorical_features].apply(lambda x: x.tolist(), axis=1)
         df = df.drop(columns=categorical_features)
 
-        ds = Dataset.from_pandas(df, split="test")
+        ds = Dataset.from_pandas(df)
         tokenized_ds = ds.map(self.tokenize)
 
         # Predictions
@@ -64,10 +64,10 @@ class CamembertEvaluator(Evaluator):
         # Format predictions
         formatted_predictions = {}
         top_classes = predictions.predictions.argsort(axis=-1)
+        n_obs, n_classes = top_classes.shape
         for rank_pred in range(k):
-            classes = top_classes[:, rank_pred]
-            nobs = len(classes)
-            probas = top_classes[np.arange(nobs), classes]
+            classes = top_classes[:, n_classes - rank_pred - 1]
+            probas = predictions.predictions[np.arange(n_obs), classes]
             formatted_predictions[rank_pred] = [
                 (reverse_mapping[x], y) for x, y in zip(classes, probas)
             ]
