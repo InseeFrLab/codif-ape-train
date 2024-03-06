@@ -60,7 +60,7 @@ spec:
           - name: EPOCHS
           - name: MODEL_TYPE
       container:
-        image: inseefrlab/codif-ape-train:v0.0.2
+        image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
         resources:
           requests:
@@ -88,6 +88,9 @@ spec:
                           -P categorical_features_4=$FEATURE4 \
                           -P model_type={{inputs.parameters.MODEL_TYPE}}
               "]
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
         env:
           # env var for s3 connexion
           - name: AWS_ACCESS_KEY_ID
