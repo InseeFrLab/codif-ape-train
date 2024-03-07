@@ -16,7 +16,11 @@ spec:
         value: '[
           { "EPOCHS": 3,
             "LR": 5e-5,
-            "MODEL_TYPE": "camembert"
+            "MODEL_CLASS": "camembert"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert"
           }
           ]'
 
@@ -38,8 +42,8 @@ spec:
                   value: "{{item.LR}}"
                 - name: EPOCHS
                   value: "{{item.EPOCHS}}"
-                - name: MODEL_TYPE
-                  value: "{{item.MODEL_TYPE}}"
+                - name: MODEL_CLASS
+                  value: "{{item.MODEL_CLASS}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -59,7 +63,7 @@ spec:
         parameters:
           - name: LR
           - name: EPOCHS
-          - name: MODEL_TYPE
+          - name: MODEL_CLASS
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
@@ -87,7 +91,7 @@ spec:
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
-                          -P model_type={{inputs.parameters.MODEL_TYPE}}
+                          -P model_class={{inputs.parameters.MODEL_CLASS}}
               "]
         volumeMounts:
           - mountPath: /dev/shm

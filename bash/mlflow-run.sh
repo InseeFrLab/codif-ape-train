@@ -23,7 +23,7 @@ FEATURE1=liasse_type
 FEATURE2=activ_nat_et
 FEATURE3=activ_surf_et
 FEATURE4=evenement_type
-MODEL_TYPE=camembert
+MODEL_CLASS=camembert_embedded
 
 mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
@@ -46,4 +46,4 @@ mlflow run ~/work/codif-ape-train/ \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \
     -P categorical_features_4=$FEATURE4 \
-    -P model_type=$MODEL_TYPE
+    -P model_class=$MODEL_CLASS

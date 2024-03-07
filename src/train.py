@@ -127,7 +127,7 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--model_type",
+    "--model_class",
     type=str,
     choices=[
         "fasttext",
@@ -163,7 +163,7 @@ def main(
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
-    model_type: str,
+    model_class: str,
 ):
     """
     Main method.
@@ -178,7 +178,7 @@ def main(
                 "experiment_name",
                 "run_name",
                 "Y",
-                "model_type",
+                "model_class",
                 "text_feature",
             ]
         )
@@ -194,7 +194,7 @@ def main(
     fs = get_file_system()
 
     with mlflow.start_run(run_name=run_name):
-        framework_classes = FRAMEWORK_CLASSES[model_type]
+        framework_classes = FRAMEWORK_CLASSES[model_class]
 
         preprocessor = framework_classes["preprocessor"]()
         trainer = framework_classes["trainer"]()
@@ -221,7 +221,7 @@ def main(
         model = trainer.train(df_train, Y, text_feature, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        if model_type == "fasttext":
+        if model_class == "fasttext":
             fasttext_model_path = run_name + ".bin"
             model.save_model(fasttext_model_path)
 
@@ -248,9 +248,9 @@ def main(
             # Log parameters
             for param_name, param_value in params.items():
                 mlflow.log_param(param_name, param_value)
-        elif model_type == "pytorch":
+        elif model_class == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
-        elif model_type == "camembert":
+        elif model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
             mlflow.pytorch.log_model(pytorch_model=model.model, artifact_path=run_name)
         else:
             raise KeyError("Model type is not valid.")
@@ -262,9 +262,9 @@ def main(
         # Evaluation
         print("*** 3- Evaluating the model...\n")
         t = time.time()
-        if model_type in ["fasttext", "camembert"]:
+        if model_class in ["fasttext", "camembert", "camembert_one_hot", "camembert_embedded"]:
             evaluator = framework_classes["evaluator"](model)
-        elif model_type == "pytorch":
+        elif model_class == "pytorch":
             evaluator = framework_classes["evaluator"](model, trainer.tokenizer)
         else:
             raise KeyError("Model type is not valid.")
