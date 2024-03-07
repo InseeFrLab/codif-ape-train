@@ -18,13 +18,11 @@ class CamembertTrainer(abc.ABC):
     Trainer class for Camembert.
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self, pre_training_weights: str = "camembert/camembert-base"):
         """
         Constructor for CamembertTrainer.
         """
-        self.pre_training_weights = "camembert/camembert-base"
+        self.pre_training_weights = pre_training_weights
         self.model = None
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.tokenizer = CamembertTokenizer.from_pretrained(self.pre_training_weights)
@@ -38,12 +36,14 @@ class CamembertTrainer(abc.ABC):
     def set_model(
         self,
         categorical_features: Optional[List[str]],
+        embedding_dims: Optional[List[int]] = None,
     ):
         """
         Set model.
 
         Args:
             categorical_features (Optional[List[str]]): Categorical features.
+            embedding_dims (Optional[List[int]]): Embedding dimensions for categorical features.
         """
         raise NotImplementedError()
 
@@ -54,9 +54,13 @@ class CamembertTrainer(abc.ABC):
         text_feature: str,
         categorical_features: Optional[List[str]],
         params: Dict,
+        embedding_dims: Optional[List[int]] = None,
     ) -> CustomCamembertModel:
+        """
+        Train model.
+        """
         if self.model is None:
-            self.set_model(categorical_features)
+            self.set_model(categorical_features, embedding_dims)
 
         num_epochs = params["epoch"]
         learning_rate = params["lr"]
@@ -119,12 +123,14 @@ class CustomCamembertTrainer(CamembertTrainer):
     def set_model(
         self,
         categorical_features: Optional[List[str]],
+        embedding_dims: Optional[List[int]] = None,
     ):
         """
         Set model.
 
         Args:
             categorical_features (Optional[List[str]]): Categorical features.
+            embedding_dims (Optional[List[int]]): Embedding dimensions for categorical features.
         """
         self.model = CustomCamembertModel.from_pretrained(
             self.pre_training_weights,
@@ -142,12 +148,14 @@ class OneHotCamembertTrainer(CamembertTrainer):
     def set_model(
         self,
         categorical_features: Optional[List[str]],
+        embedding_dims: Optional[List[int]] = None,
     ):
         """
         Set model.
 
         Args:
             categorical_features (Optional[List[str]]): Categorical features.
+            embedding_dims (Optional[List[int]]): Embedding dimensions for categorical features.
         """
         self.model = OneHotCategoricalCamembertModel.from_pretrained(
             self.pre_training_weights,
@@ -165,17 +173,22 @@ class EmbeddedCamembertTrainer(CamembertTrainer):
     def set_model(
         self,
         categorical_features: Optional[List[str]],
+        embedding_dims: Optional[List[int]] = None,
     ):
         """
         Set model.
 
         Args:
             categorical_features (Optional[List[str]]): Categorical features.
+            embedding_dims (Optional[List[int]]): Embedding dimensions for categorical features.
         """
+        if len(embedding_dims) != len(categorical_features):
+            raise ValueError("There should be as many embedding dims as " "categorical features.")
+
         self.model = EmbeddedCategoricalCamembertModel.from_pretrained(
             self.pre_training_weights,
             num_labels=len(mappings.get("APE_NIV5")),
             categorical_features=categorical_features,
-            embedding_dims=[3] * len(categorical_features),  # TODO: test variations ?
+            embedding_dims=embedding_dims,
         )
         return

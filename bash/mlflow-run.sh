@@ -23,7 +23,12 @@ FEATURE1=liasse_type
 FEATURE2=activ_nat_et
 FEATURE3=activ_surf_et
 FEATURE4=evenement_type
-MODEL_CLASS=camembert_embedded
+MODEL_CLASS=fasttext
+DIM1=3
+DIM2=3
+DIM3=1
+DIM4=3
+PRE_TRAINING_WEIGHTS=camembert/camembert-base-ccnet
 
 mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
@@ -46,4 +51,8 @@ mlflow run ~/work/codif-ape-train/ \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \
     -P categorical_features_4=$FEATURE4 \
+    -P embedding_dim_1=$DIM1 \
+    -P embedding_dim_2=$DIM2 \
+    -P embedding_dim_3=$DIM3 \
+    -P embedding_dim_4=$DIM4 \
     -P model_class=$MODEL_CLASS
