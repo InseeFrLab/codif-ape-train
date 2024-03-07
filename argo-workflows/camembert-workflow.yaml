@@ -15,12 +15,58 @@ spec:
       - name: training-conf-list
         value: '[
           { "EPOCHS": 3,
-            "LR": 5e-5,
-            "MODEL_CLASS": "camembert"
+            "LR": 1e-4,
+            "MODEL_CLASS": "camembert",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
           },
           { "EPOCHS": 3,
             "LR": 5e-5,
-            "MODEL_CLASS": "camembert"
+            "MODEL_CLASS": "camembert_one_hot",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_embedded",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_one_hot",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_embedded",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
           }
           ]'
 
@@ -32,7 +78,7 @@ spec:
           # Task 0: Start pipeline
           - name: start-pipeline
             template: start-pipeline-wt
-          # Task 1: Preprocess images
+          # Task 1: Run train
           - name: run-training-with-params
             dependencies: [ start-pipeline ]
             template: run-training-wt
@@ -44,6 +90,16 @@ spec:
                   value: "{{item.EPOCHS}}"
                 - name: MODEL_CLASS
                   value: "{{item.MODEL_CLASS}}"
+                - name: DIM1
+                  value: "{{item.DIM1}}"
+                - name: DIM2
+                  value: "{{item.DIM2}}"
+                - name: DIM3
+                  value: "{{item.DIM3}}"
+                - name: DIM4
+                  value: "{{item.DIM4}}"
+                - name: PRE_TRAINING_WEIGHTS
+                  value: "{{item.PRE_TRAINING_WEIGHTS}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -64,6 +120,11 @@ spec:
           - name: LR
           - name: EPOCHS
           - name: MODEL_CLASS
+          - name: DIM1
+          - name: DIM2
+          - name: DIM3
+          - name: DIM4
+          - name: PRE_TRAINING_WEIGHTS
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
@@ -91,7 +152,12 @@ spec:
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
-                          -P model_class={{inputs.parameters.MODEL_CLASS}}
+                          -P embedding_dim_1={{inputs.parameters.DIM1}} \
+                          -P embedding_dim_2={{inputs.parameters.DIM2}} \
+                          -P embedding_dim_3={{inputs.parameters.DIM3}} \
+                          -P embedding_dim_4={{inputs.parameters.DIM4}} \
+                          -P model_class={{inputs.parameters.MODEL_CLASS}} \
+                          -P pre_training_weights=={{inputs.parameters.PRE_TRAINING_WEIGHTS}}
               "]
         volumeMounts:
           - mountPath: /dev/shm
