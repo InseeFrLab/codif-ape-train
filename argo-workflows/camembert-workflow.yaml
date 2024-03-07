@@ -3,6 +3,7 @@ kind: Workflow
 metadata:
   generateName: parallel-training-
 spec:
+  serviceAccountName: workflow
   volumes:
     - name: dshm
       emptyDir:
