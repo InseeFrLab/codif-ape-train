@@ -14,16 +14,17 @@ import torch.nn.functional as F
 class ClassificationHead(nn.Module):
     """Head for sentence-level classification tasks."""
 
-    def __init__(self, config):
+    def __init__(self, config, additional_dims: int = 0):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        hidden_size = config.hidden_size + additional_dims
+        self.dense = nn.Linear(hidden_size, hidden_size)
         classifier_dropout = (
             config.classifier_dropout
             if config.classifier_dropout is not None
             else config.hidden_dropout_prob
         )
         self.dropout = nn.Dropout(classifier_dropout)
-        self.out_proj = nn.Linear(config.hidden_size, config.num_labels)
+        self.out_proj = nn.Linear(hidden_size, config.num_labels)
 
     def forward(self, features, **kwargs):
         x = self.dropout(features)
@@ -153,12 +154,13 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
         self.num_labels = config.num_labels
 
         self.roberta = CamembertModel(config, add_pooling_layer=False)
-        self.classifier = ClassificationHead(config)
-
         self.categorical_dims = []
         for variable in categorical_features:
             num_classes = len(mappings[variable])
             self.categorical_dims.append(num_classes)
+        additional_dims = sum(self.categorical_dims)
+
+        self.classifier = ClassificationHead(config, additional_dims=additional_dims)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -196,14 +198,14 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
         sequence_output = outputs[0]
 
         x_cat = []
-        for i, num_classes in enumerate(self.categorical_embeddings.items()):
+        for i, num_classes in enumerate(self.categorical_dims):
             index_values = categorical_inputs[:, i]
             one_hot_tensor = F.one_hot(index_values, num_classes=num_classes)
             x_cat.append(one_hot_tensor)
 
         # Mean of tokens
-        x_cat = torch.stack(x_cat, dim=1)
-        logits = self.classifier(torch.stack([sequence_output[:, 0, :], x_cat], axis=1))
+        x_cat = torch.cat(x_cat, dim=1)
+        logits = self.classifier(torch.cat([sequence_output[:, 0, :], x_cat], dim=1))
 
         loss = None
         if labels is not None:
@@ -254,14 +256,15 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
         self.num_labels = config.num_labels
 
         self.roberta = CamembertModel(config, add_pooling_layer=False)
-        self.classifier = ClassificationHead(config)
-
         self.categorical_embeddings = {}
         for variable, dim in zip(categorical_features, embedding_dims):
             vocab_size = len(mappings[variable])
             emb = nn.Embedding(embedding_dim=dim, num_embeddings=vocab_size)
             self.categorical_embeddings[variable] = emb
             setattr(self, "emb_{}".format(variable), emb)
+        additional_dims = sum(embedding_dims)
+
+        self.classifier = ClassificationHead(config, additional_dims=additional_dims)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -304,8 +307,8 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
             x_cat.append(embedding)
 
         # Mean of tokens
-        x_cat = torch.stack(x_cat, dim=1)
-        logits = self.classifier(torch.stack([sequence_output[:, 0, :], x_cat], axis=1))
+        x_cat = torch.cat(x_cat, dim=1)
+        logits = self.classifier(torch.cat([sequence_output[:, 0, :], x_cat], dim=1))
 
         loss = None
         if labels is not None:
