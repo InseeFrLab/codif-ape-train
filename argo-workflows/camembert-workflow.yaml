@@ -157,7 +157,7 @@ spec:
                           -P embedding_dim_3={{inputs.parameters.DIM3}} \
                           -P embedding_dim_4={{inputs.parameters.DIM4}} \
                           -P model_class={{inputs.parameters.MODEL_CLASS}} \
-                          -P pre_training_weights=={{inputs.parameters.PRE_TRAINING_WEIGHTS}}
+                          -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}}
               "]
         volumeMounts:
           - mountPath: /dev/shm
