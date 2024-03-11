@@ -27,6 +27,7 @@ class FastTextPreprocessor(Preprocessor):
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
+        test_size: float = 0.2,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -39,7 +40,8 @@ class FastTextPreprocessor(Preprocessor):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
-            oversampling (Optional[List[str]]): Parameters for oversampling
+            oversampling (Optional[List[str]]): Parameters for oversampling.
+            test_size (float): Size of the test set.
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training and
             evaluation
@@ -58,7 +60,7 @@ class FastTextPreprocessor(Preprocessor):
         X_train, X_test, y_train, y_test = train_test_split(
             df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
             df[y],
-            test_size=0.2,
+            test_size=test_size,
             random_state=0,
             shuffle=True,
         )
@@ -81,13 +83,14 @@ class FastTextPreprocessor(Preprocessor):
 
     @staticmethod
     def clean_categorical_features(
-        df: pd.DataFrame, categorical_features: List[str]
+        df: pd.DataFrame, y: str, categorical_features: List[str]
     ) -> pd.DataFrame:
         """
         Cleans the categorical features for pd.DataFrame `df`.
 
         Args:
             df (pd.DataFrame): DataFrame.
+            y (str): Name of the variable to predict.
             categorical_features (List[str]): Names of the categorical features.
 
         Returns:

@@ -6,11 +6,12 @@ import time
 import argparse
 import yaml
 import mlflow
+import pandas as pd
 
 from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from tests.test_main import run_test
-from utils.data import get_sirene_data
+from utils.data import get_sirene_data, get_test_data
 
 
 parser = argparse.ArgumentParser(
@@ -126,6 +127,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "--categorical_features_5",
+    type=str,
+    default="cj",
+    help="CJ of the company",
+    required=True,
+)
+parser.add_argument(
     "--embedding_dim_1",
     type=int,
     default=3,
@@ -151,6 +159,13 @@ parser.add_argument(
     type=int,
     default=3,
     help="Embedding dimension for event",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_5",
+    type=int,
+    default=3,
+    help="Embedding dimension for cj",
     required=True,
 )
 parser.add_argument(
@@ -197,10 +212,12 @@ def main(
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
+    categorical_features_5: str,
     embedding_dim_1: int,
     embedding_dim_2: int,
     embedding_dim_3: int,
     embedding_dim_4: int,
+    embedding_dim_5: int,
     model_class: str,
     pre_training_weights: str,
 ):
@@ -257,6 +274,10 @@ def main(
             text_feature=text_feature,
             categorical_features=categorical_features,
         )
+        # Get test_data from LabelStudio
+        df_test_ls = pd.concat(
+            preprocessor.preprocess(get_test_data(), Y, text_feature, categorical_features), axis=0
+        )
         print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         # Run training of the model
@@ -300,9 +321,6 @@ def main(
                 artifacts=artifacts,
                 signature=signature,
             )
-            # Log parameters
-            for param_name, param_value in params.items():
-                mlflow.log_param(param_name, param_value)
         elif model_class == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
         elif model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
@@ -330,17 +348,25 @@ def main(
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
+        accuracies = evaluator.evaluate(df_test_ls, Y, text_feature, categorical_features, 5)
+
+        # Log additional metrics
+        for metric, value in accuracies.items():
+            metric = "ls_" + metric
+            mlflow.log_metric(metric, value)
+
         print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        # Tests
-        print("*** 4- Performing standard tests...\n")
-        t = time.time()
-        with open("src/tests/tests.yaml", "r", encoding="utf-8") as stream:
-            tests = yaml.safe_load(stream)
-        for case in tests.keys():
-            run_test(tests[case], preprocessor, evaluator)
+        # Tests: dependent on categorical features
+        if "cj" not in categorical_features:
+            print("*** 4- Performing standard tests...\n")
+            t = time.time()
+            with open("src/tests/tests.yaml", "r", encoding="utf-8") as stream:
+                tests = yaml.safe_load(stream)
+            for case in tests.keys():
+                run_test(tests[case], preprocessor, evaluator)
 
-        print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
+            print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
 
 
 if __name__ == "__main__":
