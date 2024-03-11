@@ -30,8 +30,8 @@ class CamembertPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        # On passe tout en minuscule
-        df[text_feature] = df[text_feature].str.lower()
+        # On passe tout en minuscule ?
+        # df[text_feature] = df[text_feature].str.lower()
 
         if method == "training":
             # On supprime les NaN
