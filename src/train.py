@@ -6,13 +6,12 @@ import time
 import argparse
 import yaml
 import mlflow
-import pyarrow.parquet as pq
 
 from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from tests.test_main import run_test
+from utils.data import get_sirene_data
 
-from utils.data import get_file_system
 
 parser = argparse.ArgumentParser(
     description="FastAPE 🚀 : Model for coding a company's main activity"
@@ -234,7 +233,6 @@ def main(
 
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
-    fs = get_file_system()
 
     with mlflow.start_run(run_name=run_name):
         framework_classes = FRAMEWORK_CLASSES[model_class]
@@ -250,9 +248,7 @@ def main(
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data
-        df = pq.read_table(
-            "projet-ape/extractions/20240124_sirene4.parquet", filesystem=fs
-        ).to_pandas()
+        df = get_sirene_data()
 
         # Preprocess data
         df_train, df_test = preprocessor.preprocess(

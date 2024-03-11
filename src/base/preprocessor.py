@@ -67,7 +67,11 @@ class Preprocessor(ABC):
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
-            df[categorical_features] = df[categorical_features].fillna(value="NaN")
+            for feature in categorical_features:
+                if pd.api.types.is_float_dtype(df[feature]):
+                    pass
+                else:
+                    df[feature] = df[feature].fillna(value="NaN")
         df = df[variables + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]]
         df = df.dropna(subset=[y] + [text_feature])
 

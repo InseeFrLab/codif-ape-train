@@ -8,6 +8,7 @@ import pandas as pd
 
 from base.preprocessor import Preprocessor
 from utils.mappings import mappings
+from utils.data import categorize_surface
 from sklearn.model_selection import train_test_split
 
 
@@ -56,10 +57,12 @@ class CamembertPreprocessor(Preprocessor):
             df (pd.DataFrame): DataFrame.
         """
         if "activ_surf_et" in categorical_features:
-            df["activ_surf_et"] = "1"
+            df = categorize_surface(df, "activ_surf_et")
         df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
-            df[variable] = df[variable].apply(mappings[variable].get)
+            if variable != "activ_surf_et":
+                # Mapping already done for this variable
+                df[variable] = df[variable].apply(mappings[variable].get)
         df[y] = df[y].apply(mappings[y].get)
         return df
 
