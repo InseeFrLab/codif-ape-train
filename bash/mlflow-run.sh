@@ -6,8 +6,8 @@ ENTRY_POINT=main
 
 # Parameters
 DIM=180
-LR=0.00005
-EPOCHS=5
+LR=5e-5
+EPOCHS=1
 WORDNGRAMS=3
 MINN=3
 MAXN=4
@@ -23,11 +23,13 @@ FEATURE1=liasse_type
 FEATURE2=activ_nat_et
 FEATURE3=activ_surf_et
 FEATURE4=evenement_type
-MODEL_CLASS=fasttext
+FEATURE5=cj
+MODEL_CLASS=camembert
 DIM1=3
 DIM2=3
 DIM3=1
 DIM4=3
+DIM5=3
 PRE_TRAINING_WEIGHTS=camembert/camembert-base-ccnet
 
 mlflow run ~/work/codif-ape-train/ \
@@ -51,8 +53,10 @@ mlflow run ~/work/codif-ape-train/ \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \
     -P categorical_features_4=$FEATURE4 \
+    -P categorical_features_5=$FEATURE5 \
     -P embedding_dim_1=$DIM1 \
     -P embedding_dim_2=$DIM2 \
     -P embedding_dim_3=$DIM3 \
     -P embedding_dim_4=$DIM4 \
+    -P embedding_dim_5=$DIM5 \
     -P model_class=$MODEL_CLASS
