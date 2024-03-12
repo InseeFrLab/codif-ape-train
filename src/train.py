@@ -11,7 +11,7 @@ import pandas as pd
 from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from tests.test_main import run_test
-from utils.data import get_sirene_4_data, get_test_data
+from utils.data import get_sirene_4_data, get_test_data, get_sirene_3_data
 
 
 parser = argparse.ArgumentParser(
@@ -189,6 +189,20 @@ parser.add_argument(
     help="Model type",
     required=True,
 )
+parser.add_argument(
+    "--start_month",
+    type=int,
+    default=1,
+    help="Start month for Sirene 3 data",
+    required=True,
+)
+parser.add_argument(
+    "--start_year",
+    type=int,
+    default=2018,
+    help="Start year for Sirene 3 data",
+    required=True,
+)
 args = parser.parse_args()
 
 
@@ -220,6 +234,8 @@ def main(
     embedding_dim_5: int,
     model_class: str,
     pre_training_weights: str,
+    start_month: int,
+    start_year: int,
 ):
     """
     Main method.
@@ -265,19 +281,31 @@ def main(
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data
-        df = get_sirene_4_data()
+        # Sirene 4
+        df_s4 = get_sirene_4_data()
+        # Sirene 3
+        df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
 
         # Preprocess data
-        df_train, df_test = preprocessor.preprocess(
-            df=df,
+        # Sirene
+        df_train_s4, df_test = preprocessor.preprocess(
+            df=df_s4,
             y=Y,
             text_feature=text_feature,
             categorical_features=categorical_features,
+            test_size=0.1,
+        )
+        df_train_s3 = pd.concat(
+            preprocessor.preprocess(df_s3, Y, text_feature, categorical_features), axis=0
         )
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(get_test_data(), Y, text_feature, categorical_features), axis=0
         )
+        # All train data together
+        df_train = pd.concat([df_train_s3, df_train_s4], axis=0).reset_index(drop=True)
+        mlflow.log_param("number_of_observations", df_train.shape[0])
+        print(f"Number of observations in the training_set: {df_train.shape[0]}")
         print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         # Run training of the model

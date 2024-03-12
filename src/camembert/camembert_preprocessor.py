@@ -31,7 +31,10 @@ class CamembertPreprocessor(Preprocessor):
             df (pd.DataFrame): DataFrame.
         """
         # On passe tout en minuscule ?
-        # df[text_feature] = df[text_feature].str.lower()
+        # Peut-être qu'on voudrait plutôt convertir en casing standard
+        # mais suppose NER pour les noms propres, avec spacy par exemple
+        # ce qui peut prendre du temps
+        df[text_feature] = df[text_feature].str.lower()
 
         if method == "training":
             # On supprime les NaN

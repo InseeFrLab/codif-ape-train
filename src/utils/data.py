@@ -5,6 +5,7 @@ import pyarrow.parquet as pq
 from s3fs import S3FileSystem
 from pathlib import Path
 import numpy as np
+import datetime
 
 
 def get_file_system() -> S3FileSystem:
@@ -48,7 +49,12 @@ def get_sirene_4_data(
     return df
 
 
-def get_sirene_3_data(path: str = "projet-ape/data/data_sirene3.parquet") -> pd.DataFrame:
+def get_sirene_3_data(
+    path: str = "projet-ape/data/data_sirene3.parquet",
+    start_month: int = 1,
+    start_year: int = 2018,
+    date_feature: str = "DATE",
+) -> pd.DataFrame:
     """
     Get Sirene 3 data.
 
@@ -60,6 +66,10 @@ def get_sirene_3_data(path: str = "projet-ape/data/data_sirene3.parquet") -> pd.
     """
     fs = get_file_system()
     df = pq.read_table(path, filesystem=fs).to_pandas()
+
+    # Filter on date
+    df = filter_on_date(df, start_month, start_year, date_feature)
+
     # Edit surface column
     df["SURF"] = df["SURF"].fillna("0").astype(int)
     # Rename columns
@@ -69,12 +79,37 @@ def get_sirene_3_data(path: str = "projet-ape/data/data_sirene3.parquet") -> pd.
             "AUTO": "liasse_type",
             "NAT_SICORE": "activ_nat_et",
             "SURF": "activ_surf_et",
+            "APE_SICORE": "apet_finale",
+            "LIB_SICORE": "libelle_activite_apet",
         }
     )
     # Create cj column
     df["cj"] = "NaN"
 
     return df
+
+
+def filter_on_date(
+    df: pd.DataFrame, start_month: int, start_year: int, date_feature: str = "DATE"
+) -> pd.DataFrame:
+    """
+    Filter DataFrame on date.
+
+    Args:
+        df (pd.DataFrame): DataFrame to filter.
+        start_month (int): Start month.
+        start_year (int): Start year.
+        date_feature (str, optional): Date feature. Defaults to "DATE".
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame.
+    """
+    if date_feature not in df.columns:
+        raise ValueError(f"Date feature {date_feature} not in df columns.")
+    if start_month not in (np.arange(1, 13)):
+        raise ValueError("start_month must be between 1 and 12.")
+    start_date = datetime.datetime(start_year, start_month, 1)
+    return df.loc[df["DATE"] >= start_date]
 
 
 def get_test_data() -> pd.DataFrame:
@@ -159,5 +194,5 @@ def categorize_surface(
 
     df_copy[surface_feature_name] = df_copy["surf_cat"].replace("nan", "0")
     df_copy[surface_feature_name] = df_copy[surface_feature_name].astype(int)
-    df_copy = df_copy.drop(columns=["surf_log", "surf_cat"])
+    df_copy = df_copy.drop(columns=["surf_log", "surf_cat"], errors="ignore")
     return df_copy
