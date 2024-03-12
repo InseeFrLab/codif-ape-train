@@ -71,6 +71,9 @@ class CustomCamembertModel(CamembertPreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+        print(
+            f"CustomCamembertModel initialized with" f"categorical features {categorical_features}."
+        )
 
     def forward(
         self,
@@ -164,6 +167,10 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+        print(
+            f"OneHotCategoricalCamembertModel initialized with"
+            f"categorical features {categorical_features}."
+        )
 
     def forward(
         self,
@@ -268,6 +275,11 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+        print(
+            f"EmbeddedCategoricalCamembertModel initialized with"
+            f"categorical features {categorical_features} associated"
+            f"to embedding dimensions {embedding_dims}."
+        )
 
     def forward(
         self,
