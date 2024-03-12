@@ -11,7 +11,7 @@ import pandas as pd
 from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from tests.test_main import run_test
-from utils.data import get_sirene_data, get_test_data
+from utils.data import get_sirene_4_data, get_test_data
 
 
 parser = argparse.ArgumentParser(
@@ -265,7 +265,7 @@ def main(
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
         # Load data
-        df = get_sirene_data()
+        df = get_sirene_4_data()
 
         # Preprocess data
         df_train, df_test = preprocessor.preprocess(

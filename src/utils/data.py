@@ -28,7 +28,9 @@ def get_root_path() -> Path:
     return Path(__file__).parent.parent
 
 
-def get_sirene_data(path: str = "projet-ape/extractions/20240124_sirene4.parquet") -> pd.DataFrame:
+def get_sirene_4_data(
+    path: str = "projet-ape/extractions/20240124_sirene4.parquet",
+) -> pd.DataFrame:
     """
     Get Sirene 4 data.
 
@@ -42,6 +44,35 @@ def get_sirene_data(path: str = "projet-ape/extractions/20240124_sirene4.parquet
     df = pq.read_table(path, filesystem=fs).to_pandas()
     # Edit surface column
     df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
+
+    return df
+
+
+def get_sirene_3_data(path: str = "projet-ape/data/data_sirene3.parquet") -> pd.DataFrame:
+    """
+    Get Sirene 3 data.
+
+    Args:
+        path (str): Path to the data.
+
+    Returns:
+        pd.DataFrame: Sirene 3 data.
+    """
+    fs = get_file_system()
+    df = pq.read_table(path, filesystem=fs).to_pandas()
+    # Edit surface column
+    df["SURF"] = df["SURF"].fillna("0").astype(int)
+    # Rename columns
+    df = df.rename(
+        columns={
+            "EVT_SICORE": "evenement_type",
+            "AUTO": "liasse_type",
+            "NAT_SICORE": "activ_nat_et",
+            "SURF": "activ_surf_et",
+        }
+    )
+    # Create cj column
+    df["cj"] = "NaN"
 
     return df
 
@@ -86,12 +117,16 @@ def get_test_data() -> pd.DataFrame:
     return df
 
 
-def categorize_surface(df: pd.DataFrame, surface_feature_name: int) -> pd.DataFrame:
+def categorize_surface(
+    df: pd.DataFrame, surface_feature_name: int, like_sirene_3: bool = True
+) -> pd.DataFrame:
     """
     Categorize the surface of the activity.
 
     Args:
         df (pd.DataFrame): DataFrame to categorize.
+        surface_feature_name (str): Name of the surface feature.
+        like_sirene_3 (bool): If True, categorize like Sirene 3.
 
     Returns:
         pd.DataFrame: DataFrame with a new column "surf_cat".
@@ -104,15 +139,23 @@ def categorize_surface(df: pd.DataFrame, surface_feature_name: int) -> pd.DataFr
     if not (pd.api.types.is_float_dtype(df[surface_feature_name])):
         raise ValueError(f"Surface feature {surface_feature_name} must be a float variable.")
 
-    # Log transform the surface
-    df_copy["surf_log"] = np.log(df[surface_feature_name])
+    if like_sirene_3:
+        # Categorize the surface
+        df_copy["surf_cat"] = pd.cut(
+            df_copy[surface_feature_name],
+            bins=[0, 120, 400, 2500, np.inf],
+            labels=["1", "2", "3", "4"],
+        ).astype(str)
+    else:
+        # Log transform the surface
+        df_copy["surf_log"] = np.log(df[surface_feature_name])
 
-    # Categorize the surface
-    df_copy["surf_cat"] = pd.cut(
-        df_copy.surf_log,
-        bins=[0, 3, 4, 5, 12],
-        labels=["1", "2", "3", "4"],
-    ).astype(str)
+        # Categorize the surface
+        df_copy["surf_cat"] = pd.cut(
+            df_copy.surf_log,
+            bins=[0, 3, 4, 5, 12],
+            labels=["1", "2", "3", "4"],
+        ).astype(str)
 
     df_copy[surface_feature_name] = df_copy["surf_cat"].replace("nan", "0")
     df_copy[surface_feature_name] = df_copy[surface_feature_name].astype(int)

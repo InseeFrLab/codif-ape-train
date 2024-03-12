@@ -56,7 +56,9 @@ class CamembertPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        if "activ_surf_et" in categorical_features:
+        if ("activ_surf_et" in categorical_features) and (
+            pd.api.types.is_float_dtype(df["activ_surf_et"])
+        ):
             df = categorize_surface(df, "activ_surf_et")
         df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
