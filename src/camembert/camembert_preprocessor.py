@@ -8,6 +8,7 @@ import pandas as pd
 
 from base.preprocessor import Preprocessor
 from utils.mappings import mappings
+from utils.data import categorize_surface
 from sklearn.model_selection import train_test_split
 
 
@@ -29,7 +30,10 @@ class CamembertPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        # On passe tout en minuscule
+        # On passe tout en minuscule ?
+        # Peut-être qu'on voudrait plutôt convertir en casing standard
+        # mais suppose NER pour les noms propres, avec spacy par exemple
+        # ce qui peut prendre du temps
         df[text_feature] = df[text_feature].str.lower()
 
         if method == "training":
@@ -55,11 +59,15 @@ class CamembertPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        if "activ_surf_et" in categorical_features:
-            df["activ_surf_et"] = "1"
+        if ("activ_surf_et" in categorical_features) and (
+            pd.api.types.is_float_dtype(df["activ_surf_et"])
+        ):
+            df = categorize_surface(df, "activ_surf_et")
         df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
-            df[variable] = df[variable].apply(mappings[variable].get)
+            if variable != "activ_surf_et":
+                # Mapping already done for this variable
+                df[variable] = df[variable].apply(mappings[variable].get)
         df[y] = df[y].apply(mappings[y].get)
         return df
 
@@ -71,6 +79,7 @@ class CamembertPreprocessor(Preprocessor):
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
+        test_size: float = 0.2,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a Camembert classifier.
@@ -82,7 +91,8 @@ class CamembertPreprocessor(Preprocessor):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
-            oversampling (Optional[List[str]]): Parameters for oversampling
+            oversampling (Optional[List[str]]): Parameters for oversampling.
+            test_size (float): Size of the test set.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,
@@ -99,7 +109,7 @@ class CamembertPreprocessor(Preprocessor):
         X_train, X_test, y_train, y_test = train_test_split(
             df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
             df[y],
-            test_size=0.2,
+            test_size=test_size,
             random_state=0,
             shuffle=True,
         )

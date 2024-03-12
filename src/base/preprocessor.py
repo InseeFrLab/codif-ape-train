@@ -35,6 +35,7 @@ class Preprocessor(ABC):
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
+        test_size: float = 0.2,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -46,6 +47,8 @@ class Preprocessor(ABC):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
+            oversampling (Optional[List[str]]): Parameters for oversampling.
+            test_size (float): Size of the test set.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
@@ -67,13 +70,17 @@ class Preprocessor(ABC):
         variables = [y] + [text_feature]
         if categorical_features is not None:
             variables += categorical_features
-            df[categorical_features] = df[categorical_features].fillna(value="NaN")
+            for feature in categorical_features:
+                if pd.api.types.is_float_dtype(df[feature]):
+                    pass
+                else:
+                    df[feature] = df[feature].fillna(value="NaN")
         df = df[variables + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]]
         df = df.dropna(subset=[y] + [text_feature])
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
-            df, df_naf, y, text_feature, categorical_features, oversampling
+            df, df_naf, y, text_feature, categorical_features, oversampling, test_size
         )
 
     @abstractmethod
@@ -85,6 +92,7 @@ class Preprocessor(ABC):
         text_feature: str,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
+        test_size: float = 0.2,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -97,7 +105,8 @@ class Preprocessor(ABC):
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
-            oversampling (Optional[List[str]]): Parameters for oversampling
+            oversampling (Optional[List[str]]): Parameters for oversampling.
+            test_size (float): Size of the test set.
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
