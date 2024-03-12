@@ -1,0 +1,202 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: parallel-training-
+spec:
+  serviceAccountName: workflow
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 32Gi
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: training-conf-list
+        value: '[
+          { "EPOCHS": 3,
+            "LR": 1e-4,
+            "MODEL_CLASS": "camembert",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_one_hot",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_embedded",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_one_hot",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+          },
+          { "EPOCHS": 3,
+            "LR": 5e-5,
+            "MODEL_CLASS": "camembert_embedded",
+            "DIM1": 3,
+            "DIM2": 3,
+            "DIM3": 1,
+            "DIM4": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+          }
+          ]'
+
+  templates:
+    # Entrypoint DAG template
+    - name: main
+      dag:
+        tasks:
+          # Task 0: Start pipeline
+          - name: start-pipeline
+            template: start-pipeline-wt
+          # Task 1: Run train
+          - name: run-training-with-params
+            dependencies: [ start-pipeline ]
+            template: run-training-wt
+            arguments:
+              parameters:
+                - name: LR
+                  value: "{{item.LR}}"
+                - name: EPOCHS
+                  value: "{{item.EPOCHS}}"
+                - name: MODEL_CLASS
+                  value: "{{item.MODEL_CLASS}}"
+                - name: DIM1
+                  value: "{{item.DIM1}}"
+                - name: DIM2
+                  value: "{{item.DIM2}}"
+                - name: DIM3
+                  value: "{{item.DIM3}}"
+                - name: DIM4
+                  value: "{{item.DIM4}}"
+                - name: PRE_TRAINING_WEIGHTS
+                  value: "{{item.PRE_TRAINING_WEIGHTS}}"
+
+            # Pass the inputs to the task using "withParam"
+            withParam: "{{workflow.parameters.training-conf-list}}"
+
+    # Now task container templates are defined
+    # Worker template for task 0 : start-pipeline
+    - name: start-pipeline-wt
+      inputs:
+      container:
+        image: busybox
+        command: [ sh, -c ]
+        args: [ "echo Starting pipeline" ]
+
+    # Worker template for task-1 : train model with params
+    - name: run-training-wt
+      inputs:
+        parameters:
+          - name: LR
+          - name: EPOCHS
+          - name: MODEL_CLASS
+          - name: DIM1
+          - name: DIM2
+          - name: DIM3
+          - name: DIM4
+          - name: PRE_TRAINING_WEIGHTS
+      container:
+        image: inseefrlab/codif-ape-train:main
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 100m
+          limits:
+            memory: 64Gi
+            cpu: 40000m
+            nvidia.com/gpu: 1
+        command: ["/bin/bash", -c]
+        args: ["git clone -b camembert https://github.com/InseeFrLab/codif-ape-train.git &&\
+                cd codif-ape-train/ &&\
+                mlflow run ~/work/codif-ape-train/ \
+                          --env-manager=local \
+                          --entry-point $ENTRY_POINT \
+                          -P remote_server_uri=$MLFLOW_TRACKING_URI \
+                          -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+                          -P Y=$Y \
+                          -P lr={{inputs.parameters.LR}} \
+                          -P epoch={{inputs.parameters.EPOCHS}} \
+                          -P text_feature=$TEXT_FEATURE \
+                          -P categorical_features_1=$FEATURE1 \
+                          -P categorical_features_2=$FEATURE2 \
+                          -P categorical_features_3=$FEATURE3 \
+                          -P categorical_features_4=$FEATURE4 \
+                          -P embedding_dim_1={{inputs.parameters.DIM1}} \
+                          -P embedding_dim_2={{inputs.parameters.DIM2}} \
+                          -P embedding_dim_3={{inputs.parameters.DIM3}} \
+                          -P embedding_dim_4={{inputs.parameters.DIM4}} \
+                          -P model_class={{inputs.parameters.MODEL_CLASS}} \
+                          -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}}
+              "]
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+        env:
+          # env var for s3 connexion
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: accessKey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: secretKey
+          - name: AWS_DEFAULT_REGION
+            value: us-east-1
+          - name: AWS_S3_ENDPOINT
+            value: minio.lab.sspcloud.fr
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: https://minio.lab.sspcloud.fr
+          - name: MLFLOW_TRACKING_URI
+            value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: Test
+          - name: ENTRY_POINT
+            value: main
+          - name: "Y"
+            value: apet_finale
+          - name: PREFIX
+            value: __label__
+          - name: TEXT_FEATURE
+            value: libelle_activite_apet
+          - name: FEATURE1
+            value: liasse_type
+          - name: FEATURE2
+            value: activ_nat_et
+          - name: FEATURE3
+            value: activ_surf_et
+          - name: FEATURE4
+            value: evenement_type

@@ -804,5 +804,16 @@ mappings = {
         "0510Z": 725,
         "0620Z": 726,
         "5122Z": 727,
+        "9700Z": 728,
+        "9820Z": 729,
+        "9810Z": 730,
     },
 }
+
+
+mappings["liasse_type"] = mappings["AUTO"]
+mappings["activ_nat_et"] = mappings["NAT_SICORE"]
+mappings["activ_surf_et"] = mappings["SURF"]
+mappings["evenement_type"] = mappings["EVT_SICORE"]
+mappings["apet_finale"] = mappings["APE_NIV5"]
+mappings["Target"] = mappings["APE_NIV5"]

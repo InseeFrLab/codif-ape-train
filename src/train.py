@@ -126,6 +126,55 @@ parser.add_argument(
     help="Event of the observation",
     required=True,
 )
+parser.add_argument(
+    "--embedding_dim_1",
+    type=int,
+    default=3,
+    help="Embedding dimension for type",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_2",
+    type=int,
+    default=3,
+    help="Embedding dimension for nature",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_3",
+    type=int,
+    default=1,
+    help="Embedding dimension for surface",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_4",
+    type=int,
+    default=3,
+    help="Embedding dimension for event",
+    required=True,
+)
+parser.add_argument(
+    "--pre_training_weights",
+    type=str,
+    default="camembert/camembert-base",
+    help="Pre-training weights on Huggingface",
+    required=True,
+)
+parser.add_argument(
+    "--model_class",
+    type=str,
+    choices=[
+        "fasttext",
+        "pytorch",
+        "camembert",
+        "camembert_one_hot",
+        "camembert_embedded",
+    ],
+    default="fasttext",
+    help="Model type",
+    required=True,
+)
 args = parser.parse_args()
 
 
@@ -149,7 +198,12 @@ def main(
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
-    model_type: str = "fasttext",
+    embedding_dim_1: int,
+    embedding_dim_2: int,
+    embedding_dim_3: int,
+    embedding_dim_4: int,
+    model_class: str,
+    pre_training_weights: str,
 ):
     """
     Main method.
@@ -164,26 +218,34 @@ def main(
                 "experiment_name",
                 "run_name",
                 "Y",
-                "model_type",
+                "model_class",
                 "text_feature",
+                "pre_training_weights",
             ]
         )
         and not key.startswith("categorical_features")
+        and not key.startswith("embedding_dim")
     }
     params["thread"] = os.cpu_count()
     categorical_features = [
         value for key, value in locals().items() if key.startswith("categorical_features")
     ]
+    embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
 
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
     fs = get_file_system()
 
     with mlflow.start_run(run_name=run_name):
-        framework_classes = FRAMEWORK_CLASSES[model_type]
+        framework_classes = FRAMEWORK_CLASSES[model_class]
 
         preprocessor = framework_classes["preprocessor"]()
-        trainer = framework_classes["trainer"]()
+
+        # Create trainer
+        if model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
+            trainer = framework_classes["trainer"](pre_training_weights)
+        else:
+            trainer = framework_classes["trainer"]()
 
         print("\n\n*** 1- Preprocessing the database...\n")
         t = time.time()
@@ -204,10 +266,21 @@ def main(
         # Run training of the model
         print("*** 2- Training the model...\n")
         t = time.time()
-        model = trainer.train(df_train, Y, text_feature, categorical_features, params)
+
+        if model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
+            model = trainer.train(
+                df_train,
+                Y,
+                text_feature,
+                categorical_features,
+                params,
+                embedding_dims=embedding_dims,
+            )
+        else:
+            model = trainer.train(df_train, Y, text_feature, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        if model_type == "fasttext":
+        if model_class == "fasttext":
             fasttext_model_path = run_name + ".bin"
             model.save_model(fasttext_model_path)
 
@@ -231,23 +304,26 @@ def main(
                 artifacts=artifacts,
                 signature=signature,
             )
-        elif model_type == "pytorch":
+            # Log parameters
+            for param_name, param_value in params.items():
+                mlflow.log_param(param_name, param_value)
+        elif model_class == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
+        elif model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
+            mlflow.pytorch.log_model(pytorch_model=model.model, artifact_path=run_name)
         else:
             raise KeyError("Model type is not valid.")
 
-        # Log parameters
-        for param_name, param_value in params.items():
-            mlflow.log_param(param_name, param_value)
+        # Log additional params
         mlflow.log_param("features", categorical_features)
         mlflow.log_param("Y", Y)
 
         # Evaluation
         print("*** 3- Evaluating the model...\n")
         t = time.time()
-        if model_type == "fasttext":
+        if model_class in ["fasttext", "camembert", "camembert_one_hot", "camembert_embedded"]:
             evaluator = framework_classes["evaluator"](model)
-        elif model_type == "pytorch":
+        elif model_class == "pytorch":
             evaluator = framework_classes["evaluator"](model, trainer.tokenizer)
         else:
             raise KeyError("Model type is not valid.")

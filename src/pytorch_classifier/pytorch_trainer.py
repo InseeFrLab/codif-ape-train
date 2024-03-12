@@ -16,7 +16,7 @@ import mlflow
 
 from pytorch_classifier.pytorch_model import PytorchModel
 from pytorch_classifier.dataset import TorchDataset
-from pytorch_classifier.mappings import mappings
+from utils.mappings import mappings
 from pytorch_classifier.tokenizer import Tokenizer
 
 

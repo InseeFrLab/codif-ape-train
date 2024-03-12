@@ -79,6 +79,22 @@ class FastTextPreprocessor(Preprocessor):
 
         return df_train, df_test
 
+    @staticmethod
+    def clean_categorical_features(
+        df: pd.DataFrame, categorical_features: List[str]
+    ) -> pd.DataFrame:
+        """
+        Cleans the categorical features for pd.DataFrame `df`.
+
+        Args:
+            df (pd.DataFrame): DataFrame.
+            categorical_features (List[str]): Names of the categorical features.
+
+        Returns:
+            df (pd.DataFrame): DataFrame.
+        """
+        return df
+
     def clean_lib(self, df: pd.DataFrame, text_feature: str, method: str) -> pd.DataFrame:
         """
         Cleans a text feature for pd.DataFrame `df` at index idx.
