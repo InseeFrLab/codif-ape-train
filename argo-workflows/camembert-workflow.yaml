@@ -14,59 +14,27 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "EPOCHS": 3,
-            "LR": 1e-4,
-            "MODEL_CLASS": "camembert",
-            "DIM1": 3,
-            "DIM2": 3,
-            "DIM3": 1,
-            "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
-          },
-          { "EPOCHS": 3,
-            "LR": 5e-5,
-            "MODEL_CLASS": "camembert_one_hot",
-            "DIM1": 3,
-            "DIM2": 3,
-            "DIM3": 1,
-            "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
-          },
-          { "EPOCHS": 3,
+          { "EPOCHS": 5,
             "LR": 5e-5,
             "MODEL_CLASS": "camembert_embedded",
             "DIM1": 3,
             "DIM2": 3,
-            "DIM3": 1,
+            "DIM3": 3,
             "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base"
+            "DIM5": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
+            "START_YEAR": 2023
           },
-          { "EPOCHS": 3,
-            "LR": 5e-5,
-            "MODEL_CLASS": "camembert",
-            "DIM1": 3,
-            "DIM2": 3,
-            "DIM3": 1,
-            "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
-          },
-          { "EPOCHS": 3,
-            "LR": 5e-5,
-            "MODEL_CLASS": "camembert_one_hot",
-            "DIM1": 3,
-            "DIM2": 3,
-            "DIM3": 1,
-            "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
-          },
-          { "EPOCHS": 3,
+          { "EPOCHS": 5,
             "LR": 5e-5,
             "MODEL_CLASS": "camembert_embedded",
             "DIM1": 3,
             "DIM2": 3,
-            "DIM3": 1,
+            "DIM3": 3,
             "DIM4": 3,
-            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base-ccnet"
+            "DIM5": 3,
+            "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
+            "START_YEAR": 2022
           }
           ]'
 
@@ -98,8 +66,12 @@ spec:
                   value: "{{item.DIM3}}"
                 - name: DIM4
                   value: "{{item.DIM4}}"
+                - name: DIM5
+                  value: "{{item.DIM5}}"
                 - name: PRE_TRAINING_WEIGHTS
                   value: "{{item.PRE_TRAINING_WEIGHTS}}"
+                - name: START_YEAR
+                  value: "{{item.START_YEAR}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -124,7 +96,9 @@ spec:
           - name: DIM2
           - name: DIM3
           - name: DIM4
+          - name: DIM5
           - name: PRE_TRAINING_WEIGHTS
+          - name: START_YEAR
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
@@ -137,7 +111,7 @@ spec:
             cpu: 40000m
             nvidia.com/gpu: 1
         command: ["/bin/bash", -c]
-        args: ["git clone -b camembert https://github.com/InseeFrLab/codif-ape-train.git &&\
+        args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
                 mlflow run ~/work/codif-ape-train/ \
                           --env-manager=local \
@@ -156,8 +130,10 @@ spec:
                           -P embedding_dim_2={{inputs.parameters.DIM2}} \
                           -P embedding_dim_3={{inputs.parameters.DIM3}} \
                           -P embedding_dim_4={{inputs.parameters.DIM4}} \
+                          -P embedding_dim_5={{inputs.parameters.DIM5}} \
                           -P model_class={{inputs.parameters.MODEL_CLASS}} \
-                          -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}}
+                          -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}} \
+                          -P start_year={{inputs.parameters.START_YEAR}}
               "]
         volumeMounts:
           - mountPath: /dev/shm
@@ -200,3 +176,5 @@ spec:
             value: activ_surf_et
           - name: FEATURE4
             value: evenement_type
+          - name: FEATURE5
+            value: cj
