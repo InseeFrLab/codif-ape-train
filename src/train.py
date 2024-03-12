@@ -287,7 +287,7 @@ def main(
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
 
         # Preprocess data
-        # Sirene
+        # Sirene 4
         df_train_s4, df_test = preprocessor.preprocess(
             df=df_s4,
             y=Y,
@@ -295,15 +295,19 @@ def main(
             categorical_features=categorical_features,
             test_size=0.1,
         )
-        df_train_s3 = pd.concat(
-            preprocessor.preprocess(df_s3, Y, text_feature, categorical_features), axis=0
-        )
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(get_test_data(), Y, text_feature, categorical_features), axis=0
         )
-        # All train data together
-        df_train = pd.concat([df_train_s3, df_train_s4], axis=0).reset_index(drop=True)
+        # Sirene 3
+        if df_s3.empty:
+            df_train_s3 = pd.concat(
+                preprocessor.preprocess(df_s3, Y, text_feature, categorical_features), axis=0
+            )
+            # All train data together
+            df_train = pd.concat([df_train_s3, df_train_s4], axis=0).reset_index(drop=True)
+        else:
+            df_train = df_train_s4
         mlflow.log_param("number_of_observations", df_train.shape[0])
         print(f"Number of observations in the training_set: {df_train.shape[0]}")
         print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
