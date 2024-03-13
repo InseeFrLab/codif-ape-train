@@ -31,6 +31,7 @@ DIM3=1
 DIM4=3
 DIM5=3
 PRE_TRAINING_WEIGHTS=camembert/camembert-base-ccnet
+START_YEAR=2023
 
 mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
@@ -59,4 +60,6 @@ mlflow run ~/work/codif-ape-train/ \
     -P embedding_dim_3=$DIM3 \
     -P embedding_dim_4=$DIM4 \
     -P embedding_dim_5=$DIM5 \
-    -P model_class=$MODEL_CLASS
+    -P model_class=$MODEL_CLASS \
+    -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
+    -P start_year=$START_YEAR
