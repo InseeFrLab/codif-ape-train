@@ -253,6 +253,8 @@ def main(
                 "model_class",
                 "text_feature",
                 "pre_training_weights",
+                "start_month",
+                "start_year",
             ]
         )
         and not key.startswith("categorical_features")
