@@ -3,51 +3,13 @@ kind: Workflow
 metadata:
   generateName: parallel-training-
 spec:
+  serviceAccountName: workflow
   entrypoint: main
   arguments:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 50, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 100, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 150, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 200, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 250, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 500, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 1000, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 5, "MINN": 3, "MAXN": 8, "MINCOUNT": 50, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 10, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 15, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 20, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 30, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 75, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 100, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 150, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.01, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.05, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.1, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.15, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.25, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.3, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.5, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ns"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "hs"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "softmax"},
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova"}
+            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2023 }
             ]'
 
   templates:
@@ -82,6 +44,8 @@ spec:
                   value: "{{item.BUCKET}}"
                 - name: LOSS
                   value: "{{item.LOSS}}"
+                - name: START_YEAR
+                  value: "{{item.START_YEAR}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -108,8 +72,9 @@ spec:
           - name: MINCOUNT
           - name: BUCKET
           - name: LOSS
+          - name: START_YEAR
       container:
-        image: inseefrlab/codif-ape-train:v0.0.2
+        image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\
@@ -134,7 +99,9 @@ spec:
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
-                          -P categorical_features_4=$FEATURE4"
+                          -P categorical_features_4=$FEATURE4 \
+                          -P categorical_features_5=$FEATURE5 \
+                          -P start_year={{inputs.parameters.START_YEAR}}"
               ]
         env:
           # env var for s3 connexion
@@ -174,3 +141,5 @@ spec:
             value: activ_surf_et
           - name: FEATURE4
             value: evenement_type
+          - name: FEATURE5
+            value: cj

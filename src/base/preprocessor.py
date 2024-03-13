@@ -36,6 +36,7 @@ class Preprocessor(ABC):
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
+        recase: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -49,6 +50,7 @@ class Preprocessor(ABC):
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
+            recase (bool): Whether to recase the text.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
@@ -80,7 +82,7 @@ class Preprocessor(ABC):
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
-            df, df_naf, y, text_feature, categorical_features, oversampling, test_size
+            df, df_naf, y, text_feature, categorical_features, oversampling, test_size, recase
         )
 
     @abstractmethod
@@ -93,6 +95,7 @@ class Preprocessor(ABC):
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
+        recase: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -107,6 +110,8 @@ class Preprocessor(ABC):
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
+            recase (bool): if True, try applying standard casing.
+
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
