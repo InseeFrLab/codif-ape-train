@@ -306,10 +306,13 @@ def main(
             df_train = df_train_s4
         else:
             df_train_s3 = pd.concat(
-                preprocessor.preprocess(df_s3, Y, text_feature, categorical_features), axis=0
+                preprocessor.preprocess(df_s3, Y, text_feature, categorical_features, recase=True),
+                axis=0,
             )
             # All train data together
             df_train = pd.concat([df_train_s3, df_train_s4], axis=0).reset_index(drop=True)
+        # Shuffle in case it is not done later
+        df_train = df_train.sample(frac=1)
         mlflow.log_param("number_of_observations", df_train.shape[0])
         print(f"Number of observations in the training_set: {df_train.shape[0]}")
         print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")

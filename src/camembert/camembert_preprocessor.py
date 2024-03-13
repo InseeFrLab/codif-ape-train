@@ -17,7 +17,9 @@ class CamembertPreprocessor(Preprocessor):
     FastTextPreprocessor class.
     """
 
-    def clean_lib(self, df: pd.DataFrame, text_feature: str, method: str) -> pd.DataFrame:
+    def clean_lib(
+        self, df: pd.DataFrame, text_feature: str, method: str, recase: bool = False
+    ) -> pd.DataFrame:
         """
         Cleans a text feature for pd.DataFrame `df` at index idx.
 
@@ -25,16 +27,23 @@ class CamembertPreprocessor(Preprocessor):
             df (pd.DataFrame): DataFrame.
             text_feature (str): Name of the text feature.
             method (str): The method when the function is used (training or
-            evaluation)
+                evaluation).
+            recase (bool): if True, try applying standard casing.
 
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        # On passe tout en minuscule ?
-        # Peut-être qu'on voudrait plutôt convertir en casing standard
-        # mais suppose NER pour les noms propres, avec spacy par exemple
-        # ce qui peut prendre du temps
-        df[text_feature] = df[text_feature].str.lower()
+        if recase:
+            # Standard casing to apply when uppercase (for Sirene 3 in particular)
+            df[text_feature] = (
+                df[text_feature]
+                .str.lower()
+                .str.replace(r"\s{2,}", ", ", regex=True)
+                .str.replace(r"\b(l|d|n|j|s|t|qu) ", r"\1'", regex=True)
+                .str.split(".")
+                .apply(lambda x: ". ".join([sent.strip().capitalize() for sent in x]))
+            )
+        df[text_feature] = df[text_feature].str.rstrip(" .") + "."
 
         if method == "training":
             # On supprime les NaN
@@ -80,6 +89,7 @@ class CamembertPreprocessor(Preprocessor):
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
+        recase: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a Camembert classifier.
@@ -93,12 +103,13 @@ class CamembertPreprocessor(Preprocessor):
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
+            recase (bool): if True, try applying standard casing.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df = self.clean_lib(df, text_feature, "training")
+        df = self.clean_lib(df, text_feature, "training", recase=recase)
         df = self.clean_categorical_features(df, y, categorical_features)
 
         # Train/test split

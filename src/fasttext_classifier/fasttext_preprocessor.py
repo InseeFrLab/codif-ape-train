@@ -28,6 +28,7 @@ class FastTextPreprocessor(Preprocessor):
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
+        recase: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -42,11 +43,13 @@ class FastTextPreprocessor(Preprocessor):
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
+            recase (bool): if True, try applying standard casing.
+
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training and
             evaluation
         """
-
+        # Recase parameter is not used here.
         df = self.clean_lib(df, text_feature, "training")
 
         # Adding missing APE codes in the database by adding the official label as text feature
