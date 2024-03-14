@@ -29,6 +29,7 @@ class FastTextPreprocessor(Preprocessor):
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
         recase: bool = False,
+        add_codes: bool = True,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -47,13 +48,14 @@ class FastTextPreprocessor(Preprocessor):
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training and
-            evaluation
+                evaluation.
         """
         # Recase parameter is not used here.
         df = self.clean_lib(df, text_feature, "training")
 
-        # Adding missing APE codes in the database by adding the official label as text feature
-        df_train = self.add_missing_codes(df, df_naf, y, text_feature)
+        if add_codes:
+            # Adding missing APE codes in the database by adding the official label as text feature
+            df_train = self.add_missing_codes(df, df_naf, y, text_feature)
 
         # Train/test split
         features = [text_feature]

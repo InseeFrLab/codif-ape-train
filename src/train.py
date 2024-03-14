@@ -299,7 +299,10 @@ def main(
         )
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
-            preprocessor.preprocess(get_test_data(), Y, text_feature, categorical_features), axis=0
+            preprocessor.preprocess(
+                get_test_data(), Y, text_feature, categorical_features, add_codes=False
+            ),
+            axis=0,
         )
         # Sirene 3
         if df_s3.empty:
