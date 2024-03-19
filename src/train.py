@@ -10,6 +10,10 @@ import pandas as pd
 
 from constants import FRAMEWORK_CLASSES
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
+from utils.mappings import mappings
+from camembert.camembert_wrapper import CamembertWrapper
+from camembert.camembert_model import CustomCamembertModel
+from camembert.custom_pipeline import CustomPipeline
 from tests.test_main import run_test
 from utils.data import get_sirene_4_data, get_test_data, get_sirene_3_data
 
@@ -364,7 +368,27 @@ def main(
         elif model_class == "pytorch":
             mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
         elif model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
-            mlflow.pytorch.log_model(pytorch_model=model.model, artifact_path=run_name)
+            model_output_dir = "./camembert_model"
+            pipeline_output_dir = "./camembert_pipeline"
+            model.save_model(model_output_dir)
+
+            pipe = CustomPipeline(
+                framework="pt",
+                model=CustomCamembertModel.from_pretrained(
+                    model_output_dir,
+                    num_labels=len(mappings.get("APE_NIV5")),
+                    categorical_features=categorical_features,
+                ),
+                tokenizer=trainer.tokenizer,
+            )
+
+            pipe.save_pretrained(pipeline_output_dir)
+            mlflow.pyfunc.log_model(
+                artifacts={"pipeline": pipeline_output_dir},
+                code_path=["src/camembert/", "src/base/", "src/utils/"],
+                artifact_path=run_name,
+                python_model=CamembertWrapper(text_feature, categorical_features),
+            )
         else:
             raise KeyError("Model type is not valid.")
 

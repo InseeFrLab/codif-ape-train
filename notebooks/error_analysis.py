@@ -118,7 +118,7 @@ for batch in dataloader:
 camembert_accuracy = accuracy_score(labels, camembert_predictions)
 
 # Get fasttext model
-fasttext_run_id = "18e7c22f853b481b87134af7906fde67"
+fasttext_run_id = "e4a53fec83534420bec1cb747ef700a9"
 fasttext_model = mlflow.pyfunc.load_model(
     f"runs:/{fasttext_run_id}/default",
 )
@@ -141,3 +141,9 @@ fasttext_predictions = [x[0] for x in fasttext_predictions]
 labels = df_test[Y].tolist()
 fasttext_accuracy = accuracy_score(labels, fasttext_predictions)
 fasttext_accuracy
+
+# New camembert
+run_id = "8cf67bdecc0d4067996abf8cfe9cc3f6"
+model = mlflow.pyfunc.load_model(
+    f"runs:/{run_id}/default",
+)
