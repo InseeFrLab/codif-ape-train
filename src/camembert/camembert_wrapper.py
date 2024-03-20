@@ -58,25 +58,32 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
         if self.categorical_features is None:
             self.load_context(context)
 
+        # Clean text feature
         df = self.preprocessor.clean_lib(
             df=pd.DataFrame(model_input, columns=[self.text_feature] + self.categorical_features),
             text_feature=self.text_feature,
             method="evaluation",
             recase=False,
         )
-        df[self.categorical_features] = df[self.categorical_features].fillna(value="NaN")
+        # Convert categorical str features to integer list using mapping
+        df = self.clean_categorical_features(df, categorical_features=self.categorical_features)
 
+        # Rename text column
         df = df.rename(columns={self.text_feature: "text"})
+        # Create categorical inputs feature
         df["categorical_inputs"] = df[self.categorical_features].apply(lambda x: x.tolist(), axis=1)
         df = df.drop(columns=self.categorical_features)
 
         if params is None:
             params = {}
         # Feed data to pipeline
-        # TODO: for now only returns one row
+        all_preds = []
+        all_probas = []
         for row in df.itertuples():
-            prediction = self.pipeline(
+            preds, probas = self.pipeline(
                 row.text, categorical_inputs=row.categorical_inputs, k=params.get("k", 1)
             )
+            all_preds.append(preds[0])
+            all_probas.append(probas[0])
 
-        return prediction
+        return all_preds, all_probas

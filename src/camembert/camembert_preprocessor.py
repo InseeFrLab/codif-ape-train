@@ -55,15 +55,15 @@ class CamembertPreprocessor(Preprocessor):
 
     @staticmethod
     def clean_categorical_features(
-        df: pd.DataFrame, y: str, categorical_features: List[str]
+        df: pd.DataFrame, categorical_features: List[str], y: Optional[str] = None
     ) -> pd.DataFrame:
         """
         Cleans the categorical features for pd.DataFrame `df`.
 
         Args:
             df (pd.DataFrame): DataFrame.
-            y (str): Name of the variable to predict.
             categorical_features (List[str]): Names of the categorical features.
+            y (str): Name of the variable to predict.
 
         Returns:
             df (pd.DataFrame): DataFrame.
@@ -77,7 +77,8 @@ class CamembertPreprocessor(Preprocessor):
             if variable != "activ_surf_et":
                 # Mapping already done for this variable
                 df[variable] = df[variable].apply(mappings[variable].get)
-        df[y] = df[y].apply(mappings[y].get)
+        if y is not None:
+            df[y] = df[y].apply(mappings[y].get)
         return df
 
     def preprocess_for_model(
@@ -112,7 +113,7 @@ class CamembertPreprocessor(Preprocessor):
             evaluation and "guichet unique"
         """
         df = self.clean_lib(df, text_feature, "training", recase=recase)
-        df = self.clean_categorical_features(df, y, categorical_features)
+        df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
         features = [text_feature]

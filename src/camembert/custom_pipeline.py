@@ -55,11 +55,13 @@ class CustomPipeline(Pipeline):
         Returns:
             _type_: _description_
         """
-        top_predictions = []
         top_classes = model_outputs.logits.squeeze().argsort(axis=-1)
         n_classes = top_classes.shape[-1]
+        preds = []
+        probas = []
         for rank_pred in range(k):
             pred = top_classes[n_classes - rank_pred - 1]
             proba = model_outputs.logits.squeeze()[pred]
-            top_predictions.append((pred, proba))
-        return top_predictions
+            preds.append(pred)
+            probas.append(proba)
+        return ([preds], [probas])
