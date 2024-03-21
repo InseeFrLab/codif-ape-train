@@ -90,24 +90,18 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
         df = df.rename(columns={self.text_feature: "text"})
         # Create categorical inputs feature
         df["categorical_inputs"] = df[self.categorical_features].apply(lambda x: x.tolist(), axis=1)
-        df = df.drop(columns=self.categorical_features)
+        df = df[["text", "categorical_inputs"]]
 
         if params is None:
             params = {}
         # Feed data to pipeline
-        all_preds = []
-        all_probas = []
-        for row in df.itertuples():
-            # TODO: no need to feed rows one by one if pipeline is
-            # implemented correctly
-            preds, probas = self.pipeline(
-                row.text, categorical_inputs=row.categorical_inputs, k=params.get("k", 1)
-            )
-            # Reverse map to original labels
-            all_preds.append([self.reverse_label_mapping[pred] for pred in preds[0]])
-            all_probas.append(probas[0])
-
-        return all_preds, all_probas
+        predictions, probabilities = self.pipeline(df.to_dict("list"), k=params.get("k", 1))
+        # Reverse map to original labels
+        predictions = [
+            [self.reverse_label_mapping[prediction] for prediction in single_predictions]
+            for single_predictions in predictions
+        ]
+        return predictions, probabilities
 
 
 class CustomCamembertWrapper(CamembertWrapper):
