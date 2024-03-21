@@ -46,7 +46,7 @@ def get_sirene_4_data(
     # Edit surface column
     df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
 
-    return df.head(200)
+    return df
 
 
 def get_sirene_3_data(
@@ -149,7 +149,7 @@ def get_test_data() -> pd.DataFrame:
     df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
 
     # Return test data
-    return df.head(200)
+    return df
 
 
 def categorize_surface(
