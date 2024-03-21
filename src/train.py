@@ -9,9 +9,7 @@ import mlflow
 import pandas as pd
 
 from constants import FRAMEWORK_CLASSES
-from fasttext_classifier.fasttext_wrapper import FastTextWrapper
 from utils.mappings import mappings
-from camembert.camembert_wrapper import CamembertWrapper
 from camembert.camembert_model import CustomCamembertModel
 from camembert.custom_pipeline import CustomPipeline
 from tests.test_main import run_test
@@ -341,6 +339,13 @@ def main(
             model = trainer.train(df_train, Y, text_feature, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
+        inference_params = {
+            "k": 1,
+        }
+        # Infer the signature including parameters
+        signature = mlflow.models.infer_signature(
+            params=inference_params,
+        )
         if model_class == "fasttext":
             fasttext_model_path = run_name + ".bin"
             model.save_model(fasttext_model_path)
@@ -350,18 +355,10 @@ def main(
                 "train_data": "train_text.txt",
             }
 
-            inference_params = {
-                "k": 1,
-            }
-            # Infer the signature including parameters
-            signature = mlflow.models.infer_signature(
-                params=inference_params,
-            )
-
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
-                python_model=FastTextWrapper(text_feature, categorical_features),
+                python_model=framework_classes["wrapper"](text_feature, categorical_features),
                 artifacts=artifacts,
                 signature=signature,
             )
@@ -387,7 +384,8 @@ def main(
                 artifacts={"pipeline": pipeline_output_dir},
                 code_path=["src/camembert/", "src/base/", "src/utils/"],
                 artifact_path=run_name,
-                python_model=CamembertWrapper(text_feature, categorical_features),
+                python_model=framework_classes["wrapper"](text_feature, categorical_features),
+                signature=signature,
             )
         else:
             raise KeyError("Model type is not valid.")
