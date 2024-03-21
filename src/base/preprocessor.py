@@ -37,6 +37,7 @@ class Preprocessor(ABC):
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
         recase: bool = False,
+        add_codes: bool = True,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -51,6 +52,7 @@ class Preprocessor(ABC):
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
             recase (bool): Whether to recase the text.
+            add_codes (bool): Whether to add missing APE codes.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
@@ -82,7 +84,15 @@ class Preprocessor(ABC):
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
-            df, df_naf, y, text_feature, categorical_features, oversampling, test_size, recase
+            df=df,
+            df_naf=df_naf,
+            y=y,
+            text_feature=text_feature,
+            categorical_features=categorical_features,
+            oversampling=oversampling,
+            test_size=test_size,
+            recase=recase,
+            add_codes=add_codes,
         )
 
     @abstractmethod
@@ -96,6 +106,7 @@ class Preprocessor(ABC):
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
         recase: bool = False,
+        add_codes: bool = True,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a classifier of the
@@ -111,6 +122,7 @@ class Preprocessor(ABC):
             oversampling (Optional[List[str]]): Parameters for oversampling.
             test_size (float): Size of the test set.
             recase (bool): if True, try applying standard casing.
+            add_codes (bool): Whether to add missing APE codes.
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training,

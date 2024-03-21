@@ -30,7 +30,7 @@ DIM2=3
 DIM3=1
 DIM4=3
 DIM5=3
-PRE_TRAINING_WEIGHTS=camembert/camembert-base-ccnet
+PRE_TRAINING_WEIGHTS=camembert/camembert-base
 START_YEAR=2023
 
 mlflow run ~/work/codif-ape-train/ \
