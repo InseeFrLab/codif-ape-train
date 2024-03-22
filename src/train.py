@@ -10,7 +10,6 @@ import pandas as pd
 
 from constants import FRAMEWORK_CLASSES
 from utils.mappings import mappings
-from camembert.camembert_model import CustomCamembertModel
 from camembert.custom_pipeline import CustomPipeline
 from tests.test_main import run_test
 from utils.data import get_sirene_4_data, get_test_data, get_sirene_3_data
@@ -371,7 +370,7 @@ def main(
 
             pipe = CustomPipeline(
                 framework="pt",
-                model=CustomCamembertModel.from_pretrained(
+                model=framework_classes["model"].from_pretrained(
                     model_output_dir,
                     num_labels=len(mappings.get("APE_NIV5")),
                     categorical_features=categorical_features,
