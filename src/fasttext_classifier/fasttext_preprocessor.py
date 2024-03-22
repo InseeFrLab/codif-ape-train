@@ -53,10 +53,6 @@ class FastTextPreprocessor(Preprocessor):
         # Recase parameter is not used here.
         df = self.clean_lib(df, text_feature, "training")
 
-        if add_codes:
-            # Adding missing APE codes in the database by adding the official label as text feature
-            df_train = self.add_missing_codes(df, df_naf, y, text_feature)
-
         # Train/test split
         features = [text_feature]
         if categorical_features is not None:
@@ -75,8 +71,8 @@ class FastTextPreprocessor(Preprocessor):
 
         # Adding missing APE codes in the train database by adding the official label as
         # text feature
-
-        df_train = self.add_missing_codes(df_train, df_naf, y, text_feature)
+        if add_codes:
+            df_train = self.add_missing_codes(df_train, df_naf, y, text_feature)
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
