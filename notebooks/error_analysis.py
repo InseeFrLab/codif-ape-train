@@ -10,7 +10,7 @@ import hvac
 import os
 import mlflow
 from utils.data import get_test_data, get_file_system
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
 import argparse
 
@@ -160,8 +160,105 @@ def main(fasttext_run_id: str, camembert_run_id: str):
     # Compute accuracy
     fasttext_accuracy = accuracy_score(df_test["y_true"], df_test["y_pred_fasttext"])
     camembert_accuracy = accuracy_score(df_test["y_true"], df_test["y_pred_camembert"])
-    print(fasttext_accuracy)
-    print(camembert_accuracy)
+    print(f"FastText accuracy: {fasttext_accuracy}")
+    print(f"Camembert accuracy: {camembert_accuracy}")
+
+    # Compute micro-averaged precision, recall and F1
+    fasttext_precision = precision_score(
+        df_test["y_true"], df_test["y_pred_fasttext"], average="micro"
+    )
+    fasttext_recall = recall_score(df_test["y_true"], df_test["y_pred_fasttext"], average="micro")
+    fasttext_f1 = f1_score(df_test["y_true"], df_test["y_pred_fasttext"], average="micro")
+    print(f"FastText micro-averaged precision: {fasttext_precision}")
+    print(f"FastText micro-averaged recall: {fasttext_recall}")
+    print(f"FastText micro-averaged F1: {fasttext_f1}")
+
+    camembert_precision = precision_score(
+        df_test["y_true"], df_test["y_pred_camembert"], average="micro"
+    )
+    camembert_recall = recall_score(df_test["y_true"], df_test["y_pred_camembert"], average="micro")
+    camembert_f1 = f1_score(df_test["y_true"], df_test["y_pred_camembert"], average="micro")
+    print(f"Camembert micro-averaged precision: {camembert_precision}")
+    print(f"Camembert micro-averaged recall: {camembert_recall}")
+    print(f"Camembert micro-averaged F1: {camembert_f1}")
+
+    # Compute macro-averaged precision, recall and F1
+    fasttext_precision = precision_score(
+        df_test["y_true"], df_test["y_pred_fasttext"], average="macro"
+    )
+    fasttext_recall = recall_score(df_test["y_true"], df_test["y_pred_fasttext"], average="macro")
+    fasttext_f1 = f1_score(df_test["y_true"], df_test["y_pred_fasttext"], average="macro")
+    print(f"FastText macro-averaged precision: {fasttext_precision}")
+    print(f"FastText macro-averaged recall: {fasttext_recall}")
+    print(f"FastText macro-averaged F1: {fasttext_f1}")
+
+    camembert_precision = precision_score(
+        df_test["y_true"], df_test["y_pred_camembert"], average="macro"
+    )
+    camembert_recall = recall_score(df_test["y_true"], df_test["y_pred_camembert"], average="macro")
+    camembert_f1 = f1_score(df_test["y_true"], df_test["y_pred_camembert"], average="macro")
+    print(f"Camembert macro-averaged precision: {camembert_precision}")
+    print(f"Camembert macro-averaged recall: {camembert_recall}")
+    print(f"Camembert macro-averaged F1: {camembert_f1}")
+
+    df_test["all_agree"] = (df_test["y_pred_fasttext"] == df_test["y_pred_camembert"]) & (
+        df_test["y_pred_camembert"] == df_test["y_true"]
+    )
+    df_test["fasttext_agrees"] = (df_test["y_pred_fasttext"] == df_test["y_true"]) & (
+        df_test["y_pred_fasttext"] != df_test["y_pred_camembert"]
+    )
+    df_test["camembert_agrees"] = (df_test["y_pred_camembert"] == df_test["y_true"]) & (
+        df_test["y_pred_fasttext"] != df_test["y_pred_camembert"]
+    )
+    df_test["camembert_fasttext_agree"] = (
+        df_test["y_pred_fasttext"] == df_test["y_pred_camembert"]
+    ) & (df_test["y_pred_fasttext"] != df_test["y_true"])
+
+    print(f'Rate of agreement of all: {df_test["all_agree"].mean()}')
+    print(
+        f'Rate at which fastText agrees with annotation but not with Camembert: {df_test["fasttext_agrees"].mean()}'
+    )
+    print(
+        f'Rate at which Camembert agrees with annotation but not with fastText: {df_test["camembert_agrees"].mean()}'
+    )
+    print(
+        f'Rate at which Camembert agrees with fastText but not with annotation: {df_test["camembert_fasttext_agree"].mean()}'
+    )
+
+    df_test["y_true_div"] = df_test["y_true"].str[:2]
+    df_test["count"] = 1
+    division_stats = df_test.groupby("y_true_div").agg(
+        {
+            "all_agree": "mean",
+            "fasttext_agrees": "mean",
+            "camembert_agrees": "mean",
+            "camembert_fasttext_agree": "mean",
+            "count": "sum",
+        }
+    )
+    print(division_stats)
+
+    with fs.open("projet-ape/data/naf2008.csv", "r") as f:
+        naf_codes = pd.read_csv(f, sep=";")
+
+    print(df_test.shape)
+    df_test = df_test.merge(
+        naf_codes.rename(columns={"libelle": "libelle_annotation"}),
+        how="inner",
+        left_on="y_true",
+        right_on="code",
+    )
+    df_test = df_test.merge(
+        naf_codes.rename(columns={"libelle": "libelle_pred"}),
+        how="inner",
+        left_on="y_pred_camembert",
+        right_on="code",
+    )
+    print(df_test.shape)
+
+    df_test.loc[df_test.camembert_fasttext_agree].to_csv(
+        "camembert_fasttext_agree.csv", index=False
+    )
 
 
 if __name__ == "__main__":
