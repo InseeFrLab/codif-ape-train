@@ -1,4 +1,4 @@
-FROM inseefrlab/onyxia-vscode-pytorch:py3.11.6
+FROM inseefrlab/onyxia-vscode-pytorch:py3.11.9
 
 COPY requirements.txt requirements.txt
 
