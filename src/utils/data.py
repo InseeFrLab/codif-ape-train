@@ -30,7 +30,7 @@ def get_root_path() -> Path:
 
 
 def get_sirene_4_data(
-    path: str = "projet-ape/extractions/20240124_sirene4.parquet",
+    path: str = "projet-ape/extractions/20240321_sirene4.parquet",
 ) -> pd.DataFrame:
     """
     Get Sirene 4 data.
