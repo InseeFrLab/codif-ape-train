@@ -1,13 +1,13 @@
 #! /bin/bash
 export MLFLOW_TRACKING_URI=https://projet-ape-mlflow.user.lab.sspcloud.fr/
 export MLFLOW_S3_ENDPOINT_URL=https://minio.lab.sspcloud.fr
-export MLFLOW_EXPERIMENT_NAME=Test
+export MLFLOW_EXPERIMENT_NAME='Experimentation'
 ENTRY_POINT=main
 
 # Parameters
 DIM=180
 LR=5e-5
-EPOCHS=1
+EPOCHS=5
 WORDNGRAMS=3
 MINN=3
 MAXN=4
@@ -24,12 +24,16 @@ FEATURE2=activ_nat_et
 FEATURE3=activ_surf_et
 FEATURE4=evenement_type
 FEATURE5=cj
-MODEL_CLASS=camembert
+FEATURE6=other_nature_text
+FEATURE7=permanence
+MODEL_CLASS=camembert_embedded
 DIM1=3
 DIM2=3
 DIM3=1
 DIM4=3
 DIM5=3
+DIM6=3
+DIM7=1
 PRE_TRAINING_WEIGHTS=camembert/camembert-base
 START_YEAR=2023
 
@@ -55,11 +59,15 @@ mlflow run ~/work/codif-ape-train/ \
     -P categorical_features_3=$FEATURE3 \
     -P categorical_features_4=$FEATURE4 \
     -P categorical_features_5=$FEATURE5 \
+    -P categorical_features_6=$FEATURE6 \
+    -P categorical_features_7=$FEATURE7 \
     -P embedding_dim_1=$DIM1 \
     -P embedding_dim_2=$DIM2 \
     -P embedding_dim_3=$DIM3 \
     -P embedding_dim_4=$DIM4 \
     -P embedding_dim_5=$DIM5 \
+    -P embedding_dim_6=$DIM6 \
+    -P embedding_dim_7=$DIM7 \
     -P model_class=$MODEL_CLASS \
     -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
     -P start_year=$START_YEAR

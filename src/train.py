@@ -135,6 +135,20 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "--categorical_features_6",
+    type=str,
+    default="other_nature_text",
+    help="Other nature of observation description",
+    required=True,
+)
+parser.add_argument(
+    "--categorical_features_7",
+    type=str,
+    default="permanence",
+    help="Permanent or seasonal character of the activities of the company",
+    required=True,
+)
+parser.add_argument(
     "--embedding_dim_1",
     type=int,
     default=3,
@@ -167,6 +181,20 @@ parser.add_argument(
     type=int,
     default=3,
     help="Embedding dimension for cj",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_6",
+    type=int,
+    default=3,
+    help="Embedding dimension for other_nature_text",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_7",
+    type=int,
+    default=1,
+    help="Embedding dimension for permanence",
     required=True,
 )
 parser.add_argument(
@@ -228,11 +256,15 @@ def main(
     categorical_features_3: str,
     categorical_features_4: str,
     categorical_features_5: str,
+    categorical_features_6: str,
+    categorical_features_7: str,
     embedding_dim_1: int,
     embedding_dim_2: int,
     embedding_dim_3: int,
     embedding_dim_4: int,
     embedding_dim_5: int,
+    embedding_dim_6: int,
+    embedding_dim_7: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,

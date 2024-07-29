@@ -22,6 +22,8 @@ spec:
             "DIM3": 3,
             "DIM4": 3,
             "DIM5": 3,
+            "DIM6": 3,
+            "DIM7": 1,
             "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
             "START_YEAR": 2023
           },
@@ -33,8 +35,10 @@ spec:
             "DIM3": 3,
             "DIM4": 3,
             "DIM5": 3,
+            "DIM6": 3,
+            "DIM7": 1,
             "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
-            "START_YEAR": 2022
+            "START_YEAR": 2023
           }
           ]'
 
@@ -68,6 +72,10 @@ spec:
                   value: "{{item.DIM4}}"
                 - name: DIM5
                   value: "{{item.DIM5}}"
+                - name: DIM6
+                  value: "{{item.DIM6}}"
+                - name: DIM7
+                  value: "{{item.DIM7}}"
                 - name: PRE_TRAINING_WEIGHTS
                   value: "{{item.PRE_TRAINING_WEIGHTS}}"
                 - name: START_YEAR
@@ -97,6 +105,8 @@ spec:
           - name: DIM3
           - name: DIM4
           - name: DIM5
+          - name: DIM6
+          - name: DIM7
           - name: PRE_TRAINING_WEIGHTS
           - name: START_YEAR
       container:
@@ -126,11 +136,16 @@ spec:
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
+                          -P categorical_features_5=$FEATURE5 \
+                          -P categorical_features_6=$FEATURE6 \
+                          -P categorical_features_7=$FEATURE7 \
                           -P embedding_dim_1={{inputs.parameters.DIM1}} \
                           -P embedding_dim_2={{inputs.parameters.DIM2}} \
                           -P embedding_dim_3={{inputs.parameters.DIM3}} \
                           -P embedding_dim_4={{inputs.parameters.DIM4}} \
                           -P embedding_dim_5={{inputs.parameters.DIM5}} \
+                          -P embedding_dim_6={{inputs.parameters.DIM6}} \
+                          -P embedding_dim_7={{inputs.parameters.DIM7}} \
                           -P model_class={{inputs.parameters.MODEL_CLASS}} \
                           -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}} \
                           -P start_year={{inputs.parameters.START_YEAR}}
@@ -159,7 +174,7 @@ spec:
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
           - name: MLFLOW_EXPERIMENT_NAME
-            value: Test
+            value: Experimentation
           - name: ENTRY_POINT
             value: main
           - name: "Y"
@@ -178,3 +193,7 @@ spec:
             value: evenement_type
           - name: FEATURE5
             value: cj
+          - name: FEATURE6
+            value: other_nature_text
+          - name: FEATURE7
+            value: permanence

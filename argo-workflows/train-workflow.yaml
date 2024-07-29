@@ -101,6 +101,8 @@ spec:
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
                           -P categorical_features_5=$FEATURE5 \
+                          -P categorical_features_6=$FEATURE6 \
+                          -P categorical_features_7=$FEATURE7 \
                           -P start_year={{inputs.parameters.START_YEAR}}"
               ]
         env:
@@ -124,7 +126,7 @@ spec:
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
           - name: MLFLOW_EXPERIMENT_NAME
-            value: Test
+            value: Experimentation
           - name: ENTRY_POINT
             value: main
           - name: "Y"
@@ -143,3 +145,7 @@ spec:
             value: evenement_type
           - name: FEATURE5
             value: cj
+          - name: FEATURE6
+            value: other_nature_text
+          - name: FEATURE7
+            value: permanence

@@ -4,8 +4,6 @@ Script to analyse Camembert errors.
 from typing import List, Tuple
 import sys
 
-sys.path.append("src/")
-sys.path.append("codif-ape-train/src/")
 import hvac
 import os
 import mlflow
@@ -13,6 +11,9 @@ from utils.data import get_test_data, get_file_system
 from sklearn.metrics import accuracy_score
 import pandas as pd
 import argparse
+
+sys.path.append("src/")
+sys.path.append("codif-ape-train/src/")
 
 
 def set_aws_credentials():
@@ -57,7 +58,7 @@ def get_run_params(run_id: str) -> Tuple:
     """
     text_feature = mlflow.get_run(run_id).data.params["text_feature"]
     categorical_features = []
-    for idx in range(1, 6):
+    for idx in range(1, 8):
         categorical_features.append(
             mlflow.get_run(run_id).data.params.get(f"categorical_features_{idx}")
         )
@@ -139,7 +140,7 @@ def main(fasttext_run_id: str, camembert_run_id: str):
     set_mlflow_env()
 
     fs = get_file_system()
-    s3_path = f"projet-ape/estoril/predictions_{fasttext_run_id}_{camembert_run_id}.csv"
+    s3_path = f"projet-ape/estoril/predictions_{fasttext_run_id}_{camembert_run_id}_PQS.csv"
     if not fs.exists(s3_path):
         # Get raw test data
         df_test = get_test_data()
