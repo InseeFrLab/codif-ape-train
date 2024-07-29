@@ -4,6 +4,7 @@ Mappings of categorical variables.
 
 
 mappings = {
+    "activ_perm_et": {"P": 0, "S": 1},
     "cj": {
         "NaN": 0,
         "5499": 1,
