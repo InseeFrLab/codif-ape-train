@@ -146,6 +146,6 @@ spec:
           - name: FEATURE5
             value: cj
           - name: FEATURE6
-            value: other_nature_text
+            value: activ_nat_lib_et
           - name: FEATURE7
-            value: permanence
+            value: activ_perm_et

@@ -137,14 +137,14 @@ parser.add_argument(
 parser.add_argument(
     "--categorical_features_6",
     type=str,
-    default="other_nature_text",
+    default="activ_nat_lib_et",
     help="Other nature of observation description",
     required=True,
 )
 parser.add_argument(
     "--categorical_features_7",
     type=str,
-    default="permanence",
+    default="activ_perm_et",
     help="Permanent or seasonal character of the activities of the company",
     required=True,
 )
