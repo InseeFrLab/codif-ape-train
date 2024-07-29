@@ -85,6 +85,10 @@ def get_sirene_3_data(
     )
     # Create cj column
     df["cj"] = "NaN"
+    # Create other_nature_text column
+    df["other_nature_text"] = "NaN"
+    # Create permanence column
+    df["permanence"] = "NaN"
 
     return df
 
@@ -135,15 +139,19 @@ def get_test_data() -> pd.DataFrame:
             "surface": "activ_surf_et",
             "nature": "activ_nat_et",
             "type_": "liasse_type",
+            "other_nature_text": "activ_nat_lib_et",
+            "permanence": "activ_perm_et",
         }
     )
 
     # Drop rows with no APE code
     df = df[df["apet_finale"] != ""]
 
-    # activ_nat_et, cj: "" to "NaN"
+    # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
     df["activ_nat_et"] = df["activ_nat_et"].replace("", "NaN")
     df["cj"] = df["cj"].replace("", "NaN")
+    df["activ_nat_lib_et"] = df["activ_nat_lib_et"].replace("", "NaN")
+    df["activ_perm_et"] = df["activ_perm_et"].replace("", "NaN")
 
     # Surface variable to float
     df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
