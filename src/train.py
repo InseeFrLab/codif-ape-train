@@ -293,7 +293,9 @@ def main(
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
 
     # Concatenate text features
-    text_feature = f"{text_features_1} {text_features_2}"
+    text_feature = "".join(
+        [value for key, value in locals().items() if key.startswith("text_features")]
+    )
 
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
