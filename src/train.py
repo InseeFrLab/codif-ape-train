@@ -94,9 +94,16 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--text_feature",
+    "--text_features_1",
     type=str,
     help="Description of company's activity",
+    required=True,
+)
+parser.add_argument(
+    "--text_features_2",
+    type=str,
+    default="activ_nat_lib_et",
+    help="Other nature of observation description",
     required=True,
 )
 parser.add_argument(
@@ -136,13 +143,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--categorical_features_6",
-    type=str,
-    default="activ_nat_lib_et",
-    help="Other nature of observation description",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_7",
     type=str,
     default="activ_perm_et",
     help="Permanent or seasonal character of the activities of the company",
@@ -185,13 +185,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--embedding_dim_6",
-    type=int,
-    default=3,
-    help="Embedding dimension for other_nature_text",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_7",
     type=int,
     default=1,
     help="Embedding dimension for permanence",
@@ -250,21 +243,20 @@ def main(
     bucket: int,
     loss: str,
     label_prefix: str,
-    text_feature: str,
+    text_features_1: str,
+    text_features_2: str,
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_4: str,
     categorical_features_5: str,
     categorical_features_6: str,
-    categorical_features_7: str,
     embedding_dim_1: int,
     embedding_dim_2: int,
     embedding_dim_3: int,
     embedding_dim_4: int,
     embedding_dim_5: int,
     embedding_dim_6: int,
-    embedding_dim_7: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,
@@ -284,7 +276,8 @@ def main(
                 "run_name",
                 "Y",
                 "model_class",
-                "text_feature",
+                "text_features_1",
+                "text_features_2",
                 "pre_training_weights",
                 "start_month",
                 "start_year",
@@ -298,6 +291,9 @@ def main(
         value for key, value in locals().items() if key.startswith("categorical_features")
     ]
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
+
+    # Concatenate text features
+    text_feature = f"{text_features_1} {text_features_2}"
 
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)

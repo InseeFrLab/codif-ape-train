@@ -150,7 +150,6 @@ def get_test_data() -> pd.DataFrame:
     # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
     df["activ_nat_et"] = df["activ_nat_et"].replace("", "NaN")
     df["cj"] = df["cj"].replace("", "NaN")
-    df["activ_nat_lib_et"] = df["activ_nat_lib_et"].replace("", "NaN")
     df["activ_perm_et"] = df["activ_perm_et"].replace("", "NaN")
 
     # Surface variable to float

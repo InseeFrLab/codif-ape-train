@@ -95,14 +95,14 @@ spec:
                           -P bucket={{inputs.parameters.BUCKET}} \
                           -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
-                          -P text_feature=$TEXT_FEATURE \
+                          -P text_features_1=$TEXT_FEATURE1 \
+                          -P text_features_2=$TEXT_FEATURE2 \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
                           -P categorical_features_5=$FEATURE5 \
                           -P categorical_features_6=$FEATURE6 \
-                          -P categorical_features_7=$FEATURE7 \
                           -P start_year={{inputs.parameters.START_YEAR}}"
               ]
         env:
@@ -133,8 +133,10 @@ spec:
             value: apet_finale
           - name: PREFIX
             value: __label__
-          - name: TEXT_FEATURE
+          - name: TEXT_FEATURE1
             value: libelle_activite_apet
+          - name: TEXT_FEATURE2
+            value: activ_nat_lib_et
           - name: FEATURE1
             value: liasse_type
           - name: FEATURE2
@@ -146,6 +148,4 @@ spec:
           - name: FEATURE5
             value: cj
           - name: FEATURE6
-            value: activ_nat_lib_et
-          - name: FEATURE7
             value: activ_perm_et
