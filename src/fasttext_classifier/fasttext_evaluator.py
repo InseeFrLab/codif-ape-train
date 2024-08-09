@@ -25,6 +25,7 @@ class FastTextEvaluator(Evaluator):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         k: int,
     ) -> Dict[int, List[Tuple[str, float]]]:
@@ -36,6 +37,8 @@ class FastTextEvaluator(Evaluator):
             df (pd.DataFrame): Evaluation DataFrame.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             k (int): Number of predictions.
@@ -47,8 +50,11 @@ class FastTextEvaluator(Evaluator):
         libs = []
 
         iterables_features = categorical_features if categorical_features is not None else []
+        iterables_textual_features = textual_features if textual_features is not None else []
         for item in df.iterrows():
             formatted_item = item[1][text_feature]
+            for text_feature in iterables_textual_features:
+                formatted_item += f" [{text_feature}] {item[1][text_feature]}"
             for feature in iterables_features:
                 if f"{item[1][feature]}".endswith(".0"):
                     formatted_item += f" {feature}_{item[1][feature]}"[:-2]

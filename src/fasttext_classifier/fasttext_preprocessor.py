@@ -25,6 +25,7 @@ class FastTextPreprocessor(Preprocessor):
         df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]] = None,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
@@ -40,6 +41,8 @@ class FastTextPreprocessor(Preprocessor):
             df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
@@ -50,6 +53,12 @@ class FastTextPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training and
                 evaluation.
         """
+        df[textual_features] = df[textual_features].fillna(value="NaN")
+        # Concatenate all textual features next to the main text
+        df[text_feature] = df[textual_features].agg(
+            lambda x: " ".join("[" + x.index + "] " + x), axis=1
+        )
+
         # Recase parameter is not used here.
         df = self.clean_lib(df, text_feature, "training")
 

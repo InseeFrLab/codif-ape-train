@@ -33,6 +33,7 @@ class Preprocessor(ABC):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]] = None,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
@@ -47,6 +48,8 @@ class Preprocessor(ABC):
             df (pd.DataFrame): Text descriptions to classify.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
@@ -72,6 +75,8 @@ class Preprocessor(ABC):
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
         variables = [y] + [text_feature]
+        if textual_features is not None:
+            variables += textual_features
         if categorical_features is not None:
             variables += categorical_features
             for feature in categorical_features:
@@ -88,6 +93,7 @@ class Preprocessor(ABC):
             df_naf=df_naf,
             y=y,
             text_feature=text_feature,
+            textual_features=textual_features,
             categorical_features=categorical_features,
             oversampling=oversampling,
             test_size=test_size,
@@ -102,6 +108,7 @@ class Preprocessor(ABC):
         df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]] = None,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
@@ -116,6 +123,8 @@ class Preprocessor(ABC):
             df (pd.DataFrame): Text descriptions to classify.
             df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             text_feature (str): Name of the text feature.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.

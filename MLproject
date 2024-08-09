@@ -17,8 +17,9 @@ entry_points:
       bucket: {type: str, default: 2000000}
       loss: {type: str, default: ova}
       label_prefix: {type: str, default: __label__}
-      text_features_1: {type: str, default: LMNP}
-      text_features_2: {type: str, default: location}
+      text_feature: {type: str, default: LMNP}
+      textual_features_1: {type: str, default: Commerce de détail}
+      textual_features_2: {type: str, default: Elevage de chiots}
       categorical_features_1: {type: str, default: AUTO}
       categorical_features_2: {type: str, default: NAT_SICORE}
       categorical_features_3: {type: str, default: SURF}
@@ -31,6 +32,8 @@ entry_points:
       embedding_dim_4: {type: int, default: 3}
       embedding_dim_5: {type: int, default: 3}
       embedding_dim_6: {type: int, default: 1}
+      embedding_dim_7: {type: int, default: 1}
+      embedding_dim_8: {type: int, default: 1}
       model_class: {type: str, default: fasttext}
       pre_training_weights: {type: str, default: camembert/camembert-base}
       start_month: {type: int, default: 1}
@@ -52,8 +55,9 @@ entry_points:
             --bucket {bucket} \
             --loss {loss} \
             --label_prefix {label_prefix} \
-            --text_features_1 {text_features_1} \
-            --text_features_2 {text_features_2} \
+            --text_feature {text_feature} \
+            --textual_features_1 {textual_features_1} \
+            --textual_features_2 {textual_features_2} \
             --categorical_features_1 {categorical_features_1} \
             --categorical_features_2 {categorical_features_2} \
             --categorical_features_3 {categorical_features_3} \
@@ -66,6 +70,8 @@ entry_points:
             --embedding_dim_4 {embedding_dim_4} \
             --embedding_dim_5 {embedding_dim_5} \
             --embedding_dim_6 {embedding_dim_6} \
+            --embedding_dim_7 {embedding_dim_7} \
+            --embedding_dim_8 {embedding_dim_8} \
             --model_class {model_class} \
             --pre_training_weights {pre_training_weights} \
             --start_month {start_month} \

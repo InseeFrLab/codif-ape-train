@@ -15,9 +15,10 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
     Class to wrap and use FastText Models.
     """
 
-    def __init__(self, text_feature, categorical_features):
+    def __init__(self, text_feature, textual_features, categorical_features):
         self.preprocessor = FastTextPreprocessor()
         self.text_feature = text_feature
+        self.textual_features = textual_features
         self.categorical_features = categorical_features
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
@@ -54,11 +55,21 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
         Returns:
             A tuple containing the k most likely codes to the query.
         """
-        if self.categorical_features is None:
+        if (self.textual_features is None) | (self.categorical_features is None):
             self.load_context(context)
 
+        df = pd.DataFrame(
+            model_input,
+            columns=[self.text_feature] + self.textual_features + self.categorical_features,
+        )
+
+        df[self.textual_features] = df[self.textual_features].fillna(value="NaN")
+        df[self.text_feature] = df[self.textual_features].agg(
+            lambda x: " ".join("[" + x.index + "] " + x), axis=1
+        )
+
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.categorical_features),
+            df=df,
             text_feature=self.text_feature,
             method="evaluation",
         )

@@ -95,8 +95,9 @@ spec:
                           -P bucket={{inputs.parameters.BUCKET}} \
                           -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
-                          -P text_features_1=$TEXT_FEATURE1 \
-                          -P text_features_2=$TEXT_FEATURE2 \
+                          -P text_feature=$TEXT_FEATURE \
+                          -P textual_features_1=$TEXTUAL_FEATURE1 \
+                          -P textual_features_2=$TEXTUAL_FEATURE2 \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
@@ -133,10 +134,12 @@ spec:
             value: apet_finale
           - name: PREFIX
             value: __label__
-          - name: TEXT_FEATURE1
+          - name: TEXT_FEATURE
             value: libelle_activite_apet
-          - name: TEXT_FEATURE2
+          - name: TEXTUAL_FEATURE1
             value: activ_nat_lib_et
+          - name: TEXTUAL_FEATURE2
+            value: activ_sec_agri_et
           - name: FEATURE1
             value: liasse_type
           - name: FEATURE2

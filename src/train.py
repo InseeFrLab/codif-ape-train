@@ -94,16 +94,23 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--text_features_1",
+    "--text_feature",
     type=str,
     help="Description of company's activity",
     required=True,
 )
 parser.add_argument(
-    "--text_features_2",
+    "--textual_features_1",
     type=str,
     default="activ_nat_lib_et",
     help="Other nature of observation description",
+    required=True,
+)
+parser.add_argument(
+    "--textual_features_2",
+    type=str,
+    default="activ_sec_agri_et",
+    help="Additional description of company's agricultural activities",
     required=True,
 )
 parser.add_argument(
@@ -151,45 +158,60 @@ parser.add_argument(
 parser.add_argument(
     "--embedding_dim_1",
     type=int,
-    default=3,
-    help="Embedding dimension for type",
+    default=1,
+    help="Embedding dimension for activ_nat_lib_et",
     required=True,
 )
 parser.add_argument(
     "--embedding_dim_2",
     type=int,
-    default=3,
-    help="Embedding dimension for nature",
+    default=1,
+    help="Embedding dimension for activ_sec_agri_et",
     required=True,
 )
 parser.add_argument(
     "--embedding_dim_3",
     type=int,
-    default=1,
-    help="Embedding dimension for surface",
+    default=3,
+    help="Embedding dimension for type",
     required=True,
 )
 parser.add_argument(
     "--embedding_dim_4",
     type=int,
     default=3,
-    help="Embedding dimension for event",
+    help="Embedding dimension for nature",
     required=True,
 )
 parser.add_argument(
     "--embedding_dim_5",
+    type=int,
+    default=1,
+    help="Embedding dimension for surface",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_6",
+    type=int,
+    default=3,
+    help="Embedding dimension for event",
+    required=True,
+)
+parser.add_argument(
+    "--embedding_dim_7",
     type=int,
     default=3,
     help="Embedding dimension for cj",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_6",
+    "--embedding_dim_8",
     type=int,
     default=1,
     help="Embedding dimension for permanence",
     required=True,
 )
+
 parser.add_argument(
     "--pre_training_weights",
     type=str,
@@ -243,8 +265,9 @@ def main(
     bucket: int,
     loss: str,
     label_prefix: str,
-    text_features_1: str,
-    text_features_2: str,
+    text_feature: str,
+    textual_features_1: str,
+    textual_features_2: str,
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
@@ -257,6 +280,8 @@ def main(
     embedding_dim_4: int,
     embedding_dim_5: int,
     embedding_dim_6: int,
+    embedding_dim_7: int,
+    embedding_dim_8: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,
@@ -276,26 +301,24 @@ def main(
                 "run_name",
                 "Y",
                 "model_class",
-                "text_features_1",
-                "text_features_2",
+                "text_feature",
                 "pre_training_weights",
                 "start_month",
                 "start_year",
             ]
         )
+        and not key.startswith("textual_features")
         and not key.startswith("categorical_features")
         and not key.startswith("embedding_dim")
     }
     params["thread"] = os.cpu_count()
+    textual_features = [
+        value for key, value in locals().items() if key.startswith("textual_features")
+    ]
     categorical_features = [
         value for key, value in locals().items() if key.startswith("categorical_features")
     ]
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
-
-    # Concatenate text features
-    text_feature = "".join(
-        [value for key, value in locals().items() if key.startswith("text_features")]
-    )
 
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
@@ -325,13 +348,19 @@ def main(
             df=df_s4,
             y=Y,
             text_feature=text_feature,
+            textual_features=textual_features,
             categorical_features=categorical_features,
             test_size=0.1,
         )
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(
-                get_test_data(), Y, text_feature, categorical_features, add_codes=False
+                get_test_data(),
+                Y,
+                text_feature,
+                textual_features,
+                categorical_features,
+                add_codes=False,
             ),
             axis=0,
         )
@@ -340,7 +369,9 @@ def main(
             df_train = df_train_s4
         else:
             df_train_s3 = pd.concat(
-                preprocessor.preprocess(df_s3, Y, text_feature, categorical_features, recase=True),
+                preprocessor.preprocess(
+                    df_s3, Y, text_feature, textual_features, categorical_features, recase=True
+                ),
                 axis=0,
             )
             # All train data together

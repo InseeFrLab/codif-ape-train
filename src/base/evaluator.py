@@ -26,6 +26,7 @@ class Evaluator(ABC):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         k: int,
     ) -> Dict[int, List[Tuple[str, float]]]:
@@ -37,6 +38,8 @@ class Evaluator(ABC):
             df (pd.DataFrame): Evaluation DataFrame.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             k (int): Number of predictions.
@@ -52,6 +55,7 @@ class Evaluator(ABC):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         k: int,
     ) -> pd.DataFrame:
@@ -63,6 +67,8 @@ class Evaluator(ABC):
             df (pd.DataFrame): Evaluation DataFrame.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             k (int): Number of predictions.
@@ -71,7 +77,7 @@ class Evaluator(ABC):
             pd.DataFrame: DataFrame of true and predicted labels at
                 each level of the NAF classification.
         """
-        preds = self.get_preds(df, y, text_feature, categorical_features, k)
+        preds = self.get_preds(df, y, text_feature, textual_features, categorical_features, k)
         level = 5  # Hard code for now because we only predict level 5
 
         predicted_classes = {
@@ -197,6 +203,7 @@ class Evaluator(ABC):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         k: int,
     ) -> Dict[str, float]:
@@ -207,6 +214,8 @@ class Evaluator(ABC):
             df (pd.DataFrame): Evaluation DataFrame.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             k (int): Number of predictions.
@@ -214,6 +223,8 @@ class Evaluator(ABC):
         Returns:
             Dict[str, float]: Dictionary of evaluation metrics.
         """
-        all_preds_df = self.get_aggregated_preds(df, y, text_feature, categorical_features, k)
+        all_preds_df = self.get_aggregated_preds(
+            df, y, text_feature, textual_features, categorical_features, k
+        )
         accuracies = self.compute_accuracies(all_preds_df, 5)
         return accuracies
