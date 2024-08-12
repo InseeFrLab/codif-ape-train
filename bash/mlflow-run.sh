@@ -68,8 +68,6 @@ mlflow run ~/work/codif-ape-train/ \
     -P embedding_dim_4=$DIM4 \
     -P embedding_dim_5=$DIM5 \
     -P embedding_dim_6=$DIM6 \
-    -P embedding_dim_7=$DIM7 \
-    -P embedding_dim_8=$DIM8 \
     -P model_class=$MODEL_CLASS \
     -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
     -P start_year=$START_YEAR

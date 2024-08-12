@@ -266,8 +266,6 @@ def main(
     embedding_dim_4: int,
     embedding_dim_5: int,
     embedding_dim_6: int,
-    embedding_dim_7: int,
-    embedding_dim_8: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,
