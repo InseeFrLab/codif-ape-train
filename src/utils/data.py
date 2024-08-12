@@ -151,6 +151,9 @@ def get_test_data() -> pd.DataFrame:
     df["activ_nat_et"] = df["activ_nat_et"].replace("", "NaN")
     df["cj"] = df["cj"].replace("", "NaN")
     df["activ_perm_et"] = df["activ_perm_et"].replace("", "NaN")
+    # need to add activ_sec_agri_et in data next time
+    if "activ_sec_agri_et" not in df:
+        df["activ_sec_agri_et"] = ""
 
     # Surface variable to float
     df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
