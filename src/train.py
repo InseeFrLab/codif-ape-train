@@ -375,6 +375,7 @@ def main(
                 df_train,
                 Y,
                 text_feature,
+                textual_features,
                 categorical_features,
                 params,
                 embedding_dims=embedding_dims,
