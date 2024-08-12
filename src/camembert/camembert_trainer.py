@@ -52,6 +52,7 @@ class CamembertTrainer(abc.ABC):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         params: Dict,
         embedding_dims: Optional[List[int]] = None,
@@ -69,14 +70,17 @@ class CamembertTrainer(abc.ABC):
 
         # Train/val split
         features = [text_feature]
+        if textual_features is not None:
+            features += textual_features
         if categorical_features is not None:
             features += categorical_features
 
         df = df.rename(columns={text_feature: "text", y: "labels"})
+        df["textual_inputs"] = df[textual_features].apply(lambda x: x.tolist(), axis=1)
         df["categorical_inputs"] = df[categorical_features].apply(lambda x: x.tolist(), axis=1)
         df = df.drop(columns=categorical_features)
         train_df, val_df = train_test_split(
-            df[["text", "labels", "categorical_inputs"]],
+            df[["text", "labels", "textual_inputs", "categorical_inputs"]],
             test_size=1 - train_proportion,
             random_state=0,
             shuffle=True,

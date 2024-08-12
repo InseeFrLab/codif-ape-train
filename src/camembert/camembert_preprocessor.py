@@ -62,7 +62,7 @@ class CamembertPreprocessor(Preprocessor):
         recase: bool = False,
     ) -> pd.DataFrame:
         """
-        Cleans the categorical features for pd.DataFrame `df`.
+        Cleans the other textual features for pd.DataFrame `df`.
 
         Args:
             df (pd.DataFrame): DataFrame.

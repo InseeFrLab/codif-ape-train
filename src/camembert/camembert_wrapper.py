@@ -21,9 +21,10 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
     CamembertWrapper class.
     """
 
-    def __init__(self, text_feature, categorical_features):
+    def __init__(self, text_feature, textual_features, categorical_features):
         self.preprocessor = CamembertPreprocessor()
         self.text_feature = text_feature
+        self.textual_features = textual_features
         self.categorical_features = categorical_features
         self.model_class = self.get_model_class()
         self.reverse_label_mapping = {v: k for k, v in mappings["APE_NIV5"].items()}
@@ -71,12 +72,15 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
         Returns:
             A tuple containing the k most likely codes to the query.
         """
+        if self.textual_features is None:
+            self.load_context(context)
+
         if self.categorical_features is None:
             self.load_context(context)
 
         # Clean text feature
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.categorical_features),
+            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.textual_features + self.categorical_features),
             text_feature=self.text_feature,
             method="evaluation",
             recase=False,
@@ -88,9 +92,11 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
 
         # Rename text column
         df = df.rename(columns={self.text_feature: "text"})
+        # Create textual inputs feature
+        df["textual_inputs"] = df[self.textual_features].apply(lambda x: x.tolist(), axis=1)
         # Create categorical inputs feature
         df["categorical_inputs"] = df[self.categorical_features].apply(lambda x: x.tolist(), axis=1)
-        df = df[["text", "categorical_inputs"]]
+        df = df[["text", "textual_inputs", "categorical_inputs"]]
 
         if params is None:
             params = {}

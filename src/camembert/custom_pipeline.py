@@ -47,12 +47,39 @@ class CustomPipeline(Pipeline):
         tokenized_text = self.tokenizer(
             text_input, truncation=True, padding=True, return_tensors="pt"
         )
+
+        # Extract and process the additional textual inputs
+        additional_texts = input_copy.pop("textual_inputs", [])  # List of additional texts
+        additional_text_embeds = []
+        additional_attention_masks = []
+        additional_token_type_ids = []
+        additional_position_ids = []
+        additional_head_masks = []
+
+        for additional_text in additional_texts:
+            tokenized_additional_text = self.tokenizer(
+                additional_text, truncation=True, padding=True, return_tensors="pt"
+            )
+            additional_text_embeds.append(tokenized_additional_text["input_ids"])
+            additional_attention_masks.append(tokenized_additional_text["attention_mask"])
+            additional_token_type_ids.append(tokenized_additional_text.get("token_type_ids"))
+            additional_position_ids.append(tokenized_additional_text.get("position_ids"))
+            additional_head_masks.append(tokenized_additional_text.get("head_mask"))
+
         # Convert categorical inputs to LongTensors
-        categorical_inputs = torch.LongTensor(input_["categorical_inputs"])
+        categorical_inputs = torch.LongTensor(input_copy["categorical_inputs"])
         # Add batch dimension if necessary
         if categorical_inputs.dim() == 1:
             categorical_inputs = categorical_inputs.unsqueeze(0)
-        return tokenized_text | {"categorical_inputs": categorical_inputs}
+
+        return tokenized_text | {
+            "categorical_inputs": categorical_inputs,
+            "additional_text_embeds": additional_text_embeds,
+            "additional_attention_masks": additional_attention_masks,
+            "additional_token_type_ids": additional_token_type_ids,
+            "additional_position_ids": additional_position_ids,
+            "additional_head_masks": additional_head_masks,
+        }
 
     def _forward(self, input_tensors: Dict) -> ModelOutput:
         """

@@ -64,6 +64,8 @@ class FastTextPreprocessor(Preprocessor):
 
         # Train/test split
         features = [text_feature]
+        if textual_features is not None:
+            features += textual_features
         if categorical_features is not None:
             features += categorical_features
 
