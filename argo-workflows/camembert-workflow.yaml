@@ -17,28 +17,24 @@ spec:
           { "EPOCHS": 5,
             "LR": 5e-5,
             "MODEL_CLASS": "camembert_embedded",
-            "DIM1": 3,
+            "DIM1": 1,
             "DIM2": 3,
             "DIM3": 3,
-            "DIM4": 3,
+            "DIM4": 1,
             "DIM5": 3,
-            "DIM6": 3,
-            "DIM7": 3,
-            "DIM8": 1,
+            "DIM6": 1,
             "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
             "START_YEAR": 2023
           },
           { "EPOCHS": 5,
             "LR": 5e-5,
             "MODEL_CLASS": "camembert_embedded",
-            "DIM1": 3,
+            "DIM1": 1,
             "DIM2": 3,
             "DIM3": 3,
-            "DIM4": 3,
+            "DIM4": 1,
             "DIM5": 3,
-            "DIM6": 3,
-            "DIM7": 3,
-            "DIM8": 1,
+            "DIM6": 1,
             "PRE_TRAINING_WEIGHTS": "camembert/camembert-base",
             "START_YEAR": 2023
           }
@@ -76,10 +72,6 @@ spec:
                   value: "{{item.DIM5}}"
                 - name: DIM6
                   value: "{{item.DIM6}}"
-                - name: DIM7
-                  value: "{{item.DIM7}}"
-                - name: DIM8
-                  value: "{{item.DIM8}}"
                 - name: PRE_TRAINING_WEIGHTS
                   value: "{{item.PRE_TRAINING_WEIGHTS}}"
                 - name: START_YEAR
@@ -110,8 +102,6 @@ spec:
           - name: DIM4
           - name: DIM5
           - name: DIM6
-          - name: DIM7
-          - name: DIM8
           - name: PRE_TRAINING_WEIGHTS
           - name: START_YEAR
       container:
@@ -151,8 +141,6 @@ spec:
                           -P embedding_dim_4={{inputs.parameters.DIM4}} \
                           -P embedding_dim_5={{inputs.parameters.DIM5}} \
                           -P embedding_dim_6={{inputs.parameters.DIM6}} \
-                          -P embedding_dim_7={{inputs.parameters.DIM7}} \
-                          -P embedding_dim_8={{inputs.parameters.DIM8}} \
                           -P model_class={{inputs.parameters.MODEL_CLASS}} \
                           -P pre_training_weights={{inputs.parameters.PRE_TRAINING_WEIGHTS}} \
                           -P start_year={{inputs.parameters.START_YEAR}}

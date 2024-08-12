@@ -158,54 +158,40 @@ parser.add_argument(
 parser.add_argument(
     "--embedding_dim_1",
     type=int,
-    default=1,
-    help="Embedding dimension for activ_nat_lib_et",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_2",
-    type=int,
-    default=1,
-    help="Embedding dimension for activ_sec_agri_et",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_3",
-    type=int,
     default=3,
     help="Embedding dimension for type",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_4",
+    "--embedding_dim_2",
     type=int,
     default=3,
     help="Embedding dimension for nature",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_5",
+    "--embedding_dim_3",
     type=int,
     default=1,
     help="Embedding dimension for surface",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_6",
+    "--embedding_dim_4",
     type=int,
     default=3,
     help="Embedding dimension for event",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_7",
+    "--embedding_dim_5",
     type=int,
     default=3,
     help="Embedding dimension for cj",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_8",
+    "--embedding_dim_6",
     type=int,
     default=1,
     help="Embedding dimension for permanence",
@@ -464,13 +450,13 @@ def main(
         else:
             raise KeyError("Model type is not valid.")
 
-        accuracies = evaluator.evaluate(df_test, Y, text_feature, categorical_features, 5)
+        accuracies = evaluator.evaluate(df_test, Y, text_feature, textual_features, categorical_features, 5)
 
         # Log metrics
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
-        accuracies = evaluator.evaluate(df_test_ls, Y, text_feature, categorical_features, 5)
+        accuracies = evaluator.evaluate(df_test_ls, Y, text_feature, textual_features, categorical_features, 5)
 
         # Log additional metrics
         for metric, value in accuracies.items():

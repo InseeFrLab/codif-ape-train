@@ -101,7 +101,7 @@ class CamembertPreprocessor(Preprocessor):
             df = categorize_surface(df, "activ_surf_et")
         df[categorical_features] = df[categorical_features].fillna("NaN")
         for variable in categorical_features:
-            if variable not in ["activ_surf_et", "activ_nat_lib_et"]:
+            if variable != "activ_surf_et":
                 # Mapping already done for this variable
                 df[variable] = df[variable].apply(mappings[variable].get)
         if y is not None:
@@ -146,7 +146,9 @@ class CamembertPreprocessor(Preprocessor):
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
-        features = [text_feature] + textual_features
+        features = [text_feature]
+        if textual_features is not None:
+            features += textual_features
         if categorical_features is not None:
             features += categorical_features
 
