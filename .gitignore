@@ -216,3 +216,5 @@ data/
 !doc/unece-conf/slides/data/
 
 log_files/
+
+src/camembert/

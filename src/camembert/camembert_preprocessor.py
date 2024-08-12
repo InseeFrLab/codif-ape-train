@@ -53,6 +53,33 @@ class CamembertPreprocessor(Preprocessor):
 
         return df
 
+    def clean_textual_features(
+        self,
+        df: pd.DataFrame,
+        y: str,
+        textual_features: List[str],
+        method: str,
+        recase: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Cleans the categorical features for pd.DataFrame `df`.
+
+        Args:
+            df (pd.DataFrame): DataFrame.
+            y (str): Name of the variable to predict.
+            textual_features (List[str]): Names of the other textual features.
+            method (str): The method when the function is used (training or
+                evaluation).
+            recase (bool): if True, try applying standard casing.
+
+        Returns:
+            df (pd.DataFrame): DataFrame.
+        """
+        for textual_feature in textual_features:
+            self.clean_lib(df, textual_feature, method, recase)
+
+        return df
+
     @staticmethod
     def clean_categorical_features(
         df: pd.DataFrame, categorical_features: List[str], y: Optional[str] = None
@@ -87,6 +114,7 @@ class CamembertPreprocessor(Preprocessor):
         df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]] = None,
         categorical_features: Optional[List[str]] = None,
         oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
@@ -101,6 +129,7 @@ class CamembertPreprocessor(Preprocessor):
             df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (List[str]): Names of the other textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             oversampling (Optional[List[str]]): Parameters for oversampling.
@@ -113,10 +142,11 @@ class CamembertPreprocessor(Preprocessor):
             evaluation and "guichet unique"
         """
         df = self.clean_lib(df, text_feature, "training", recase=recase)
+        df = self.clean_textual_features(df, textual_features, "training", recase=recase)
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
-        features = [text_feature]
+        features = [text_feature] + textual_features
         if categorical_features is not None:
             features += categorical_features
 

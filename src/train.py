@@ -396,7 +396,7 @@ def main(
                 embedding_dims=embedding_dims,
             )
         else:
-            model = trainer.train(df_train, Y, text_feature, categorical_features, params)
+            model = trainer.train(df_train, Y, text_feature, textual_features, categorical_features, params)
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         inference_params = {
@@ -418,7 +418,7 @@ def main(
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
-                python_model=framework_classes["wrapper"](text_feature, categorical_features),
+                python_model=framework_classes["wrapper"](text_feature, textual_features, categorical_features),
                 artifacts=artifacts,
                 signature=signature,
             )
