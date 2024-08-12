@@ -25,6 +25,7 @@ class FastTextTrainer(Trainer):
         df: pd.DataFrame,
         y: str,
         text_feature: str,
+        textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
         params: Dict,
     ) -> fasttext.FastText:
@@ -35,6 +36,8 @@ class FastTextTrainer(Trainer):
             df (pd.DataFrame): Training data.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
+            textual_features (Optional[List[str]]): Names of the
+                textual features.
             categorical_features (Optional[List[str]]): Names of the
                 categorical features.
             params (Dict): Parameters for the fastText classifier.

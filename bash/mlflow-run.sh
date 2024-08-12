@@ -18,7 +18,7 @@ LOSS=ova
 # Database arguments
 Y=apet_finale
 PREFIX=__label__
-TEXT_FEATURE=libelle_activite_apet
+TEXT_FEATURE=libelle_activite
 TEXTUAL_FEATURE1=activ_nat_lib_et
 TEXTUAL_FEATURE2=activ_sec_agri_et
 FEATURE1=liasse_type

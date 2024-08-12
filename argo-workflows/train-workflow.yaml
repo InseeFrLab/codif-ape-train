@@ -135,7 +135,7 @@ spec:
           - name: PREFIX
             value: __label__
           - name: TEXT_FEATURE
-            value: libelle_activite_apet
+            value: libelle_activite
           - name: TEXTUAL_FEATURE1
             value: activ_nat_lib_et
           - name: TEXTUAL_FEATURE2

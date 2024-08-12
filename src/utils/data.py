@@ -30,7 +30,7 @@ def get_root_path() -> Path:
 
 
 def get_sirene_4_data(
-    path: str = "projet-ape/extractions/20240321_sirene4.parquet",
+    path: str = "projet-ape/extractions/20240812_sirene4.parquet",
 ) -> pd.DataFrame:
     """
     Get Sirene 4 data.
@@ -80,7 +80,7 @@ def get_sirene_3_data(
             "NAT_SICORE": "activ_nat_et",
             "SURF": "activ_surf_et",
             "APE_SICORE": "apet_finale",
-            "LIB_SICORE": "libelle_activite_apet",
+            "LIB_SICORE": "libelle_activite",
         }
     )
     # Create cj column
@@ -134,7 +134,7 @@ def get_test_data() -> pd.DataFrame:
     df = df.rename(
         columns={
             "apet_manual": "apet_finale",
-            "text_description": "libelle_activite_apet",
+            "text_description": "libelle_activite",
             "event": "evenement_type",
             "surface": "activ_surf_et",
             "nature": "activ_nat_et",
