@@ -102,20 +102,20 @@ parser.add_argument(
     help="Description of company's activity",
     required=True,
 )
-parser.add_argument(
-    "--textual_features_1",
-    type=str,
-    default="activ_nat_lib_et",
-    help="Other nature of observation description",
-    required=True,
-)
-parser.add_argument(
-    "--textual_features_2",
-    type=str,
-    default="activ_sec_agri_et",
-    help="Additional description of company's agricultural activities",
-    required=True,
-)
+# parser.add_argument(
+#     "--textual_features_1",
+#     type=str,
+#     default="activ_nat_lib_et",
+#     help="Other nature of observation description",
+#     required=True,
+# )
+# parser.add_argument(
+#     "--textual_features_2",
+#     type=str,
+#     default="activ_sec_agri_et",
+#     help="Additional description of company's agricultural activities",
+#     required=True,
+# )
 parser.add_argument(
     "--categorical_features_1",
     type=str,
@@ -256,8 +256,8 @@ def main(
     loss: str,
     label_prefix: str,
     text_feature: str,
-    textual_features_1: str,
-    textual_features_2: str,
+    # textual_features_1: str,
+    # textual_features_2: str,
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
