@@ -51,7 +51,11 @@ parser.add_argument(
     type=int,
     default=180,
     help="Size of word vectors",
-    required=True,
+    re
+    quired=True,
+)
+parser.add_argument(
+    "--ws", type=int, default=5, help="size of the context window"
 )
 parser.add_argument(
     "--lr", type=float, default=0.2, metavar="LR", help="Learning rate (default: 0.2)"
