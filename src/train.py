@@ -245,6 +245,7 @@ def main(
     run_name: str,
     Y: str,
     dim: int,
+    ws: int,
     lr: float,
     epoch: int,
     wordNgrams: int,
