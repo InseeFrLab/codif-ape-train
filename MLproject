@@ -19,8 +19,8 @@ entry_points:
       loss: {type: str, default: ova}
       label_prefix: {type: str, default: __label__}
       text_feature: {type: str, default: LMNP}
-      textual_features_1: {type: str, default: Commerce de détail}
-      textual_features_2: {type: str, default: Elevage de chiots}
+      textual_features_1: {type: str, default: ""}
+      textual_features_2: {type: str, default: ""}
       categorical_features_1: {type: str, default: AUTO}
       categorical_features_2: {type: str, default: NAT_SICORE}
       categorical_features_3: {type: str, default: SURF}
