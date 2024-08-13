@@ -142,7 +142,7 @@ class CamembertPreprocessor(Preprocessor):
             evaluation and "guichet unique"
         """
         df = self.clean_lib(df, text_feature, "training", recase=recase)
-        df = self.clean_textual_features(df, textual_features, "training", recase=recase)
+        df = self.clean_textual_features(df, textual_features, "training", recase=recase, y=y)
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
