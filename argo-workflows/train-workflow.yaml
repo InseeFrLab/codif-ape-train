@@ -9,7 +9,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "WS": 12, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 7, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2024 }
+            { "DIM": 180, "WS": 24, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 7, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2024 }
             ]'
 
   templates:
@@ -100,8 +100,6 @@ spec:
                           -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
                           -P text_feature=$TEXT_FEATURE \
-                          -P textual_features_1=$TEXTUAL_FEATURE1 \
-                          -P textual_features_2=$TEXTUAL_FEATURE2 \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
