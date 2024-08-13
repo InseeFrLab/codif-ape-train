@@ -54,6 +54,8 @@ mlflow run ~/work/codif-ape-train/ \
     -P loss=$LOSS \
     -P label_prefix=$PREFIX \
     -P text_feature=$TEXT_FEATURE1 \
+    -P textual_features_1=$TEXT_FEATURE1 \
+    -P textual_features_2=$TEXT_FEATURE2 \
     -P categorical_features_1=$FEATURE1 \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \

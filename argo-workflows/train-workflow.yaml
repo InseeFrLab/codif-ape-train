@@ -100,6 +100,8 @@ spec:
                           -P loss={{inputs.parameters.LOSS}} \
                           -P label_prefix=$PREFIX \
                           -P text_feature=$TEXT_FEATURE \
+                          -P textual_features_1=$TEXTUAL_FEATURE1 \
+                          -P textual_features_2=$TEXTUAL_FEATURE2 \
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
@@ -138,6 +140,10 @@ spec:
             value: __label__
           - name: TEXT_FEATURE
             value: libelle_activite
+          - name: TEXTUAL_FEATURE1
+            value: activ_nat_lib_et
+          - name: TEXTUAL_FEATURE2
+            value: activ_sec_agri_et
           - name: FEATURE1
             value: liasse_type
           - name: FEATURE2
