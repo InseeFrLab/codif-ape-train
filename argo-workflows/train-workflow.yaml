@@ -9,7 +9,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2023 }
+            { "DIM": 180, "WS": 12, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 7, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2024 }
             ]'
 
   templates:
@@ -28,6 +28,8 @@ spec:
               parameters:
                 - name: DIM
                   value: "{{item.DIM}}"
+                - name: WS
+                  value: "{{item.WS}}"
                 - name: LR
                   value: "{{item.LR}}"
                 - name: EPOCHS
@@ -64,6 +66,7 @@ spec:
       inputs:
         parameters:
           - name: DIM
+          - name: WS
           - name: LR
           - name: EPOCHS
           - name: WORDNGRAMS
@@ -86,6 +89,7 @@ spec:
                           -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
                           -P Y=$Y \
                           -P dim={{inputs.parameters.DIM}} \
+                          -P ws={{inputs.parameters.WS}} \
                           -P lr={{inputs.parameters.LR}} \
                           -P epoch={{inputs.parameters.EPOCHS}} \
                           -P wordNgrams={{inputs.parameters.WORDNGRAMS}} \
