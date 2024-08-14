@@ -9,7 +9,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "WS": 24, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 7, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2024 }
+            { "DIM": 260, "WS": 7, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 7, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2023 }
             ]'
 
   templates:
