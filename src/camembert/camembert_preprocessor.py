@@ -56,7 +56,6 @@ class CamembertPreprocessor(Preprocessor):
     def clean_textual_features(
         self,
         df: pd.DataFrame,
-        y: str,
         textual_features: List[str],
         method: str,
         recase: bool = False,
@@ -66,7 +65,6 @@ class CamembertPreprocessor(Preprocessor):
 
         Args:
             df (pd.DataFrame): DataFrame.
-            y (str): Name of the variable to predict.
             textual_features (List[str]): Names of the other textual features.
             method (str): The method when the function is used (training or
                 evaluation).
@@ -142,7 +140,7 @@ class CamembertPreprocessor(Preprocessor):
             evaluation and "guichet unique"
         """
         df = self.clean_lib(df, text_feature, "training", recase=recase)
-        df = self.clean_textual_features(df, textual_features, "training", recase=recase, y=y)
+        df = self.clean_textual_features(df, textual_features, "training", recase=recase)
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
