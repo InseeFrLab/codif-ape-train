@@ -78,7 +78,8 @@ class CamembertTrainer(abc.ABC):
         df = df.rename(columns={text_feature: "text", y: "labels"})
         df["textual_inputs"] = df[textual_features].apply(lambda x: x.tolist(), axis=1)
         df["categorical_inputs"] = df[categorical_features].apply(lambda x: x.tolist(), axis=1)
-        df = df.drop(columns=categorical_features)
+        additional_features = textual_features + categorical_features
+        df = df.drop(columns=additional_features)
         train_df, val_df = train_test_split(
             df[["text", "labels", "textual_inputs", "categorical_inputs"]],
             test_size=1 - train_proportion,

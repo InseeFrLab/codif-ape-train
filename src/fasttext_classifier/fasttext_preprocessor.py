@@ -54,7 +54,7 @@ class FastTextPreprocessor(Preprocessor):
                 evaluation.
         """
         df[textual_features] = df[textual_features].fillna(value="NaN")
-        # Concatenate all textual features next to the main text
+        # Concatenate all textual features next to the main text feature
         df[text_feature] = df[textual_features].agg(
             lambda x: " ".join("[" + x.index + "] " + x), axis=1
         )
