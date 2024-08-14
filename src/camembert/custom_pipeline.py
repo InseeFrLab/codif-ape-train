@@ -37,7 +37,7 @@ class CustomPipeline(Pipeline):
 
         Args:
             input_ (Dict): The text(s) to classify along with
-                categorical inputs in a dict.
+                textual and categorical inputs in a dict.
 
         Returns:
             Dict: The inputs to feed to the model.

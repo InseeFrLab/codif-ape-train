@@ -29,18 +29,9 @@ class CamembertTrainer(abc.ABC):
 
     def tokenize(self, examples):
         """
-        Tokenize text and each item in textual_inputs separately.
+        Tokenize text field of observation.
         """
-        # Tokenize the main text
-        tokenized_output = self.tokenizer(examples["text"], truncation=True)
-
-        # Tokenize each element in textual_inputs separately
-        if "textual_inputs" in examples:
-            tokenized_textual_inputs = [self.tokenizer(input_text, truncation=True) for input_text in examples["textual_inputs"]]
-            # You may need to adjust how these tokenized inputs are formatted/stored
-            tokenized_output["textual_inputs"] = tokenized_textual_inputs
-
-        return tokenized_output
+        return self.tokenizer(examples["text"], truncation=True)
 
     def set_model(
         self,
@@ -85,6 +76,14 @@ class CamembertTrainer(abc.ABC):
             features += categorical_features
 
         df = df.rename(columns={text_feature: "text", y: "labels"})
+        # Concatenate the main text and textual_inputs into the text column
+        # if textual_features:
+        #     # If textual_features are provided, create a list of lists of strings for text
+        #     df["text"] = df.apply(lambda row: [row["text"]] + row[textual_features].tolist(), axis=1)
+        # else:
+        #     # If no textual_features, keep text as a list of strings
+        #     df["text"] = df["text"].apply(lambda x: [x])
+
         df["textual_inputs"] = df[textual_features].apply(lambda x: x.tolist(), axis=1)
         df["categorical_inputs"] = df[categorical_features].apply(lambda x: x.tolist(), axis=1)
         additional_features = textual_features + categorical_features
