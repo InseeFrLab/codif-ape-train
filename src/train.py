@@ -325,7 +325,7 @@ def main(
         t = time.time()
         # Load data
         # Sirene 4
-        df_s4 = get_sirene_4_data(revision="NAF2025").sample(frac=0.001, random_state=42)
+        df_s4 = get_sirene_4_data(revision="NAF2025")
         # Sirene 3
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
 

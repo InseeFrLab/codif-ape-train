@@ -87,7 +87,9 @@ class FastTextPreprocessor(Preprocessor):
         # Adding missing APE codes in the train database by adding the official label as
         # text feature
         if add_codes:
-            df_train = self.add_missing_codes(df_train, df_naf, y, text_feature)
+            df_train = self.add_missing_codes(
+                df_train, df_naf, y, text_feature, textual_features, categorical_features
+            )
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
@@ -193,15 +195,27 @@ class FastTextPreprocessor(Preprocessor):
 
         return pd.concat([df, df_oversampled])
 
-    def add_missing_codes(self, df: pd.DataFrame, df_naf: pd.DataFrame, y: str, text_feature: str):
+    def add_missing_codes(
+        self,
+        df: pd.DataFrame,
+        df_naf: pd.DataFrame,
+        y: str,
+        text_feature: str,
+        textual_features: list,
+        categorical_features: list,
+    ):
         """
-        Oversamples the minority classes in a pandas DataFrame to achieve a more balanced dataset.
+        Adds missing APE codes in the train database by adding the official label as text feature.
 
         Args:
+
             df (pd.DataFrame): The input DataFrame to be oversampled.
-            threshold (int): The minimum number of samples for each class. Classes with fewer
-                samples than the threshold will be oversampled.
+            df_naf (pd.DataFrame): The DataFrame containing all APE codes and labels.
             y (str): The name of the column containing the class labels.
+            text_feature (str): The name of the text feature.
+            textual_features (list): The list of textual features.
+            categorical_features (list): The list of categorical features.
+
 
         Returns:
             pd.DataFrame: The oversampled DataFrame with a balanced distribution of classes.
@@ -215,5 +229,13 @@ class FastTextPreprocessor(Preprocessor):
             lambda row: " ".join(f"[{col}] {val}" for col, val in row.items() if val != ""), axis=1
         )
         df = pd.concat([df, fake_obs[[col for col in fake_obs.columns if col in df.columns]]])
+
+        if textual_features is not None:
+            for feature in textual_features:
+                df[feature] = df[feature].fillna(value="")
+        if categorical_features is not None:
+            for feature in categorical_features:
+                df[feature] = df[feature].fillna(value="NaN")
+
         print(f"\t*** {len(missing_codes)} missing codes have been added in the database...\n")
         return df
