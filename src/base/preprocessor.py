@@ -1,16 +1,17 @@
 """
 Preprocessor class.
 """
+
+import os
+import string
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import pyarrow.parquet as pq
-import string
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 from s3fs import S3FileSystem
-import os
 
 
 class Preprocessor(ABC):
@@ -64,7 +65,7 @@ class Preprocessor(ABC):
         # Adding APE codes at each level
         df["APE_NIV5"] = df[y]
         df_naf = pq.read_table(
-            "projet-ape/data/naf_extended.parquet",
+            "projet-ape/data/naf2025_extended.parquet",
             filesystem=S3FileSystem(
                 client_kwargs={"endpoint_url": f"https://{os.environ['AWS_S3_ENDPOINT']}"},
                 key=os.environ["AWS_ACCESS_KEY_ID"],
@@ -77,13 +78,12 @@ class Preprocessor(ABC):
         variables = [y] + [text_feature]
         if textual_features is not None:
             variables += textual_features
+            for feature in textual_features:
+                df[feature] = df[feature].fillna(value="")
         if categorical_features is not None:
             variables += categorical_features
             for feature in categorical_features:
-                if pd.api.types.is_float_dtype(df[feature]):
-                    pass
-                else:
-                    df[feature] = df[feature].fillna(value="NaN")
+                df[feature] = df[feature].fillna(value="NaN")
         df = df[variables + ["APE_NIV" + str(i) for i in range(1, 6) if str(i) not in [y[-1]]]]
         df = df.dropna(subset=[y] + [text_feature])
 

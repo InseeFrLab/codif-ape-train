@@ -1,19 +1,20 @@
 """
 Main script.
 """
+
+import argparse
 import os
 import time
-import argparse
-import yaml
+
 import mlflow
 import pandas as pd
+import yaml
 
-from constants import FRAMEWORK_CLASSES
-from utils.mappings import mappings
 from camembert.custom_pipeline import CustomPipeline
+from constants import FRAMEWORK_CLASSES
 from tests.test_main import run_test
-from utils.data import get_sirene_4_data, get_test_data, get_sirene_3_data
-
+from utils.data import get_sirene_3_data, get_sirene_4_data, get_test_data
+from utils.mappings import mappings
 
 parser = argparse.ArgumentParser(
     description="FastAPE 🚀 : Model for coding a company's main activity"
@@ -41,7 +42,7 @@ parser.add_argument(
 parser.add_argument(
     "--Y",
     type=str,
-    choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale"],
+    choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale", "nace2025"],
     default="APE_NIV5",
     help="Target name",
     required=True,
@@ -53,9 +54,7 @@ parser.add_argument(
     help="Size of word vectors",
     required=True,
 )
-parser.add_argument(
-    "--ws", type=int, default=5, help="size of the context window"
-)
+parser.add_argument("--ws", type=int, default=5, help="size of the context window")
 parser.add_argument(
     "--lr", type=float, default=0.2, metavar="LR", help="Learning rate (default: 0.2)"
 )
@@ -79,7 +78,7 @@ parser.add_argument(
     help="Minimal number of word occurrences (default: 3)",
 )
 parser.add_argument(
-    "--bucket", type=int, default=3, metavar="N", help="Number of buckets (default: 2000000)"
+    "--bucket", type=int, default=2000000, metavar="N", help="Number of buckets (default: 2000000)"
 )
 parser.add_argument(
     "--loss",
@@ -147,14 +146,14 @@ parser.add_argument(
 parser.add_argument(
     "--categorical_features_5",
     type=str,
-    default="cj",
+    default="CJ",
     help="CJ of the company",
     required=True,
 )
 parser.add_argument(
     "--categorical_features_6",
     type=str,
-    default="activ_perm_et",
+    default="CRT",
     help="Permanent or seasonal character of the activities of the company",
     required=True,
 )
@@ -385,7 +384,9 @@ def main(
                 embedding_dims=embedding_dims,
             )
         else:
-            model = trainer.train(df_train, Y, text_feature, textual_features, categorical_features, params)
+            model = trainer.train(
+                df_train, Y, text_feature, textual_features, categorical_features, params
+            )
         print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         inference_params = {
@@ -407,7 +408,9 @@ def main(
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
                 code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
-                python_model=framework_classes["wrapper"](text_feature, textual_features, categorical_features),
+                python_model=framework_classes["wrapper"](
+                    text_feature, textual_features, categorical_features
+                ),
                 artifacts=artifacts,
                 signature=signature,
             )
@@ -453,13 +456,17 @@ def main(
         else:
             raise KeyError("Model type is not valid.")
 
-        accuracies = evaluator.evaluate(df_test, Y, text_feature, textual_features, categorical_features, 5)
+        accuracies = evaluator.evaluate(
+            df_test, Y, text_feature, textual_features, categorical_features, 5
+        )
 
         # Log metrics
         for metric, value in accuracies.items():
             mlflow.log_metric(metric, value)
 
-        accuracies = evaluator.evaluate(df_test_ls, Y, text_feature, textual_features, categorical_features, 5)
+        accuracies = evaluator.evaluate(
+            df_test_ls, Y, text_feature, textual_features, categorical_features, 5
+        )
 
         # Log additional metrics
         for metric, value in accuracies.items():
