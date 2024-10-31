@@ -1,6 +1,3 @@
-# pylint: disable=C0301,C0114
-
-
 import re
 
 import numpy as np

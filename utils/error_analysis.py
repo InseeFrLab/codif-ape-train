@@ -1,16 +1,18 @@
 """
 Script to analyse Camembert errors.
 """
-from typing import List, Tuple
+
+import argparse
+import os
 import sys
+from typing import List, Tuple
 
 import hvac
-import os
 import mlflow
-from utils.data import get_test_data, get_file_system
-from sklearn.metrics import accuracy_score
 import pandas as pd
-import argparse
+from sklearn.metrics import accuracy_score
+
+from utils.data import get_file_system, get_test_data
 
 sys.path.append("src/")
 sys.path.append("codif-ape-train/src/")
