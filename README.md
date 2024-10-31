@@ -4,7 +4,7 @@ This project is dedicated to experimenting with the automatic coding of the NACE
 
 ## Prerequisites
 
-- Python 3.10
+- Python >= 3.10
 - Python libraries: see `requirements.txt`
 
 ## License
