@@ -1,13 +1,15 @@
 """
 Evaluator base class.
 """
+
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from utils.data import get_file_system
 import pyarrow.parquet as pq
+
+from utils.data import get_file_system
 
 
 class Evaluator(ABC):
@@ -97,7 +99,7 @@ class Evaluator(ABC):
         proba_df.set_index(liasse_nb, inplace=True)
 
         df_naf = pq.read_table(
-            "projet-ape/data/naf_extended.parquet",
+            "projet-ape/data/naf2025_extended.parquet",
             columns=[f"APE_NIV{i}" for i in range(1, level + 1)],
             filesystem=get_file_system(),
         ).to_pandas()

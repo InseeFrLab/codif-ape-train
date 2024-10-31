@@ -325,7 +325,7 @@ def main(
         t = time.time()
         # Load data
         # Sirene 4
-        df_s4 = get_sirene_4_data()
+        df_s4 = get_sirene_4_data(revision="NAF2025").sample(frac=0.001, random_state=42)
         # Sirene 3
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
 
@@ -342,7 +342,7 @@ def main(
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(
-                get_test_data(),
+                get_test_data(revision="NAF2025", y=Y),
                 Y,
                 text_feature,
                 textual_features,
@@ -476,7 +476,7 @@ def main(
         print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
 
         # Tests: dependent on categorical features
-        if "cj" not in categorical_features:
+        if "CJ" not in categorical_features:
             print("*** 4- Performing standard tests...\n")
             t = time.time()
             with open("src/tests/tests.yaml", "r", encoding="utf-8") as stream:

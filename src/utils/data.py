@@ -1,11 +1,11 @@
+import datetime
 import os
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 from s3fs import S3FileSystem
-from pathlib import Path
-import numpy as np
-import datetime
 
 
 def get_file_system() -> S3FileSystem:
@@ -30,7 +30,7 @@ def get_root_path() -> Path:
 
 
 def get_sirene_4_data(
-    path: str = "projet-ape/extractions/20240812_sirene4.parquet",
+    revision: str,
 ) -> pd.DataFrame:
     """
     Get Sirene 4 data.
@@ -42,9 +42,26 @@ def get_sirene_4_data(
         pd.DataFrame: Sirene 4 data.
     """
     fs = get_file_system()
+
+    if revision == "NAF2008":
+        path = "projet-ape/extractions/20240812_sirene4.parquet"
+    elif revision == "NAF2025":
+        path = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
     df = pq.read_table(path, filesystem=fs).to_pandas()
-    # Edit surface column
-    df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
+
+    df = df.rename(
+        columns={
+            "evenement_type": "EVT",
+            "cj": "CJ",
+            "activ_nat_et": "NAT",
+            "liasse_type": "TYP",
+            "activ_surf_et": "SRF",
+            "activ_perm_et": "CRT",
+        }
+    )
 
     return df
 
@@ -116,47 +133,64 @@ def filter_on_date(
     return df.loc[df["DATE"] >= start_date]
 
 
-def get_test_data() -> pd.DataFrame:
+def get_test_data(revision: str, y: str) -> pd.DataFrame:
     """
-    Returns test data from the 2024 annotated campaign
-    preprocessed and saved as a .parquet file.
+    Get test data.
+
+    Args:
+        revision (str): Revision of the test data. Either "NAF2008" or "NAF2025".
+        Y (str): Target variable.
 
     Returns:
         pd.DataFrame: Test data.
     """
     # Get test DataFrame
     fs = get_file_system()
-    test_data_path = "projet-ape/label-studio/annotation-campaign-2024/NAF2008/preprocessed/test_data_NAF2008.parquet"
+    if revision == "NAF2008":
+        test_data_path = "projet-ape/label-studio/annotation-campaign-2024/NAF2008/preprocessed/test_data_NAF2008.parquet"
+    elif revision == "NAF2025":
+        test_data_path = "projet-ape/label-studio/annotation-campaign-2024/rev-NAF2025/preprocessed/training_data_NAF2025.parquet"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
     df = pq.read_table(test_data_path, filesystem=fs).to_pandas()
 
     # Reformat dataframe to have column names consistent
     # with Sirene 4 data
     df = df.rename(
         columns={
-            "apet_manual": "apet_finale",
-            "text_description": "libelle_activite",
-            "event": "evenement_type",
-            "surface": "activ_surf_et",
-            "nature": "activ_nat_et",
-            "type_": "liasse_type",
+            "apet_manual": y,
+            "text_description": "libelle",
+            "event": "EVT",
+            "evenement_type": "EVT",
+            "cj": "CJ",
+            "surface": "SRF",
+            "activ_surf_et": "SRF",
+            "nature": "NAT",
+            "activ_nat_et": "NAT",
+            "liasse_type": "TYP",
+            "type_": "TYP",
+            "permanence": "CRT",
+            "activ_perm_et": "CRT",
             "other_nature_text": "activ_nat_lib_et",
-            "permanence": "activ_perm_et",
         }
     )
-
     # Drop rows with no APE code
-    df = df[df["apet_finale"] != ""]
+    df = df[df[y] != ""]
 
     # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
-    df["activ_nat_et"] = df["activ_nat_et"].replace("", "NaN")
-    df["cj"] = df["cj"].replace("", "NaN")
-    df["activ_perm_et"] = df["activ_perm_et"].replace("", "NaN")
-    # need to add activ_sec_agri_et in data next time
+    df["NAT"] = df["NAT"].replace("", "NaN")
+    df["CJ"] = df["CJ"].replace("", "NaN")
+    # df["CRT"] = df["CRT"].replace("", "NaN")
+    df["SRF"] = df["SRF"].str.replace("", "NaN")  # TODO: What if we use srf as float?
+
+    # TODO: need to add activ_sec_agri_et in data next time
     if "activ_sec_agri_et" not in df:
         df["activ_sec_agri_et"] = ""
 
-    # Surface variable to float
-    df["activ_surf_et"] = df["activ_surf_et"].replace("", np.nan).astype(float)
+    # TODO : need to add CRT in data next time
+    if "CRT" not in df:
+        df["CRT"] = "NaN"
 
     # Return test data
     return df
