@@ -6,8 +6,8 @@ ENTRY_POINT=main
 
 # Parameters
 DIM=180
-LR=5e-5
-EPOCHS=5
+LR=0.2
+EPOCHS=50
 WORDNGRAMS=3
 MINN=3
 MAXN=4
@@ -16,18 +16,18 @@ BUCKET=2000000
 LOSS=ova
 
 # Database arguments
-Y=apet_finale
+Y=nace2025
 PREFIX=__label__
-TEXT_FEATURE=libelle_activite
+TEXT_FEATURE=libelle
 TEXTUAL_FEATURE1=activ_nat_lib_et
 TEXTUAL_FEATURE2=activ_sec_agri_et
-FEATURE1=liasse_type
-FEATURE2=activ_nat_et
-FEATURE3=activ_surf_et
-FEATURE4=evenement_type
-FEATURE5=cj
-FEATURE6=activ_perm_et
-MODEL_CLASS=camembert_embedded
+FEATURE1=TYP
+FEATURE2=NAT
+FEATURE3=SRF
+FEATURE4=EVT
+FEATURE5=CJ
+FEATURE6=CRT
+MODEL_CLASS=fasttext
 DIM1=1
 DIM2=3
 DIM3=3
@@ -35,7 +35,7 @@ DIM4=1
 DIM5=3
 DIM6=1
 PRE_TRAINING_WEIGHTS=camembert/camembert-base
-START_YEAR=2023
+START_YEAR=2025
 
 mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
@@ -53,9 +53,9 @@ mlflow run ~/work/codif-ape-train/ \
     -P bucket=$BUCKET \
     -P loss=$LOSS \
     -P label_prefix=$PREFIX \
-    -P text_feature=$TEXT_FEATURE1 \
-    -P textual_features_1=$TEXT_FEATURE1 \
-    -P textual_features_2=$TEXT_FEATURE2 \
+    -P text_feature=$TEXT_FEATURE \
+    -P textual_features_1=$TEXTUAL_FEATURE1 \
+    -P textual_features_2=$TEXTUAL_FEATURE2 \
     -P categorical_features_1=$FEATURE1 \
     -P categorical_features_2=$FEATURE2 \
     -P categorical_features_3=$FEATURE3 \
