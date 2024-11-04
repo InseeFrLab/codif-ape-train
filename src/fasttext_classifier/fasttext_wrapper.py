@@ -2,7 +2,8 @@
 FastText wrapper for MLflow.
 """
 
-from typing import Tuple, Optional, Dict, Any
+from typing import Any, Dict, Optional, Tuple
+
 import fasttext
 import mlflow
 import pandas as pd
@@ -63,15 +64,19 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
             columns=[self.text_feature] + self.textual_features + self.categorical_features,
         )
 
-        df[self.textual_features] = df[self.textual_features].fillna(value="NaN")
-        df[self.text_feature] = df[self.textual_features].agg(
-            lambda x: " ".join("[" + x.index + "] " + x), axis=1
-        )
+        df[self.textual_features] = df[self.textual_features].fillna(value="")
 
-        df = self.preprocessor.clean_lib(
-            df=df,
-            text_feature=self.text_feature,
-            method="evaluation",
+        textual_features_cleaned = [
+            self.preprocessor.clean_lib(df[text].tolist())
+            for text in [self.text_feature] + self.textual_features
+        ]
+
+        df.loc[:, [self.text_feature] + self.textual_features] = list(
+            zip(*textual_features_cleaned)
+        )  # Transpose the list of lists
+
+        df[self.text_feature] = df[[self.text_feature] + self.textual_features].apply(
+            lambda row: " ".join(f"[{col}] {val}" for col, val in row.items() if val != ""), axis=1
         )
 
         df[self.categorical_features] = df[self.categorical_features].fillna(value="NaN")
