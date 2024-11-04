@@ -17,10 +17,6 @@ spec:
     - name: main
       dag:
         tasks:
-          # Task 0: Start pipeline
-          - name: start-pipeline
-            template: start-pipeline-wt
-          # Task 1: Preprocess images
           - name: run-training-with-params
             dependencies: [ start-pipeline ]
             template: run-training-wt
@@ -52,16 +48,7 @@ spec:
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
 
-    # Now task container templates are defined
-    # Worker template for task 0 : start-pipeline
-    - name: start-pipeline-wt
-      inputs:
-      container:
-        image: busybox
-        command: [ sh, -c ]
-        args: [ "echo Starting pipeline" ]
-
-    # Worker template for task-1 : train model with params
+    # Worker template for task-1
     - name: run-training-wt
       inputs:
         parameters:

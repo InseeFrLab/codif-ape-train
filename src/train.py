@@ -407,7 +407,7 @@ def main(
 
             mlflow.pyfunc.log_model(
                 artifact_path=run_name,
-                code_path=["src/fasttext_classifier/", "src/base/", "src/utils/"],
+                code_paths=["src/fasttext_classifier/", "src/base/", "src/utils/"],
                 python_model=framework_classes["wrapper"](
                     text_feature, textual_features, categorical_features
                 ),
