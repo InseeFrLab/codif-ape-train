@@ -28,13 +28,13 @@ FEATURE4=EVT
 FEATURE5=CJ
 FEATURE6=CRT
 MODEL_CLASS=fasttext
-DIM1=1
-DIM2=3
-DIM3=3
-DIM4=1
-DIM5=3
-DIM6=1
-PRE_TRAINING_WEIGHTS=camembert/camembert-base
+# DIM1=1
+# DIM2=3
+# DIM3=3
+# DIM4=1
+# DIM5=3
+# DIM6=1
+# PRE_TRAINING_WEIGHTS=camembert/camembert-base
 START_YEAR=2025
 
 mlflow run ~/work/codif-ape-train/ \
@@ -62,12 +62,13 @@ mlflow run ~/work/codif-ape-train/ \
     -P categorical_features_4=$FEATURE4 \
     -P categorical_features_5=$FEATURE5 \
     -P categorical_features_6=$FEATURE6 \
-    -P embedding_dim_1=$DIM1 \
-    -P embedding_dim_2=$DIM2 \
-    -P embedding_dim_3=$DIM3 \
-    -P embedding_dim_4=$DIM4 \
-    -P embedding_dim_5=$DIM5 \
-    -P embedding_dim_6=$DIM6 \
     -P model_class=$MODEL_CLASS \
-    -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
     -P start_year=$START_YEAR
+
+    # -P embedding_dim_1=$DIM1 \
+    # -P embedding_dim_2=$DIM2 \
+    # -P embedding_dim_3=$DIM3 \
+    # -P embedding_dim_4=$DIM4 \
+    # -P embedding_dim_5=$DIM5 \
+    # -P embedding_dim_6=$DIM6 \
+    # -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
