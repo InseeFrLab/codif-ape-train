@@ -40,6 +40,12 @@ parser.add_argument(
     help="Run name in MLflow",
 )
 parser.add_argument(
+    "--revision",
+    type=str,
+    default="NAF2008",
+    help="Run name in MLflow",
+)
+parser.add_argument(
     "--Y",
     type=str,
     choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale", "nace2025"],
