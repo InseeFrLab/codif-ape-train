@@ -242,6 +242,7 @@ def main(
     remote_server_uri: str,
     experiment_name: str,
     run_name: str,
+    revision: str,
     Y: str,
     dim: int,
     ws: int,
@@ -286,7 +287,7 @@ def main(
                 "remote_server_uri",
                 "experiment_name",
                 "run_name",
-                "Y",
+                "revision" "Y",
                 "model_class",
                 "text_feature",
                 "pre_training_weights",
@@ -325,7 +326,7 @@ def main(
         t = time.time()
         # Load data
         # Sirene 4
-        df_s4 = get_sirene_4_data(revision="NAF2025")
+        df_s4 = get_sirene_4_data(revision=revision)
         # Sirene 3
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
 
@@ -342,7 +343,7 @@ def main(
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(
-                get_test_data(revision="NAF2025", y=Y),
+                get_test_data(revision=revision, y=Y),
                 Y,
                 text_feature,
                 textual_features,

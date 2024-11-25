@@ -6,6 +6,7 @@ entry_points:
       remote_server_uri: {type: str, default: projet-ape-mlflow.user.lab.sspcloud.fr}
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
+      revision: {type: str, default: "NAF2008"}
       Y: {type: str, default: APE_NIV5}
       dim: {type: str, default: 180}
       ws: {type: str, default: 5}
@@ -43,6 +44,7 @@ entry_points:
             --remote_server_uri {remote_server_uri} \
             --experiment_name {experiment_name} \
             --run_name {run_name} \
+            --revision {revision} \
             --Y {Y} \
             --dim {dim} \
             --ws {ws} \

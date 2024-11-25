@@ -1,8 +1,8 @@
 #! /bin/bash
 export MLFLOW_TRACKING_URI=https://projet-ape-mlflow.user.lab.sspcloud.fr/
 export MLFLOW_S3_ENDPOINT_URL=https://minio.lab.sspcloud.fr
-export MLFLOW_EXPERIMENT_NAME='Experimentation'
-ENTRY_POINT=main
+export MLFLOW_EXPERIMENT_NAME='NACE2008'
+ENTRY_POINT=naf2008
 
 # Parameters
 DIM=180
@@ -16,7 +16,7 @@ BUCKET=2000000
 LOSS=ova
 
 # Database arguments
-Y=nace2025
+Y=apet_finale
 PREFIX=__label__
 TEXT_FEATURE=libelle
 TEXTUAL_FEATURE1=activ_nat_lib_et
@@ -42,6 +42,7 @@ mlflow run ~/work/codif-ape-train/ \
     --entry-point $ENTRY_POINT \
     -P remote_server_uri=$MLFLOW_TRACKING_URI \
     -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+    -P revision=$revision \
     -P Y=$Y \
     -P dim=$DIM \
     -P lr=$LR \
