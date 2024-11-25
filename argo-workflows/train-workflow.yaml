@@ -63,7 +63,7 @@ spec:
           - name: LOSS
           - name: START_YEAR
       container:
-        image: inseefrlab/codif-ape-train:main
+        image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\

@@ -43,7 +43,7 @@ parser.add_argument(
     "--revision",
     type=str,
     default="NAF2008",
-    help="Run name in MLflow",
+    help="Model output revision in MLflow",
 )
 parser.add_argument(
     "--Y",
