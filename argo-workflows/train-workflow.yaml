@@ -66,7 +66,7 @@ spec:
         image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
-        args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\
+        args: ["git clone -b naf2008 https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
                 mlflow run ~/work/codif-ape-train/ \
                           --env-manager=local \
