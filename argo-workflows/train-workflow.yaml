@@ -79,7 +79,6 @@ spec:
                           --entry-point $ENTRY_POINT \
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
                           -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
-                          -P revision={{inputs.parameters.REVISION}} \
                           -P Y=$Y \
                           -P dim={{inputs.parameters.DIM}} \
                           -P ws={{inputs.parameters.WS}} \
@@ -102,7 +101,8 @@ spec:
                           -P categorical_features_5=$FEATURE5 \
                           -P categorical_features_6=$FEATURE6 \
                           -P start_year={{inputs.parameters.START_YEAR}} \
-                          -P model_class={{inputs.parameters.MODEL_CLASS}}"
+                          -P model_class={{inputs.parameters.MODEL_CLASS}} \
+                          -P revision={{inputs.parameters.REVISION}} "
               ]
         env:
           # env var for s3 connexion
@@ -128,8 +128,6 @@ spec:
             value: Experimentation
           - name: ENTRY_POINT
             value: main
-          - name: "Y"
-            value: apet_finale
           - name: PREFIX
             value: __label__
           - name: TEXT_FEATURE

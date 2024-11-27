@@ -40,9 +40,9 @@ entry_points:
       start_year: {type: int, default: 2018}
 
     command: |
-          if [ "$revision" == "NAF2008" ]; then
+          if [ revision == "NAF2008" ]; then
               Y="apet_finale"
-          elif [ "$revision" == "NAF2025" ]; then
+          elif [ revision == "NAF2025" ]; then
               Y="nace2025"
           else
               echo "Valeur inconnue pour revision: $revision"
