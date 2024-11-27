@@ -46,6 +46,14 @@ parser.add_argument(
     help="Model output revision in MLflow",
 )
 parser.add_argument(
+    "--Y",
+    type=str,
+    choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale", "nace2025"],
+    default="APE_NIV5",
+    help="Target name",
+    required=True,
+)
+parser.add_argument(
     "--dim",
     type=int,
     default=180,
@@ -349,6 +357,7 @@ def main(
         df_test_ls = pd.concat(
             preprocessor.preprocess(
                 get_test_data(revision=revision, y=Y),
+                df_naf,
                 Y,
                 text_feature,
                 textual_features,
@@ -363,7 +372,13 @@ def main(
         else:
             df_train_s3 = pd.concat(
                 preprocessor.preprocess(
-                    df_s3, Y, text_feature, textual_features, categorical_features, recase=True
+                    df_s3,
+                    df_naf,
+                    Y,
+                    text_feature,
+                    textual_features,
+                    categorical_features,
+                    recase=True,
                 ),
                 axis=0,
             )
