@@ -41,7 +41,6 @@ mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
     --entry-point $ENTRY_POINT \
     -P remote_server_uri=$MLFLOW_TRACKING_URI \
-    -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
     -P revision=$revision \
     -P dim=$DIM \
     -P lr=$LR \
