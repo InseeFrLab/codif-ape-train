@@ -71,3 +71,5 @@ mlflow run ~/work/codif-ape-train/ \
     # -P embedding_dim_5=$DIM5 \
     # -P embedding_dim_6=$DIM6 \
     # -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
+    # -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+    # -P Y=$Y \
