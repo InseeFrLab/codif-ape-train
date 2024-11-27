@@ -13,7 +13,7 @@ import yaml
 from camembert.custom_pipeline import CustomPipeline
 from constants import FRAMEWORK_CLASSES
 from tests.test_main import run_test
-from utils.data import get_sirene_3_data, get_sirene_4_data, get_test_data
+from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data
 from utils.mappings import mappings
 
 parser = argparse.ArgumentParser(
@@ -336,11 +336,14 @@ def main(
         df_s4 = get_sirene_4_data(revision=revision)
         # Sirene 3
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
+        # Detailed NAF
+        df_naf = get_df_naf(revision=revision)
 
         # Preprocess data
         # Sirene 4
         df_train_s4, df_test = preprocessor.preprocess(
             df=df_s4,
+            df_naf=df_naf,
             y=Y,
             text_feature=text_feature,
             textual_features=textual_features,

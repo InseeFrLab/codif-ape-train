@@ -9,59 +9,73 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2025 }
+          { "REVISION": "NAF2008", "START_YEAR": 2008, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
             ]'
-
   templates:
-    # Entrypoint DAG template
     - name: main
+      # Entrypoint DAG template
       dag:
         tasks:
-          - name: run-training-with-params
-            template: run-training-wt
+          - name: train-model
+            template: run-training
             arguments:
               parameters:
-                - name: DIM
-                  value: "{{item.DIM}}"
-                - name: WS
-                  value: "{{item.WS}}"
-                - name: LR
-                  value: "{{item.LR}}"
-                - name: EPOCHS
-                  value: "{{item.EPOCHS}}"
-                - name: WORDNGRAMS
-                  value: "{{item.WORDNGRAMS}}"
-                - name: MINN
-                  value: "{{item.MINN}}"
-                - name: MAXN
-                  value: "{{item.MAXN}}"
-                - name: MINCOUNT
-                  value: "{{item.MINCOUNT}}"
-                - name: BUCKET
-                  value: "{{item.BUCKET}}"
-                - name: LOSS
-                  value: "{{item.LOSS}}"
-                - name: START_YEAR
-                  value: "{{item.START_YEAR}}"
-
-            # Pass the inputs to the task using "withParam"
+                - name: config
+                  value: "{{item}}"
             withParam: "{{workflow.parameters.training-conf-list}}"
+  # templates:
+
+  #   - name: main
+  #     dag:
+  #       tasks:
+  #         - name: run-training-naf2008-with-params
+  #           template: run-training-naf2008-wt
+  #           arguments:
+  #             parameters:
+  #               - name: DIM
+  #                 value: "{{item.DIM}}"
+  #               - name: WS
+  #                 value: "{{item.WS}}"
+  #               - name: LR
+  #                 value: "{{item.LR}}"
+  #               - name: EPOCHS
+  #                 value: "{{item.EPOCHS}}"
+  #               - name: WORDNGRAMS
+  #                 value: "{{item.WORDNGRAMS}}"
+  #               - name: MINN
+  #                 value: "{{item.MINN}}"
+  #               - name: MAXN
+  #                 value: "{{item.MAXN}}"
+  #               - name: MINCOUNT
+  #                 value: "{{item.MINCOUNT}}"
+  #               - name: BUCKET
+  #                 value: "{{item.BUCKET}}"
+  #               - name: LOSS
+  #                 value: "{{item.LOSS}}"
+  #               - name: START_YEAR
+  #                 value: "{{item.START_YEAR}}"
+  #               - name: REVISION
+  #                 value: NAF2008
+
+  #           # Pass the inputs to the task using "withParam"
+  #           withParam: "{{workflow.parameters.training-conf-list}}"
 
     # Worker template for task-1
-    - name: run-training-wt
-      inputs:
-        parameters:
-          - name: DIM
-          - name: WS
-          - name: LR
-          - name: EPOCHS
-          - name: WORDNGRAMS
-          - name: MINN
-          - name: MAXN
-          - name: MINCOUNT
-          - name: BUCKET
-          - name: LOSS
-          - name: START_YEAR
+    # - name: run-training-wt
+    #   inputs:
+    #     parameters:
+    #       - name: DIM
+    #       - name: WS
+    #       - name: LR
+    #       - name: EPOCHS
+    #       - name: WORDNGRAMS
+    #       - name: MINN
+    #       - name: MAXN
+    #       - name: MINCOUNT
+    #       - name: BUCKET
+    #       - name: LOSS
+    #       - name: START_YEAR
       container:
         image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
@@ -73,18 +87,18 @@ spec:
                           --entry-point $ENTRY_POINT \
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
                           -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
-                          -P revision=$revision \
+                          -P revision={{inputs.parameters.config.REVISION}} \
                           -P Y=$Y \
-                          -P dim={{inputs.parameters.DIM}} \
-                          -P ws={{inputs.parameters.WS}} \
-                          -P lr={{inputs.parameters.LR}} \
-                          -P epoch={{inputs.parameters.EPOCHS}} \
-                          -P wordNgrams={{inputs.parameters.WORDNGRAMS}} \
-                          -P minn={{inputs.parameters.MINN}} \
-                          -P maxn={{inputs.parameters.MAXN}} \
-                          -P minCount={{inputs.parameters.MINCOUNT}} \
-                          -P bucket={{inputs.parameters.BUCKET}} \
-                          -P loss={{inputs.parameters.LOSS}} \
+                          -P dim={{inputs.parameters.config.DIM}} \
+                          -P ws={{inputs.parameters.config.WS}} \
+                          -P lr={{inputs.parameters.config.LR}} \
+                          -P epoch={{inputs.parameters.config.EPOCHS}} \
+                          -P wordNgrams={{inputs.parameters.config.WORDNGRAMS}} \
+                          -P minn={{inputs.parameters.config.MINN}} \
+                          -P maxn={{inputs.parameters.config.MAXN}} \
+                          -P minCount={{inputs.parameters.config.MINCOUNT}} \
+                          -P bucket={{inputs.parameters.config.BUCKET}} \
+                          -P loss={{inputs.parameters.config.LOSS}} \
                           -P label_prefix=$PREFIX \
                           -P text_feature=$TEXT_FEATURE \
                           -P textual_features_1=$TEXTUAL_FEATURE1 \
@@ -97,7 +111,6 @@ spec:
                           -P categorical_features_6=$FEATURE6 \
                           -P start_year={{inputs.parameters.START_YEAR}} \
                           -P model_class=fasttext"
-
               ]
         env:
           # env var for s3 connexion
@@ -123,8 +136,6 @@ spec:
             value: Experimentation
           - name: ENTRY_POINT
             value: main
-          - name: revision
-            value: NAF2008
           - name: "Y"
             value: apet_finale
           - name: PREFIX

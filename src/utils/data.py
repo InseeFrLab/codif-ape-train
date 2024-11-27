@@ -240,3 +240,29 @@ def categorize_surface(
     df_copy[surface_feature_name] = df_copy[surface_feature_name].astype(int)
     df_copy = df_copy.drop(columns=["surf_log", "surf_cat"], errors="ignore")
     return df_copy
+
+
+def get_df_naf(
+    revision: str,
+) -> pd.DataFrame:
+    """
+    Get detailed NAF data (lvl5).
+
+    Args:
+        path (str): Path to the data.
+
+    Returns:
+        pd.DataFrame: Detailed NAF data.
+    """
+    fs = get_file_system()
+
+    if revision == "NAF2008":
+        path = "projet-ape/data/naf2008_extended.parquet"
+    elif revision == "NAF2025":
+        path = "projet-ape/data/naf2025_extended.parquet"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
+    df = pq.read_table(path, filesystem=fs).to_pandas()
+
+    return df
