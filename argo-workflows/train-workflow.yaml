@@ -82,7 +82,7 @@ spec:
                           --env-manager=local \
                           --entry-point $ENTRY_POINT \
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
-                          -P experiment_name={{inputs.parameters.EXPERIMENT_NAME}} \
+                          -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
                           -P dim={{inputs.parameters.DIM}} \
                           -P ws={{inputs.parameters.WS}} \
                           -P lr={{inputs.parameters.LR}} \

@@ -310,9 +310,6 @@ def main(
     ]
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
 
-    # Override the environment variable MLFLOW_EXPERIMENT_NAME to enable change of experiment name
-    os.environ["MLFLOW_EXPERIMENT_NAME"] = experiment_name
-
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment(experiment_name)
 
