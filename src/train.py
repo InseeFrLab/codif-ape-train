@@ -284,6 +284,15 @@ def main(
     """
     Main method.
     """
+
+    # choose right output for training according to NAF
+    if revision == "NAF2008":
+        Y = "apet_finale"
+    elif revision == "NAF2025":
+        Y = "nace2025"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
     params = {
         key: value
         for key, value in locals().items()
