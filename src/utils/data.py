@@ -278,7 +278,7 @@ def get_Y(
         text (str): naf revision.
 
     Returns:
-        str: output variable name.
+        str: output variable name in dataset.
     """
 
     if revision == "NAF2008":
