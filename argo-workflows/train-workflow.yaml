@@ -126,8 +126,6 @@ spec:
             value: https://minio.lab.sspcloud.fr
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
-          - name: MLFLOW_EXPERIMENT_NAME
-            value: Experimentation
           - name: ENTRY_POINT
             value: main
           - name: PREFIX

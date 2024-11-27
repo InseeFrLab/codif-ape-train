@@ -45,14 +45,6 @@ parser.add_argument(
     default="NAF2008",
     help="Model output revision in MLflow",
 )
-# parser.add_argument(
-#     "--Y",
-#     type=str,
-#     choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale", "nace2025"],
-#     default="APE_NIV5",
-#     help="Target name",
-#     required=True,
-# )
 parser.add_argument(
     "--dim",
     type=int,

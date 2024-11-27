@@ -63,6 +63,7 @@ class Preprocessor(ABC):
         """
         # Adding APE codes at each level
         df["APE_NIV5"] = df[y]
+        print(df_naf)
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
