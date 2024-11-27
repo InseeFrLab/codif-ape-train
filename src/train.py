@@ -249,7 +249,6 @@ def main(
     experiment_name: str,
     run_name: str,
     revision: str,
-    # Y: str,
     dim: int,
     ws: int,
     lr: float,
