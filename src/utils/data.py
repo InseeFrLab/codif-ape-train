@@ -266,3 +266,26 @@ def get_df_naf(
     df = pq.read_table(path, filesystem=fs).to_pandas()
 
     return df
+
+
+def get_Y(
+    revision: str,
+) -> str:
+    """
+    Get output variable name in training dataset.
+
+    Args:
+        text (str): naf revision.
+
+    Returns:
+        str: output variable name.
+    """
+
+    if revision == "NAF2008":
+        Y = "apet_finale"
+    elif revision == "NAF2025":
+        Y = "nace2025"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
+    return Y

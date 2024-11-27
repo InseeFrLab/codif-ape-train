@@ -7,7 +7,6 @@ entry_points:
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
       revision: {type: str, default: "NAF2008"}
-      Y: {type: str, default: APE_NIV5}
       dim: {type: str, default: 180}
       ws: {type: str, default: 5}
       lr: {type: str, default: 0.2}
@@ -45,7 +44,6 @@ entry_points:
             --experiment_name {experiment_name} \
             --run_name {run_name} \
             --revision {revision} \
-            --Y {Y} \
             --dim {dim} \
             --ws {ws} \
             --lr {lr} \

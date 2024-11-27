@@ -13,7 +13,7 @@ import yaml
 from camembert.custom_pipeline import CustomPipeline
 from constants import FRAMEWORK_CLASSES
 from tests.test_main import run_test
-from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data
+from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data, get_Y
 from utils.mappings import mappings
 
 parser = argparse.ArgumentParser(
@@ -249,7 +249,7 @@ def main(
     experiment_name: str,
     run_name: str,
     revision: str,
-    Y: str,
+    # Y: str,
     dim: int,
     ws: int,
     lr: float,
@@ -285,13 +285,8 @@ def main(
     Main method.
     """
 
-    # choose right output for training according to NAF
-    if revision == "NAF2008":
-        Y = "apet_finale"
-    elif revision == "NAF2025":
-        Y = "nace2025"
-    else:
-        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+    # choose right output for training according to NAF revision
+    Y = get_Y(revision=revision)
 
     params = {
         key: value
