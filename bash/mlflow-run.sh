@@ -16,7 +16,7 @@ BUCKET=2000000
 LOSS=ova
 
 # Database arguments
-Y=apet_finale
+#Y=apet_finale
 PREFIX=__label__
 TEXT_FEATURE=libelle
 TEXTUAL_FEATURE1=activ_nat_lib_et
