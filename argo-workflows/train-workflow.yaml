@@ -9,8 +9,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
-          { "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
+          { "EXPERIMENT_NAME": "NACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
             ]'
   templates:
     - name: main
@@ -47,6 +47,8 @@ spec:
                   value: "{{item.REVISION}}"
                 - name: MODEL_CLASS
                   value: "{{item.MODEL_CLASS}}"
+                - name: EXPERIMENT_NAME
+                  value: "{{item.EXPERIMENT_NAME}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -68,6 +70,7 @@ spec:
           - name: START_YEAR
           - name: REVISION
           - name: MODEL_CLASS
+          - name: EXPERIMENT_NAME
       container:
         image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
@@ -78,7 +81,7 @@ spec:
                           --env-manager=local \
                           --entry-point $ENTRY_POINT \
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
-                          -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+                          -P experiment_name={{inputs.parameters.EXPERIMENT_NAME}}\
                           -P dim={{inputs.parameters.DIM}} \
                           -P ws={{inputs.parameters.WS}} \
                           -P lr={{inputs.parameters.LR}} \
