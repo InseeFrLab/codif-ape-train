@@ -15,6 +15,7 @@ from constants import FRAMEWORK_CLASSES
 from tests.test_main import run_test
 from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data, get_Y
 from utils.mappings import mappings
+from utils.mlflow_tracking_queries import create_or_restore_experiment
 
 parser = argparse.ArgumentParser(
     description="FastAPE 🚀 : Model for coding a company's main activity"
@@ -311,6 +312,7 @@ def main(
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
 
     mlflow.set_tracking_uri(remote_server_uri)
+    create_or_restore_experiment(experiment_name)
     mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run(run_name=run_name):
