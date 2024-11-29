@@ -9,8 +9,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "EXPERIMENT_NAME": "TESTNACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
-          { "EXPERIMENT_NAME": "TESTNACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
+          { "EXPERIMENT_NAME": "NACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
             ]'
   templates:
     - name: main
