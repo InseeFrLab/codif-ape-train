@@ -61,7 +61,6 @@ entry_points:
             --categorical_features_1 {categorical_features_1} \
             --categorical_features_2 {categorical_features_2} \
             --categorical_features_3 {categorical_features_3} \
-            --categorical_features_4 {categorical_features_4} \
             --categorical_features_5 {categorical_features_5} \
             --categorical_features_6 {categorical_features_6} \
             --embedding_dim_1 {embedding_dim_1} \

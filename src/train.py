@@ -135,13 +135,13 @@ parser.add_argument(
     help="Surface of the company",
     required=True,
 )
-parser.add_argument(
-    "--categorical_features_4",
-    type=str,
-    default="EVT_SICORE",
-    help="Event of the observation",
-    required=True,
-)
+# parser.add_argument(
+#     "--categorical_features_4",
+#     type=str,
+#     default="EVT_SICORE",
+#     help="Event of the observation",
+#     required=True,
+# )
 parser.add_argument(
     "--categorical_features_5",
     type=str,
@@ -259,7 +259,6 @@ def main(
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
-    categorical_features_4: str,
     categorical_features_5: str,
     categorical_features_6: str,
     embedding_dim_1: int,
