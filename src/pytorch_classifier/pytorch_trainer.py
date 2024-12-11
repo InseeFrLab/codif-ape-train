@@ -52,7 +52,8 @@ class PytorchTrainer:
 
     def train(
         self,
-        df: pd.DataFrame,
+        df_train: pd.DataFrame,
+        df_val,
         y: str,
         text_feature: str,
         categorical_features: Optional[List[str]],
@@ -92,11 +93,8 @@ class PytorchTrainer:
         if categorical_features is not None:
             features += categorical_features
 
-
         X = df[features].values
         y = df[y].values
-
-        X_train, X_test, y_train, y_test = stratified_split_rare_labels(X, y)
         
         # Model
         self.torch_fasttext = torchFastText(num_buckets=buckets,
@@ -160,10 +158,7 @@ class PytorchTrainer:
             scheduler_params=module.scheduler_params,
             scheduler_interval=module.scheduler_interval,
         )
-        mlflow.pytorch.log_model(
-            pytorch_model=best_model.to("cpu"),
-        )
-
+        
         # Quick updates
         self.torch_fasttext.pytorch_model = module.model.to("cpu").eval()
         self.torch_fasttext.trained = True
