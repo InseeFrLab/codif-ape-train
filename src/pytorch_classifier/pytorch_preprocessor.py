@@ -43,44 +43,27 @@ class PytorchPreprocessor(CamembertPreprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df = self.clean_lib(df, text_feature)
-
-        df[categorical_features] = df[categorical_features].fillna("NaN")
-        for variable in categorical_features:
-            df[variable] = df[variable].apply(mappings[variable].get)
-        df[y] = df[y].apply(mappings[y].get)
-
-        # Guichet unique split
-        df_gu = df[df.index.str.startswith("J")]
-        df = df[~df.index.str.startswith("J")]
+        df = self.clean_lib(df, text_feature, "training", recase=recase)
+        df = self.clean_textual_features(df, textual_features, "training", recase=recase)
+        df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
         # Train/test split
         features = [text_feature]
+        if textual_features is not None:
+            features += textual_features
         if categorical_features is not None:
             features += categorical_features
 
         X_train, X_test, y_train, y_test = train_test_split(
             df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
             df[y],
-            test_size=0.2,
-            random_state=0,
-            shuffle=True,
-        )
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_train[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
-            X_train[y],
-            test_size=0.2,
+            test_size=test_size,
             random_state=0,
             shuffle=True,
         )
 
         df_train = pd.concat([X_train, y_train], axis=1)
-        df_val = pd.concat([X_val, y_val], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
-
-        df_train = self.add_missing_codes(
-                df_train, df_naf, y, text_feature, textual_features, categorical_features
-            )
 
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
@@ -88,4 +71,4 @@ class PytorchPreprocessor(CamembertPreprocessor):
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(f"\t*** Done! Oversampling lasted " f"{round((time.time() - t)/60,1)} minutes.\n")
 
-        return df_train, df_val, df_test, df_gu
+        return df_train, df_test

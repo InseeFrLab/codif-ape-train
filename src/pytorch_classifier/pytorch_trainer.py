@@ -3,18 +3,13 @@ PytorchTrainer class without fastText dependency.
 """
 
 # Standard
-import time
 from typing import List, Optional, Dict
 
 import pandas as pd
-import numpy as np
-from tqdm import tqdm
 
 # Torch
 import torch
-import torch.nn.functional as F
 from torch import nn
-from torch.optim import Adam, SGD
 # Lightning
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import (
@@ -28,7 +23,6 @@ import mlflow
 
 # torchFastText
 from torchFastText import torchFastText
-from torchFastText.preprocess import stratified_split_rare_labels
 
 # Relative imports
 from utils.mappings import mappings
