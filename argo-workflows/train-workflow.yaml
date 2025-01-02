@@ -100,8 +100,8 @@ spec:
                           -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
+                          -P categorical_features_4=$FEATURE4 \
                           -P categorical_features_5=$FEATURE5 \
-                          -P categorical_features_6=$FEATURE6 \
                           -P start_year={{inputs.parameters.START_YEAR}} \
                           -P model_class={{inputs.parameters.MODEL_CLASS}} \
                           -P revision={{inputs.parameters.REVISION}} "
@@ -142,7 +142,7 @@ spec:
             value: NAT
           - name: FEATURE3
             value: SRF
-          - name: FEATURE5
+          - name: FEATURE4
             value: CJ
-          - name: FEATURE6
+          - name: FEATURE5
             value: CRT

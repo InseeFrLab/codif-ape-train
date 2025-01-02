@@ -143,14 +143,14 @@ parser.add_argument(
 #     required=True,
 # )
 parser.add_argument(
-    "--categorical_features_5",
+    "--categorical_features_4",
     type=str,
     default="CJ",
     help="CJ of the company",
     required=True,
 )
 parser.add_argument(
-    "--categorical_features_6",
+    "--categorical_features_5",
     type=str,
     default="CRT",
     help="Permanent or seasonal character of the activities of the company",
@@ -177,22 +177,22 @@ parser.add_argument(
     help="Embedding dimension for surface",
     required=True,
 )
+# parser.add_argument(
+#     "--embedding_dim_4",
+#     type=int,
+#     default=3,
+#     help="Embedding dimension for event",
+#     required=True,
+# )
 parser.add_argument(
     "--embedding_dim_4",
-    type=int,
-    default=3,
-    help="Embedding dimension for event",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_5",
     type=int,
     default=3,
     help="Embedding dimension for cj",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_6",
+    "--embedding_dim_5",
     type=int,
     default=1,
     help="Embedding dimension for permanence",
@@ -259,14 +259,13 @@ def main(
     categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
+    categorical_features_4: str,
     categorical_features_5: str,
-    categorical_features_6: str,
     embedding_dim_1: int,
     embedding_dim_2: int,
     embedding_dim_3: int,
     embedding_dim_4: int,
     embedding_dim_5: int,
-    embedding_dim_6: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,
