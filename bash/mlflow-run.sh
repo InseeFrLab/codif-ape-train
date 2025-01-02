@@ -16,7 +16,7 @@ BUCKET=2000000
 LOSS=ova
 
 # Database arguments
-Y=nace2025
+#Y=apet_finale
 PREFIX=__label__
 TEXT_FEATURE=libelle
 TEXTUAL_FEATURE1=activ_nat_lib_et
@@ -41,8 +41,7 @@ mlflow run ~/work/codif-ape-train/ \
     --env-manager=local \
     --entry-point $ENTRY_POINT \
     -P remote_server_uri=$MLFLOW_TRACKING_URI \
-    -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
-    -P Y=$Y \
+    -P revision=$revision \
     -P dim=$DIM \
     -P lr=$LR \
     -P epoch=$EPOCHS \
@@ -72,3 +71,5 @@ mlflow run ~/work/codif-ape-train/ \
     # -P embedding_dim_5=$DIM5 \
     # -P embedding_dim_6=$DIM6 \
     # -P pre_training_weights=$PRE_TRAINING_WEIGHTS \
+    # -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
+    # -P Y=$Y \

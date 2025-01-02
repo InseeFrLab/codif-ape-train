@@ -6,7 +6,7 @@ entry_points:
       remote_server_uri: {type: str, default: projet-ape-mlflow.user.lab.sspcloud.fr}
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
-      Y: {type: str, default: APE_NIV5}
+      revision: {type: str, default: "NAF2008"}
       dim: {type: str, default: 180}
       ws: {type: str, default: 5}
       lr: {type: str, default: 0.2}
@@ -24,15 +24,13 @@ entry_points:
       categorical_features_1: {type: str, default: AUTO}
       categorical_features_2: {type: str, default: NAT_SICORE}
       categorical_features_3: {type: str, default: SURF}
-      categorical_features_4: {type: str, default: EVT_SICORE}
-      categorical_features_5: {type: str, default: cj}
-      categorical_features_6: {type: str, default: activ_perm_et}
+      categorical_features_4: {type: str, default: cj}
+      categorical_features_5: {type: str, default: activ_perm_et}
       embedding_dim_1: {type: int, default: 1}
       embedding_dim_2: {type: int, default: 3}
       embedding_dim_3: {type: int, default: 3}
-      embedding_dim_4: {type: int, default: 1}
-      embedding_dim_5: {type: int, default: 3}
-      embedding_dim_6: {type: int, default: 1}
+      embedding_dim_4: {type: int, default: 3}
+      embedding_dim_5: {type: int, default: 1}
       model_class: {type: str, default: fasttext}
       pre_training_weights: {type: str, default: camembert/camembert-base}
       start_month: {type: int, default: 1}
@@ -43,7 +41,7 @@ entry_points:
             --remote_server_uri {remote_server_uri} \
             --experiment_name {experiment_name} \
             --run_name {run_name} \
-            --Y {Y} \
+            --revision {revision} \
             --dim {dim} \
             --ws {ws} \
             --lr {lr} \
@@ -63,13 +61,11 @@ entry_points:
             --categorical_features_3 {categorical_features_3} \
             --categorical_features_4 {categorical_features_4} \
             --categorical_features_5 {categorical_features_5} \
-            --categorical_features_6 {categorical_features_6} \
             --embedding_dim_1 {embedding_dim_1} \
             --embedding_dim_2 {embedding_dim_2} \
             --embedding_dim_3 {embedding_dim_3} \
             --embedding_dim_4 {embedding_dim_4} \
             --embedding_dim_5 {embedding_dim_5} \
-            --embedding_dim_6 {embedding_dim_6} \
             --model_class {model_class} \
             --pre_training_weights {pre_training_weights} \
             --start_month {start_month} \

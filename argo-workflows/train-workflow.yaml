@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: parallel-training-
+  generateName: parallel-training
 spec:
   serviceAccountName: workflow
   entrypoint: main
@@ -9,12 +9,12 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-            { "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova", "START_YEAR": 2025 }
+          { "EXPERIMENT_NAME": "NACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
             ]'
-
   templates:
-    # Entrypoint DAG template
     - name: main
+      # Entrypoint DAG template
       dag:
         tasks:
           - name: run-training-with-params
@@ -43,6 +43,12 @@ spec:
                   value: "{{item.LOSS}}"
                 - name: START_YEAR
                   value: "{{item.START_YEAR}}"
+                - name: REVISION
+                  value: "{{item.REVISION}}"
+                - name: MODEL_CLASS
+                  value: "{{item.MODEL_CLASS}}"
+                - name: EXPERIMENT_NAME
+                  value: "{{item.EXPERIMENT_NAME}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -62,18 +68,21 @@ spec:
           - name: BUCKET
           - name: LOSS
           - name: START_YEAR
+          - name: REVISION
+          - name: MODEL_CLASS
+          - name: EXPERIMENT_NAME
       container:
-        image: inseefrlab/codif-ape-train:main
+        image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
-        args: ["git clone https://github.com/InseeFrLab/codif-ape-train.git &&\
+        args: ["git clone -b naf2008 https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
+                export MLFLOW_EXPERIMENT_NAME={{inputs.parameters.EXPERIMENT_NAME}} &&\
                 mlflow run ~/work/codif-ape-train/ \
                           --env-manager=local \
                           --entry-point $ENTRY_POINT \
                           -P remote_server_uri=$MLFLOW_TRACKING_URI \
                           -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
-                          -P Y=$Y \
                           -P dim={{inputs.parameters.DIM}} \
                           -P ws={{inputs.parameters.WS}} \
                           -P lr={{inputs.parameters.LR}} \
@@ -93,10 +102,9 @@ spec:
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_4=$FEATURE4 \
                           -P categorical_features_5=$FEATURE5 \
-                          -P categorical_features_6=$FEATURE6 \
                           -P start_year={{inputs.parameters.START_YEAR}} \
-                          -P model_class=fasttext"
-
+                          -P model_class={{inputs.parameters.MODEL_CLASS}} \
+                          -P revision={{inputs.parameters.REVISION}} "
               ]
         env:
           # env var for s3 connexion
@@ -118,12 +126,8 @@ spec:
             value: https://minio.lab.sspcloud.fr
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
-          - name: MLFLOW_EXPERIMENT_NAME
-            value: Experimentation
           - name: ENTRY_POINT
             value: main
-          - name: "Y"
-            value: nace2025
           - name: PREFIX
             value: __label__
           - name: TEXT_FEATURE
@@ -139,8 +143,6 @@ spec:
           - name: FEATURE3
             value: SRF
           - name: FEATURE4
-            value: EVT
-          - name: FEATURE5
             value: CJ
-          - name: FEATURE6
+          - name: FEATURE5
             value: CRT

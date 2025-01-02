@@ -44,7 +44,7 @@ def get_sirene_4_data(
     fs = get_file_system()
 
     if revision == "NAF2008":
-        path = "projet-ape/extractions/20240812_sirene4.parquet"
+        path = "projet-ape/extractions/20241027_sirene4.parquet"
     elif revision == "NAF2025":
         path = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
     else:
@@ -240,3 +240,52 @@ def categorize_surface(
     df_copy[surface_feature_name] = df_copy[surface_feature_name].astype(int)
     df_copy = df_copy.drop(columns=["surf_log", "surf_cat"], errors="ignore")
     return df_copy
+
+
+def get_df_naf(
+    revision: str,
+) -> pd.DataFrame:
+    """
+    Get detailed NAF data (lvl5).
+
+    Args:
+        path (str): Path to the data.
+
+    Returns:
+        pd.DataFrame: Detailed NAF data.
+    """
+    fs = get_file_system()
+
+    if revision == "NAF2008":
+        path = "projet-ape/data/naf2008_extended.parquet"
+    elif revision == "NAF2025":
+        path = "projet-ape/data/naf2025_extended.parquet"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
+    df = pq.read_table(path, filesystem=fs).to_pandas()
+
+    return df
+
+
+def get_Y(
+    revision: str,
+) -> str:
+    """
+    Get output variable name in training dataset.
+
+    Args:
+        text (str): naf revision.
+
+    Returns:
+        str: output variable name in dataset.
+    """
+
+    if revision == "NAF2008":
+        Y = "apet_finale"
+    elif revision == "NAF2025":
+        Y = "nace2025"
+    else:
+        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+
+    return Y

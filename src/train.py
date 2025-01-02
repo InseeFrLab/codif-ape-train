@@ -13,8 +13,9 @@ import yaml
 from camembert.custom_pipeline import CustomPipeline
 from constants import FRAMEWORK_CLASSES
 from tests.test_main import run_test
-from utils.data import get_sirene_3_data, get_sirene_4_data, get_test_data
+from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data, get_Y
 from utils.mappings import mappings
+from utils.mlflow_tracking_queries import create_or_restore_experiment
 
 parser = argparse.ArgumentParser(
     description="FastAPE 🚀 : Model for coding a company's main activity"
@@ -29,7 +30,7 @@ parser.add_argument(
 parser.add_argument(
     "--experiment_name",
     type=str,
-    choices=["Experimentation", "Production", "Test"],
+    # choices=["NACE2008", "NACE2025", "Experimentation", "Production", "Test"],
     default="Test",
     help="Experiment name in MLflow",
 )
@@ -40,12 +41,10 @@ parser.add_argument(
     help="Run name in MLflow",
 )
 parser.add_argument(
-    "--Y",
+    "--revision",
     type=str,
-    choices=["APE_NIV5", "APE_NIV4", "APE_NIV3", "APE_NIV2", "APE_NIV1", "apet_finale", "nace2025"],
-    default="APE_NIV5",
-    help="Target name",
-    required=True,
+    default="NAF2008",
+    help="Model output revision in MLflow",
 )
 parser.add_argument(
     "--dim",
@@ -136,22 +135,22 @@ parser.add_argument(
     help="Surface of the company",
     required=True,
 )
+# parser.add_argument(
+#     "--categorical_features_4",
+#     type=str,
+#     default="EVT_SICORE",
+#     help="Event of the observation",
+#     required=True,
+# )
 parser.add_argument(
     "--categorical_features_4",
-    type=str,
-    default="EVT_SICORE",
-    help="Event of the observation",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_5",
     type=str,
     default="CJ",
     help="CJ of the company",
     required=True,
 )
 parser.add_argument(
-    "--categorical_features_6",
+    "--categorical_features_5",
     type=str,
     default="CRT",
     help="Permanent or seasonal character of the activities of the company",
@@ -178,22 +177,22 @@ parser.add_argument(
     help="Embedding dimension for surface",
     required=True,
 )
+# parser.add_argument(
+#     "--embedding_dim_4",
+#     type=int,
+#     default=3,
+#     help="Embedding dimension for event",
+#     required=True,
+# )
 parser.add_argument(
     "--embedding_dim_4",
-    type=int,
-    default=3,
-    help="Embedding dimension for event",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_5",
     type=int,
     default=3,
     help="Embedding dimension for cj",
     required=True,
 )
 parser.add_argument(
-    "--embedding_dim_6",
+    "--embedding_dim_5",
     type=int,
     default=1,
     help="Embedding dimension for permanence",
@@ -242,7 +241,7 @@ def main(
     remote_server_uri: str,
     experiment_name: str,
     run_name: str,
-    Y: str,
+    revision: str,
     dim: int,
     ws: int,
     lr: float,
@@ -262,13 +261,11 @@ def main(
     categorical_features_3: str,
     categorical_features_4: str,
     categorical_features_5: str,
-    categorical_features_6: str,
     embedding_dim_1: int,
     embedding_dim_2: int,
     embedding_dim_3: int,
     embedding_dim_4: int,
     embedding_dim_5: int,
-    embedding_dim_6: int,
     model_class: str,
     pre_training_weights: str,
     start_month: int,
@@ -277,6 +274,10 @@ def main(
     """
     Main method.
     """
+
+    # choose right output for training according to NAF revision
+    Y = get_Y(revision=revision)
+
     params = {
         key: value
         for key, value in locals().items()
@@ -286,6 +287,7 @@ def main(
                 "remote_server_uri",
                 "experiment_name",
                 "run_name",
+                "revision",
                 "Y",
                 "model_class",
                 "text_feature",
@@ -308,6 +310,7 @@ def main(
     embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
 
     mlflow.set_tracking_uri(remote_server_uri)
+    create_or_restore_experiment(experiment_name)
     mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run(run_name=run_name):
@@ -325,14 +328,17 @@ def main(
         t = time.time()
         # Load data
         # Sirene 4
-        df_s4 = get_sirene_4_data(revision="NAF2025")
+        df_s4 = get_sirene_4_data(revision=revision)
         # Sirene 3
         df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
+        # Detailed NAF
+        df_naf = get_df_naf(revision=revision)
 
         # Preprocess data
         # Sirene 4
         df_train_s4, df_test = preprocessor.preprocess(
             df=df_s4,
+            df_naf=df_naf,
             y=Y,
             text_feature=text_feature,
             textual_features=textual_features,
@@ -342,7 +348,8 @@ def main(
         # Get test_data from LabelStudio
         df_test_ls = pd.concat(
             preprocessor.preprocess(
-                get_test_data(revision="NAF2025", y=Y),
+                get_test_data(revision=revision, y=Y),
+                df_naf,
                 Y,
                 text_feature,
                 textual_features,
@@ -357,7 +364,13 @@ def main(
         else:
             df_train_s3 = pd.concat(
                 preprocessor.preprocess(
-                    df_s3, Y, text_feature, textual_features, categorical_features, recase=True
+                    df_s3,
+                    df_naf,
+                    Y,
+                    text_feature,
+                    textual_features,
+                    categorical_features,
+                    recase=True,
                 ),
                 axis=0,
             )

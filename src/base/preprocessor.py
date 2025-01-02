@@ -2,16 +2,13 @@
 Preprocessor class.
 """
 
-import os
 import string
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-import pyarrow.parquet as pq
 from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
-from s3fs import S3FileSystem
 
 
 class Preprocessor(ABC):
@@ -32,6 +29,7 @@ class Preprocessor(ABC):
     def preprocess(
         self,
         df: pd.DataFrame,
+        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         textual_features: Optional[List[str]] = None,
@@ -47,6 +45,7 @@ class Preprocessor(ABC):
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.
+            df_naf (pd.DataFrame): NAF classification, level 5 detail.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
             textual_features (Optional[List[str]]): Names of the
@@ -64,14 +63,6 @@ class Preprocessor(ABC):
         """
         # Adding APE codes at each level
         df["APE_NIV5"] = df[y]
-        df_naf = pq.read_table(
-            "projet-ape/data/naf2025_extended.parquet",
-            filesystem=S3FileSystem(
-                client_kwargs={"endpoint_url": f"https://{os.environ['AWS_S3_ENDPOINT']}"},
-                key=os.environ["AWS_ACCESS_KEY_ID"],
-                secret=os.environ["AWS_SECRET_ACCESS_KEY"],
-            ),
-        ).to_pandas()
         df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
