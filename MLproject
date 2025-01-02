@@ -24,15 +24,13 @@ entry_points:
       categorical_features_1: {type: str, default: AUTO}
       categorical_features_2: {type: str, default: NAT_SICORE}
       categorical_features_3: {type: str, default: SURF}
-      categorical_features_4: {type: str, default: EVT_SICORE}
-      categorical_features_5: {type: str, default: cj}
-      categorical_features_6: {type: str, default: activ_perm_et}
+      categorical_features_4: {type: str, default: cj}
+      categorical_features_5: {type: str, default: activ_perm_et}
       embedding_dim_1: {type: int, default: 1}
       embedding_dim_2: {type: int, default: 3}
       embedding_dim_3: {type: int, default: 3}
-      embedding_dim_4: {type: int, default: 1}
-      embedding_dim_5: {type: int, default: 3}
-      embedding_dim_6: {type: int, default: 1}
+      embedding_dim_4: {type: int, default: 3}
+      embedding_dim_5: {type: int, default: 1}
       model_class: {type: str, default: fasttext}
       pre_training_weights: {type: str, default: camembert/camembert-base}
       start_month: {type: int, default: 1}
@@ -68,7 +66,6 @@ entry_points:
             --embedding_dim_3 {embedding_dim_3} \
             --embedding_dim_4 {embedding_dim_4} \
             --embedding_dim_5 {embedding_dim_5} \
-            --embedding_dim_6 {embedding_dim_6} \
             --model_class {model_class} \
             --pre_training_weights {pre_training_weights} \
             --start_month {start_month} \
