@@ -1,31 +1,32 @@
 """
 Constants file.
 """
+
+from camembert.camembert_evaluator import CamembertEvaluator
+from camembert.camembert_model import (
+    CustomCamembertModel,
+    EmbeddedCategoricalCamembertModel,
+    OneHotCategoricalCamembertModel,
+)
+from camembert.camembert_preprocessor import CamembertPreprocessor
+from camembert.camembert_trainer import (
+    CustomCamembertTrainer,
+    EmbeddedCamembertTrainer,
+    OneHotCamembertTrainer,
+)
+from camembert.camembert_wrapper import (
+    CustomCamembertWrapper,
+    EmbeddedCategoricalCamembertWrapper,
+    OneHotCategoricalCamembertWrapper,
+)
+
 from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
 from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
 from fasttext_classifier.fasttext_trainer import FastTextTrainer
 from fasttext_classifier.fasttext_wrapper import FastTextWrapper
-from pytorch_classifier.pytorch_evaluator import PytorchEvaluator
-from pytorch_classifier.pytorch_preprocessor import PytorchPreprocessor
-from pytorch_classifier.pytorch_trainer import PytorchTrainer
-from camembert.camembert_evaluator import CamembertEvaluator
-from camembert.camembert_preprocessor import CamembertPreprocessor
-from camembert.camembert_trainer import (
-    CustomCamembertTrainer,
-    OneHotCamembertTrainer,
-    EmbeddedCamembertTrainer,
-)
-from camembert.camembert_wrapper import (
-    CustomCamembertWrapper,
-    OneHotCategoricalCamembertWrapper,
-    EmbeddedCategoricalCamembertWrapper,
-)
-from camembert.camembert_model import (
-    CustomCamembertModel,
-    OneHotCategoricalCamembertModel,
-    EmbeddedCategoricalCamembertModel,
-)
-
+from pytorch_classifiers.pytorch_evaluator import PytorchEvaluator
+from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
+from pytorch_classifiers.pytorch_trainer import PytorchTrainer
 
 FRAMEWORK_CLASSES = {
     "fasttext": {
