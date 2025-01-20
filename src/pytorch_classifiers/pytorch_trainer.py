@@ -1,16 +1,18 @@
-from transformers import CamembertTokenizer, Trainer, TrainingArguments
+import abc
+from typing import Dict, List, Optional
+
+import pandas as pd
+import torch
 from camembert.camembert_model import (
     CustomCamembertModel,
-    OneHotCategoricalCamembertModel,
     EmbeddedCategoricalCamembertModel,
+    OneHotCategoricalCamembertModel,
 )
-import torch
-import pandas as pd
-from typing import Dict, List, Optional
-from sklearn.model_selection import train_test_split
 from datasets import Dataset
+from sklearn.model_selection import train_test_split
+from transformers import CamembertTokenizer, Trainer, TrainingArguments
+
 from utils.mappings import mappings
-import abc
 
 
 class CamembertTrainer(abc.ABC):

@@ -1,18 +1,21 @@
 """
 Custom model class for a Huggingface model.
 """
-from typing import Optional, Dict, Any
+
+from typing import Any, Dict, Optional
+
+import mlflow
 import pandas as pd
-from camembert.camembert_preprocessor import CamembertPreprocessor
-from camembert.custom_pipeline import CustomPipeline
+import torch
 from camembert.camembert_model import (
     CustomCamembertModel,
-    OneHotCategoricalCamembertModel,
     EmbeddedCategoricalCamembertModel,
+    OneHotCategoricalCamembertModel,
 )
+from camembert.camembert_preprocessor import CamembertPreprocessor
+from camembert.custom_pipeline import CustomPipeline
 from transformers import CamembertTokenizer
-import mlflow
-import torch
+
 from utils.mappings import mappings
 
 
@@ -80,7 +83,10 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
 
         # Clean text feature
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.textual_features + self.categorical_features),
+            df=pd.DataFrame(
+                model_input,
+                columns=[self.text_feature] + self.textual_features + self.categorical_features,
+            ),
             text_feature=self.text_feature,
             method="evaluation",
             recase=False,

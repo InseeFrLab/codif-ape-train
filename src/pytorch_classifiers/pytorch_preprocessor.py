@@ -1,18 +1,19 @@
 """
-CamembertPreprocessor class.
+PytorchPreprocessor class.
 """
-from typing import List, Optional, Tuple, Dict
 
 import time
-import pandas as pd
+from typing import Dict, List, Optional, Tuple
 
-from base.preprocessor import Preprocessor
-from utils.mappings import mappings
-from utils.data import categorize_surface
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from base.preprocessor import Preprocessor
+from utils.data import categorize_surface
+from utils.mappings import mappings
 
-class CamembertPreprocessor(Preprocessor):
+
+class PytorchPreprocessor(Preprocessor):
     """
     FastTextPreprocessor class.
     """
@@ -120,7 +121,7 @@ class CamembertPreprocessor(Preprocessor):
         add_codes: bool = True,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Preprocesses data to feed to a Camembert classifier.
+        Preprocesses data to feed to a Pytorch classifier.
 
         Args:
             df (pd.DataFrame): Text descriptions to classify.

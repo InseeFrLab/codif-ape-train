@@ -1,18 +1,21 @@
 """
 Evaluate the model on the test set.
 """
-from transformers import Trainer
-from typing import Optional, Dict, List, Tuple
-import pandas as pd
-from base.evaluator import Evaluator
-from datasets import Dataset
-from utils.mappings import mappings
+
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
+from datasets import Dataset
+from transformers import Trainer
+
+from base.evaluator import Evaluator
+from utils.mappings import mappings
 
 
-class CamembertEvaluator(Evaluator):
+class PytorchEvaluator(Evaluator):
     """
-    CamembertEvaluator class.
+    PytorchEvaluator class.
     """
 
     def __init__(self, model: Trainer) -> None:
