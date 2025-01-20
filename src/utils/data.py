@@ -7,6 +7,10 @@ import pandas as pd
 import pyarrow.parquet as pq
 from s3fs import S3FileSystem
 
+PATH_SIRENE_3 = "projet-ape/data/data_sirene3.parquet"
+PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/20241027_sirene4.parquet"
+PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+
 
 def get_file_system() -> S3FileSystem:
     """
@@ -29,9 +33,7 @@ def get_root_path() -> Path:
     return Path(__file__).parent.parent
 
 
-def get_sirene_4_data(
-    revision: str,
-) -> pd.DataFrame:
+def get_sirene_4_data(revision: str, return_col_names: bool = False) -> pd.DataFrame:
     """
     Get Sirene 4 data.
 
@@ -44,30 +46,33 @@ def get_sirene_4_data(
     fs = get_file_system()
 
     if revision == "NAF2008":
-        path = "projet-ape/extractions/20241027_sirene4.parquet"
+        path = PATH_SIRENE_4_NAF2008
     elif revision == "NAF2025":
-        path = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+        path = PATH_SIRENE_4_NAF2025
     else:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 
     df = pq.read_table(path, filesystem=fs).to_pandas()
 
-    df = df.rename(
-        columns={
-            "evenement_type": "EVT",
-            "cj": "CJ",
-            "activ_nat_et": "NAT",
-            "liasse_type": "TYP",
-            "activ_surf_et": "SRF",
-            "activ_perm_et": "CRT",
-        }
-    )
+    col_renaming = {
+        "cj": "CJ",  # specific to sirene 4
+        "activ_nat_et": "NAT",
+        "liasse_type": "TYP",
+        "activ_surf_et": "SRF",
+        "activ_perm_et": "CRT",  # specific to sirene 4
+        "activ_sec_agri_et": "AGRI",  # specific to sirene 4 - textual feature
+        "activ_nat_lib_et": "NAT_LIB",  # specific to sirene 4 - textual feature
+    }
 
-    return df
+    df = df.rename(columns=col_renaming)
+
+    if return_col_names:
+        return df, col_renaming
+    else:
+        return df
 
 
 def get_sirene_3_data(
-    path: str = "projet-ape/data/data_sirene3.parquet",
     start_month: int = 1,
     start_year: int = 2018,
     date_feature: str = "DATE",
@@ -82,7 +87,7 @@ def get_sirene_3_data(
         pd.DataFrame: Sirene 3 data.
     """
     fs = get_file_system()
-    df = pq.read_table(path, filesystem=fs).to_pandas()
+    df = pq.read_table(PATH_SIRENE_3, filesystem=fs).to_pandas()
 
     # Filter on date
     df = filter_on_date(df, start_month, start_year, date_feature)
@@ -92,22 +97,36 @@ def get_sirene_3_data(
     # Rename columns
     df = df.rename(
         columns={
-            "EVT_SICORE": "evenement_type",
-            "AUTO": "liasse_type",
-            "NAT_SICORE": "activ_nat_et",
-            "SURF": "activ_surf_et",
+            "AUTO": "TYP",
+            "NAT_SICORE": "NAT",
+            "SURF": "SRF",
             "APE_SICORE": "apet_finale",
-            "LIB_SICORE": "libelle_activite",
+            "LIB_SICORE": "libelle",
         }
     )
     # Create cj column
-    df["cj"] = "NaN"
-    # Create other_nature_text column
-    df["other_nature_text"] = "NaN"
-    # Create permanence column
-    df["permanence"] = "NaN"
+    # df["CJ"] = "NaN"
+    # # Create other_nature_text column
+    # df["other_nature_text"] = "NaN"
+    # # Create permanence column
+    # df["permanence"] = "NaN"
 
     return df
+
+
+def get_all_data(
+    revision, start_month: int = 1, start_year: int = 2018, date_feature: str = "DATE"
+) -> pd.DataFrame:
+    df_s4, old_to_new_cols_s4 = get_sirene_4_data(revision=revision, return_col_names=True)
+    df_s3 = get_sirene_3_data(
+        start_month=start_month, start_year=start_year, date_feature=date_feature
+    )
+
+    for col in old_to_new_cols_s4.values():
+        if col not in df_s3.columns:
+            df_s3[col] = "NaN"
+
+    return df_s3, df_s4
 
 
 def filter_on_date(

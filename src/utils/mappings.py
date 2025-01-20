@@ -2,7 +2,6 @@
 Mappings of categorical variables.
 """
 
-
 mappings = {
     "activ_perm_et": {"P": 0, "S": 1},
     "cj": {
@@ -96,7 +95,7 @@ mappings = {
         "5552": 87,
         "6578": 88,
     },
-    "AUTO": {
+    "TYP": {
         "Y": 0,
         "X": 1,
         "C": 2,
@@ -113,7 +112,7 @@ mappings = {
         "D": 13,
         "N": 14,
     },
-    "NAT_SICORE": {
+    "NAT": {
         "10": 0,
         "NaN": 1,
         "12": 2,
@@ -139,8 +138,8 @@ mappings = {
         "26": 22,
         "22": 23,
     },
-    "SURF": {"NaN": 0, "2": 1, "1": 2, "3": 3, "4": 4},
-    "EVT_SICORE": {
+    "SRF": {"NaN": 0, "2": 1, "1": 2, "3": 3, "4": 4},
+    "EVT": {
         "01P": 0,
         "05P": 1,
         "11M": 2,
@@ -903,10 +902,12 @@ mappings = {
 }
 
 
-mappings["liasse_type"] = mappings["AUTO"]
-mappings["activ_nat_et"] = mappings["NAT_SICORE"]
-mappings["activ_surf_et"] = mappings["SURF"]
-mappings["evenement_type"] = mappings["EVT_SICORE"]
+mappings["liasse_type"] = mappings["TYP"]
+mappings["activ_nat_et"] = mappings["NAT"]
+mappings["activ_surf_et"] = mappings["SRF"]
+# mappings["evenement_type"] = mappings["EVT_SICORE"]
 # mappings["activ_perm_et"] = mappings["permanence"]
 mappings["apet_finale"] = mappings["APE_NIV5"]
 mappings["Target"] = mappings["APE_NIV5"]
+mappings["CJ"] = mappings["cj"]
+mappings["CRT"] = mappings["activ_perm_et"]

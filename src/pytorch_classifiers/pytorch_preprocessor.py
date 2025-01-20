@@ -162,10 +162,21 @@ class PytorchPreprocessor(Preprocessor):
         df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
 
+        X_train, X_val, y_train, y_val = train_test_split(
+            df_train[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
+            df_train[y],
+            test_size=test_size,
+            random_state=0,
+            shuffle=True,
+        )
+
+        df_train = pd.concat([X_train, y_train], axis=1)
+        df_val = pd.concat([X_val, y_val], axis=1)
+
         if oversampling is not None:
             print("\t*** Oversampling the train database...\n")
             t = time.time()
             df_train = self.oversample_df(df_train, oversampling["threshold"], y)
             print(f"\t*** Done! Oversampling lasted " f"{round((time.time() - t)/60,1)} minutes.\n")
 
-        return df_train, df_test
+        return df_train, df_val, df_test
