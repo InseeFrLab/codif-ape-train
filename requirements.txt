@@ -16,4 +16,4 @@ sentencepiece
 accelerate
 datasets
 evaluate
-torchFastText @ git+https://github.com/inseefrlab/torch-fastText@package
+torchFastText
