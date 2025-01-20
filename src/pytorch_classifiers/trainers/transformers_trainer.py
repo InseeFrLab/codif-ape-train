@@ -3,15 +3,15 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 import torch
-from camembert.camembert_model import (
-    CustomCamembertModel,
-    EmbeddedCategoricalCamembertModel,
-    OneHotCategoricalCamembertModel,
-)
 from datasets import Dataset
 from sklearn.model_selection import train_test_split
 from transformers import CamembertTokenizer, Trainer, TrainingArguments
 
+from pytorch_classifiers.models.camembert.camembert_model import (
+    CustomCamembertModel,
+    EmbeddedCategoricalCamembertModel,
+    OneHotCategoricalCamembertModel,
+)
 from utils.mappings import mappings
 
 

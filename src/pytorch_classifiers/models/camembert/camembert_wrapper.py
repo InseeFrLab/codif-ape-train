@@ -7,16 +7,16 @@ from typing import Any, Dict, Optional
 import mlflow
 import pandas as pd
 import torch
-from camembert.camembert_model import (
+from transformers import CamembertTokenizer
+
+from pytorch_classifiers.models.camembert.camembert_model import (
     CustomCamembertModel,
     EmbeddedCategoricalCamembertModel,
     OneHotCategoricalCamembertModel,
 )
-from camembert.camembert_preprocessor import CamembertPreprocessor
-from camembert.custom_pipeline import CustomPipeline
-from transformers import CamembertTokenizer
-
+from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
 from utils.mappings import mappings
+from utils.transformers.custom_pipeline import CustomPipeline
 
 
 class CamembertWrapper(mlflow.pyfunc.PythonModel):
@@ -25,7 +25,7 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
     """
 
     def __init__(self, text_feature, textual_features, categorical_features):
-        self.preprocessor = CamembertPreprocessor()
+        self.preprocessor = PytorchPreprocessor()
         self.text_feature = text_feature
         self.textual_features = textual_features
         self.categorical_features = categorical_features

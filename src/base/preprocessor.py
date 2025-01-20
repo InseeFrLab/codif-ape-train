@@ -75,6 +75,7 @@ class Preprocessor(ABC):
             variables += categorical_features
             for feature in categorical_features:
                 df[feature] = df[feature].fillna(value="NaN")
+
         df = df[variables + [f"APE_NIV{i}" for i in range(1, 6)]]
         df = df.dropna(subset=[y] + [text_feature])
 
