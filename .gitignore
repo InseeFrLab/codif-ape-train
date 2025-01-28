@@ -218,3 +218,6 @@ data/
 log_files/
 # *.ipynb
 train_text.txt
+
+# Hydra
+outputs/

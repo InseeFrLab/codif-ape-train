@@ -1,0 +1,6 @@
+defaults:
+  - torchFastText
+  - override hydra/job_logging: default
+
+experiment_name: "model_comparison"
+output_dir: ./outputs
