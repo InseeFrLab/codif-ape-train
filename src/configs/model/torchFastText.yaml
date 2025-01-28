@@ -3,7 +3,8 @@ preprocessor: "PyTorch"
 model_params:
   dim: 300
   min_count: 5
+  categorical_embedding_dims: 5
+
+training_params:
   epoch: 10
   lr: 0.001
-  use_categorical: ${categorical.use}
-  categorical_vars: ${categorical.vars}

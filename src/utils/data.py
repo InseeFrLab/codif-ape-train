@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 from pathlib import Path
 
@@ -7,9 +8,22 @@ import pandas as pd
 import pyarrow.parquet as pq
 from s3fs import S3FileSystem
 
+logging.getLogger("botocore.httpchecksum").setLevel(logging.ERROR)
+
 PATH_SIRENE_3 = "projet-ape/data/data_sirene3.parquet"
 PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/20241027_sirene4.parquet"
 PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+
+
+COL_RENAMING = {
+    "cj": "CJ",  # specific to sirene 4
+    "activ_nat_et": "NAT",
+    "liasse_type": "TYP",
+    "activ_surf_et": "SRF",
+    "activ_perm_et": "CRT",  # specific to sirene 4
+    "activ_sec_agri_et": "AGRI",  # specific to sirene 4 - textual feature
+    "activ_nat_lib_et": "NAT_LIB",  # specific to sirene 4 - textual feature
+}
 
 
 def get_file_system() -> S3FileSystem:
@@ -33,7 +47,18 @@ def get_root_path() -> Path:
     return Path(__file__).parent.parent
 
 
-def get_sirene_4_data(revision: str, return_col_names: bool = False) -> pd.DataFrame:
+"""
+
+Data getters:
+    1. get_sirene_4_data
+    2. get_sirene_3_data
+    3. get_all_data
+
+All of them return a tuple of two DataFrames: sirene_3 and sirene_4  in that order (that can be None if applicable).
+"""
+
+
+def get_sirene_4_data(revision: str, return_col_names: bool = False, **kwargs) -> pd.DataFrame:
     """
     Get Sirene 4 data.
 
@@ -54,28 +79,13 @@ def get_sirene_4_data(revision: str, return_col_names: bool = False) -> pd.DataF
 
     df = pq.read_table(path, filesystem=fs).to_pandas()
 
-    col_renaming = {
-        "cj": "CJ",  # specific to sirene 4
-        "activ_nat_et": "NAT",
-        "liasse_type": "TYP",
-        "activ_surf_et": "SRF",
-        "activ_perm_et": "CRT",  # specific to sirene 4
-        "activ_sec_agri_et": "AGRI",  # specific to sirene 4 - textual feature
-        "activ_nat_lib_et": "NAT_LIB",  # specific to sirene 4 - textual feature
-    }
+    df = df.rename(columns=COL_RENAMING)
 
-    df = df.rename(columns=col_renaming)
-
-    if return_col_names:
-        return df, col_renaming
-    else:
-        return df
+    return None, df  # sirene_3 = None, sirene_4
 
 
 def get_sirene_3_data(
-    start_month: int = 1,
-    start_year: int = 2018,
-    date_feature: str = "DATE",
+    start_month: int = 1, start_year: int = 2018, date_feature: str = "DATE", **kwargs
 ) -> pd.DataFrame:
     """
     Get Sirene 3 data.
@@ -111,18 +121,18 @@ def get_sirene_3_data(
     # # Create permanence column
     # df["permanence"] = "NaN"
 
-    return df
+    return df, None  # sirene_3, sirene_4=None
 
 
 def get_all_data(
-    revision, start_month: int = 1, start_year: int = 2018, date_feature: str = "DATE"
+    revision, start_month: int = 1, start_year: int = 2018, date_feature: str = "DATE", **kwargs
 ) -> pd.DataFrame:
-    df_s4, old_to_new_cols_s4 = get_sirene_4_data(revision=revision, return_col_names=True)
-    df_s3 = get_sirene_3_data(
+    _, df_s4 = get_sirene_4_data(revision=revision, return_col_names=True)
+    df_s3, _ = get_sirene_3_data(
         start_month=start_month, start_year=start_year, date_feature=date_feature
     )
 
-    for col in old_to_new_cols_s4.values():
+    for col in COL_RENAMING.values():
         if col not in df_s3.columns:
             df_s3[col] = "NaN"
 
@@ -130,7 +140,10 @@ def get_all_data(
 
 
 def filter_on_date(
-    df: pd.DataFrame, start_month: int, start_year: int, date_feature: str = "DATE"
+    df: pd.DataFrame,
+    start_month: int,
+    start_year: int,
+    date_feature: str = "DATE",
 ) -> pd.DataFrame:
     """
     Filter DataFrame on date.

@@ -2,7 +2,6 @@
 PytorchPreprocessor class.
 """
 
-import time
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -110,7 +109,6 @@ class PytorchPreprocessor(Preprocessor):
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
-        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         textual_features: Optional[List[str]] = None,
@@ -119,12 +117,13 @@ class PytorchPreprocessor(Preprocessor):
         test_size: float = 0.2,
         recase: bool = False,
         add_codes: bool = True,
+        **kwargs,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to a Pytorch classifier.
 
         Args:
-            df (pd.DataFrame): Text descriptions to classify.
+            df (pd.DataFrame): Raw text descriptions to classify and relevant variables.
             df_naf (pd.DataFrame): Dataframe that contains all codes and libs.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
@@ -144,39 +143,35 @@ class PytorchPreprocessor(Preprocessor):
         df = self.clean_textual_features(df, textual_features, "training", recase=recase)
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
-        # Train/test split
-        features = [text_feature]
-        if textual_features is not None:
-            features += textual_features
-        if categorical_features is not None:
-            features += categorical_features
+        num_classes = df[y].nunique()
+
+        # isolate the added "true" labels (code libelles): we will add them to the training set
+        df = df.iloc[:num_classes]
+        oversampled_labels = df.iloc[num_classes:]
 
         X_train, X_test, y_train, y_test = train_test_split(
-            df[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
+            df.drop(columns=[y]),
             df[y],
             test_size=test_size,
             random_state=0,
             shuffle=True,
         )
 
-        df_train = pd.concat([X_train, y_train], axis=1)
         df_test = pd.concat([X_test, y_test], axis=1)
 
         X_train, X_val, y_train, y_val = train_test_split(
-            df_train[features + [f"APE_NIV{i}" for i in range(1, 6) if str(i) not in [y[-1]]]],
-            df_train[y],
+            X_train,
+            y_train,
             test_size=test_size,
             random_state=0,
             shuffle=True,
         )
 
+        # Adding the true labels to the training set
+        X_train = pd.concat([X_train, oversampled_labels.drop(columns=[y])], axis=0)
+        y_train = pd.concat([y_train, oversampled_labels[y]], axis=0)
+
         df_train = pd.concat([X_train, y_train], axis=1)
         df_val = pd.concat([X_val, y_val], axis=1)
-
-        if oversampling is not None:
-            print("\t*** Oversampling the train database...\n")
-            t = time.time()
-            df_train = self.oversample_df(df_train, oversampling["threshold"], y)
-            print(f"\t*** Done! Oversampling lasted " f"{round((time.time() - t)/60,1)} minutes.\n")
 
         return df_train, df_val, df_test

@@ -1,6 +1,8 @@
 defaults:
-  - torchFastText
+  - model: torchFastText
+  - data: NAF2008_sirene4
   - override hydra/job_logging: default
+  - _self_
 
 experiment_name: "model_comparison"
 output_dir: ./outputs
