@@ -2,14 +2,15 @@
 PytorchPreprocessor class.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from torchFastText.preprocess import clean_text_feature
 
 from base.preprocessor import Preprocessor
 from utils.data import categorize_surface
-from utils.mappings import mappings
+from utils.mappings import SURFACE_COLS, mappings
 
 
 class PytorchPreprocessor(Preprocessor):
@@ -17,48 +18,10 @@ class PytorchPreprocessor(Preprocessor):
     FastTextPreprocessor class.
     """
 
-    def clean_lib(
-        self, df: pd.DataFrame, text_feature: str, method: str, recase: bool = False
-    ) -> pd.DataFrame:
-        """
-        Cleans a text feature for pd.DataFrame `df` at index idx.
-
-        Args:
-            df (pd.DataFrame): DataFrame.
-            text_feature (str): Name of the text feature.
-            method (str): The method when the function is used (training or
-                evaluation).
-            recase (bool): if True, try applying standard casing.
-
-        Returns:
-            df (pd.DataFrame): DataFrame.
-        """
-        if recase:
-            # Standard casing to apply when uppercase (for Sirene 3 in particular)
-            df[text_feature] = (
-                df[text_feature]
-                .str.lower()
-                .str.replace(r"\s{2,}", ", ", regex=True)
-                .str.replace(r"\b(l|d|n|j|s|t|qu) ", r"\1'", regex=True)
-                .str.split(".")
-                .apply(lambda x: ". ".join([sent.strip().capitalize() for sent in x]))
-            )
-        df[text_feature] = df[text_feature].str.rstrip(" .") + "."
-
-        if method == "training":
-            # On supprime les NaN
-            df = df.dropna(subset=[text_feature])
-        elif method == "evaluation":
-            df[text_feature] = df[text_feature].fillna(value="")
-
-        return df
-
     def clean_textual_features(
         self,
         df: pd.DataFrame,
         textual_features: List[str],
-        method: str,
-        recase: bool = False,
     ) -> pd.DataFrame:
         """
         Cleans the other textual features for pd.DataFrame `df`.
@@ -74,7 +37,13 @@ class PytorchPreprocessor(Preprocessor):
             df (pd.DataFrame): DataFrame.
         """
         for textual_feature in textual_features:
-            self.clean_lib(df, textual_feature, method, recase)
+            df[textual_feature] = clean_text_feature(df[textual_feature], remove_stop_words=True)
+            df[textual_feature] = df[textual_feature].str.replace(
+                "nan", ""
+            )  # empty string instead of "nan" (nothing will be added to the libelle)
+            df[textual_feature] = df[textual_feature].apply(
+                lambda x: " " + x if x != "" else x
+            )  # add a space before the text because it will be concatenated to the libelle
 
         return df
 
@@ -93,15 +62,16 @@ class PytorchPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-        if ("activ_surf_et" in categorical_features) and (
-            pd.api.types.is_float_dtype(df["activ_surf_et"])
-        ):
-            df = categorize_surface(df, "activ_surf_et")
-        df[categorical_features] = df[categorical_features].fillna("NaN")
+
+        for surface_col in SURFACE_COLS:
+            if surface_col in categorical_features:
+                df[surface_col] = df[surface_col].astype(float)
+                df = categorize_surface(df, surface_col)
+
         for variable in categorical_features:
-            if variable != "activ_surf_et":
-                # Mapping already done for this variable
+            if variable not in SURFACE_COLS:  # Mapping already done for this variable
                 df[variable] = df[variable].apply(mappings[variable].get)
+
         if y is not None:
             df[y] = df[y].apply(mappings[y].get)
         return df
@@ -113,10 +83,7 @@ class PytorchPreprocessor(Preprocessor):
         text_feature: str,
         textual_features: Optional[List[str]] = None,
         categorical_features: Optional[List[str]] = None,
-        oversampling: Optional[Dict[str, int]] = None,
         test_size: float = 0.2,
-        recase: bool = False,
-        add_codes: bool = True,
         **kwargs,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -139,18 +106,29 @@ class PytorchPreprocessor(Preprocessor):
             pd.DataFrame: Preprocessed DataFrames for training,
             evaluation and "guichet unique"
         """
-        df = self.clean_lib(df, text_feature, "training", recase=recase)
-        df = self.clean_textual_features(df, textual_features, "training", recase=recase)
+
+        # Clean text + textual features, add textual features at the end of the text (libelle)
+        df[text_feature] = clean_text_feature(df[text_feature], remove_stop_words=True)
+        df = self.clean_textual_features(df, textual_features)
+        df[text_feature] = df[text_feature] + df[textual_features].apply(
+            lambda x: "".join(x), axis=1
+        )
+
+        # Clean categorical features
         df = self.clean_categorical_features(df, categorical_features=categorical_features, y=y)
 
-        num_classes = df[y].nunique()
+        num_classes = df[
+            y
+        ].nunique()  # we are sure, after the "oversampling" (adding the true labels), that each label is present at least once
 
         # isolate the added "true" labels (code libelles): we will add them to the training set
-        df = df.iloc[:num_classes]
-        oversampled_labels = df.iloc[num_classes:]
+        oversampled_labels = df.iloc[-num_classes:]
+        df = df.iloc[:-num_classes]
 
         X_train, X_test, y_train, y_test = train_test_split(
-            df.drop(columns=[y]),
+            df.drop(
+                columns=[y, *textual_features]
+            ),  # drop the textual additional var as they are already concatenated to the libelle
             df[y],
             test_size=test_size,
             random_state=0,
@@ -168,7 +146,9 @@ class PytorchPreprocessor(Preprocessor):
         )
 
         # Adding the true labels to the training set
-        X_train = pd.concat([X_train, oversampled_labels.drop(columns=[y])], axis=0)
+        X_train = pd.concat(
+            [X_train, oversampled_labels.drop(columns=[y, *textual_features])], axis=0
+        )
         y_train = pd.concat([y_train, oversampled_labels[y]], axis=0)
 
         df_train = pd.concat([X_train, y_train], axis=1)

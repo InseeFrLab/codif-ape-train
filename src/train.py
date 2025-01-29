@@ -1,15 +1,8 @@
-import os
-import sys
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
 from constants import DATA_GETTER, PREPROCESSORS
 from utils.data import get_df_naf, get_Y
-
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(project_root, "torch-fastText"))
-sys.path.append(project_root)
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")

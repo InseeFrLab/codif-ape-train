@@ -2,8 +2,10 @@
 Mappings of categorical variables.
 """
 
+SURFACE_COLS = ["activ_surf_et", "SRF"]
+
 mappings = {
-    "activ_perm_et": {"P": 0, "S": 1},
+    "activ_perm_et": {"NaN": 0, "P": 1, "S": 2},
     "cj": {
         "NaN": 0,
         "5499": 1,
@@ -94,6 +96,8 @@ mappings = {
         "6596": 86,
         "5552": 87,
         "6578": 88,
+        "9260": 89,
+        "9220": 90,
     },
     "TYP": {
         "Y": 0,

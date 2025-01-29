@@ -61,6 +61,7 @@ class Preprocessor(ABC):
             pd.DataFrame: Preprocessed DataFrames for training
                 and evaluation.
         """
+
         # Add APE codes libelles (true labels)
         df = pd.concat(
             [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
