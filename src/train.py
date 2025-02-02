@@ -1,4 +1,5 @@
 import hydra
+import pandas as pd
 from omegaconf import DictConfig, OmegaConf
 
 from constants import DATA_GETTER, PREPROCESSORS
@@ -32,7 +33,32 @@ def train(cfg: DictConfig):
             categorical_features=cfg_dict["data"]["categorical_features"],
             test_size=0.1,
         )
-    print(df_train_s4.head())
+    else:
+        raise ValueError("Sirene 4 data should be provided.")
+
+    if df_s3 is not None:
+        df_train_s3, df_val_s3, df_test_s3 = preprocessor.preprocess(
+            df=df_s3,
+            df_naf=df_naf,
+            y=Y,
+            text_feature=cfg_dict["data"]["text_feature"],
+            textual_features=cfg_dict["data"]["textual_features"],
+            categorical_features=cfg_dict["data"]["categorical_features"],
+            test_size=0.1,
+            s3=True,
+        )
+        # all sirene 3 data used as train set, we eval/test only on sirene 4 data
+        df_s3_processed = pd.concat([df_train_s3, df_val_s3, df_test_s3])
+        df_train = pd.concat([df_s3_processed, df_train_s4]).reset_index(drop=True)
+
+        # Assert we have not lost data in the process
+        assert len(df_s3) == len(df_s3_processed)
+        assert len(df_train_s4) + len(df_s3) == len(df_train)
+
+    else:
+        df_train = df_train_s4
+
+    print(df_train.head())
 
 
 if __name__ == "__main__":

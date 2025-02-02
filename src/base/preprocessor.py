@@ -38,6 +38,7 @@ class Preprocessor(ABC):
         test_size: float = 0.2,
         recase: bool = False,
         add_codes: bool = True,
+        s3: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -62,10 +63,11 @@ class Preprocessor(ABC):
                 and evaluation.
         """
 
-        # Add APE codes libelles (true labels)
-        df = pd.concat(
-            [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
-        )
+        # Add APE codes libelles (true labels) only for Sirene 4 data
+        if not s3:
+            df = pd.concat(
+                [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
+            )
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
         variables = [y] + [text_feature]
