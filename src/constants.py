@@ -2,6 +2,8 @@
 Constants file.
 """
 
+from torchFastText.datasets import NGramTokenizer
+
 from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
 from utils.data import get_all_data, get_sirene_3_data, get_sirene_4_data
 
@@ -26,3 +28,4 @@ DATA_GETTER = {
     "sirene_4": get_sirene_4_data,
     "sirene_3+4": get_all_data,
 }
+TOKENIZERS = {"NGramTokenizer": NGramTokenizer}

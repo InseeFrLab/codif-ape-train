@@ -1,6 +1,7 @@
 defaults:
   - model: torchFastText
   - data: NAF2008_sirene4
+  - tokenizer: NGramTokenizer
   - override hydra/job_logging: default
   - _self_
 

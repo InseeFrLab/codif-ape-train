@@ -2,12 +2,13 @@ import hydra
 import pandas as pd
 from omegaconf import DictConfig, OmegaConf
 
-from constants import DATA_GETTER, PREPROCESSORS
+from constants import DATA_GETTER, PREPROCESSORS, TOKENIZERS
 from utils.data import get_df_naf, get_Y
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def train(cfg: DictConfig):
+    ##### DATA #########
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
     # Fetch data
@@ -21,7 +22,7 @@ def train(cfg: DictConfig):
     # Debugging purposes only
     df_s4 = df_s4.sample(frac=0.001, random_state=42)
     df_s3 = df_s3.sample(frac=0.001, random_state=42)
-    ############################
+    ##########
 
     if df_s4 is not None:
         df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
@@ -58,7 +59,15 @@ def train(cfg: DictConfig):
     else:
         df_train = df_train_s4
 
-    print(df_train.head())
+    ###### Tokenizer ####
+    tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["name"]](
+        **cfg_dict["tokenizer"], training_text=df_train[cfg_dict["data"]["text_feature"]].values
+    )
+    print(tokenizer)
+
+    ###### Dataset #####
+
+    ###### MODEL #####
 
 
 if __name__ == "__main__":
