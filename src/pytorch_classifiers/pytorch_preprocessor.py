@@ -70,10 +70,18 @@ class PytorchPreprocessor(Preprocessor):
 
         for variable in categorical_features:
             if variable not in SURFACE_COLS:  # Mapping already done for this variable
+                if len(set(df[variable].unique()) - set(mappings[variable].keys())) < 0:
+                    print(set(df[variable].unique()) - set(mappings[variable].keys()))
+                    raise ValueError(f"Missing values in mapping for {variable}")
                 df[variable] = df[variable].apply(mappings[variable].get)
 
         if y is not None:
+            if len(set(df[y].unique()) - set(mappings[y].keys())) < 0:
+                print(set(df[y].unique()) - set(mappings[y].keys()))
+                raise ValueError(f"Missing values in mapping for {y}")
             df[y] = df[y].apply(mappings[y].get)
+
+        print(df[df.isna().any(axis=1)])
         return df
 
     def preprocess_for_model(

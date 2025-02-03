@@ -81,7 +81,7 @@ class Preprocessor(ABC):
                 df[feature] = df[feature].fillna(value="NaN")
 
         df = df[variables]
-        df = df.dropna(subset=[y] + [text_feature])
+        df = df.dropna(subset=[y] + [text_feature], axis=0)
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
