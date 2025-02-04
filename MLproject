@@ -3,7 +3,6 @@ name: ape-classifier
 entry_points:
   main:
     parameters:
-      remote_server_uri: {type: str, default: projet-ape-mlflow.user.lab.sspcloud.fr}
       experiment_name: {type: str, default: test}
       run_name: {type: str, default: default}
       revision: {type: str, default: "NAF2008"}
