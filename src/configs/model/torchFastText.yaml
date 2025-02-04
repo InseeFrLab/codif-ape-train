@@ -2,7 +2,7 @@ name: "torchFastText"
 preprocessor: "PyTorch"
 dataset: "FastTextModelDataset"
 model_params:
-  embedding_dim: 300
+  embedding_dim: 180
   categorical_embedding_dims: 5
   sparse: False
   direct_bagging: True

@@ -220,6 +220,7 @@ train_text.txt
 
 # Hydra
 outputs/
+multirun/
 
 #Lightning
 lightning_logs/

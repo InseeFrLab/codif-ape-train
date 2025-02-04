@@ -2,6 +2,7 @@ import hydra
 import mlflow
 import numpy as np
 import pandas as pd
+import torch
 from omegaconf import DictConfig, OmegaConf
 
 from constants import (
@@ -17,7 +18,7 @@ from constants import (
     TRAINERS,
 )
 from utils.data import get_df_naf, get_Y
-from utils.mlflow import create_or_restore_experiment, mlflow_log_model
+from utils.mlflow import create_or_restore_experiment
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -29,6 +30,9 @@ def train(cfg: DictConfig):
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
     with mlflow.start_run(run_name=cfg_dict["mlflow"]["run_name"]):
+        # Log config
+        mlflow.log_params(cfg_dict)
+
         ##### Data #########
 
         # Fetch data
@@ -171,14 +175,27 @@ def train(cfg: DictConfig):
             **cfg_dict["model"]["training_params"]
         )
 
+        if cfg_dict["model"]["preprocessor"] == "PyTorch":
+            mlflow.pytorch.autolog()
+            torch.cuda.empty_cache()
+            torch.set_float32_matmul_precision("medium")
+
         trainer.fit(module, train_dataloader, val_dataloader)
 
         # Save model
 
-        mlflow_log_model(
-            logging_type=cfg_dict["model"]["preprocessor"],
-            model=module,
+        best_model = type(module).load_from_checkpoint(
+            checkpoint_path=trainer.checkpoint_callback.best_model_path,
+            model=module.model,
+            loss=loss,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            **cfg_dict["model"]["training_params"],
+        )
+        mlflow.pytorch.log_model(
+            pytorch_model=best_model,
             artifact_path=cfg_dict["mlflow"]["run_name"],
+            input_example=None,
         )
 
         ########## Evaluation ##########
