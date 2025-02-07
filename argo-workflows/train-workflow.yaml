@@ -57,54 +57,14 @@ spec:
     - name: run-training-wt
       inputs:
         parameters:
-          - name: DIM
-          - name: WS
-          - name: LR
-          - name: EPOCHS
-          - name: WORDNGRAMS
-          - name: MINN
-          - name: MAXN
-          - name: MINCOUNT
-          - name: BUCKET
-          - name: LOSS
-          - name: START_YEAR
-          - name: REVISION
-          - name: MODEL_CLASS
-          - name: EXPERIMENT_NAME
+          - name: HYDRA_COMMAND
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone -b main https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
-                export MLFLOW_EXPERIMENT_NAME={{inputs.parameters.EXPERIMENT_NAME}} &&\
-                mlflow run ~/work/codif-ape-train/ \
-                          --env-manager=local \
-                          --entry-point $ENTRY_POINT \
-                          -P remote_server_uri=$MLFLOW_TRACKING_URI \
-                          -P experiment_name=$MLFLOW_EXPERIMENT_NAME \
-                          -P dim={{inputs.parameters.DIM}} \
-                          -P ws={{inputs.parameters.WS}} \
-                          -P lr={{inputs.parameters.LR}} \
-                          -P epoch={{inputs.parameters.EPOCHS}} \
-                          -P wordNgrams={{inputs.parameters.WORDNGRAMS}} \
-                          -P minn={{inputs.parameters.MINN}} \
-                          -P maxn={{inputs.parameters.MAXN}} \
-                          -P minCount={{inputs.parameters.MINCOUNT}} \
-                          -P bucket={{inputs.parameters.BUCKET}} \
-                          -P loss={{inputs.parameters.LOSS}} \
-                          -P label_prefix=$PREFIX \
-                          -P text_feature=$TEXT_FEATURE \
-                          -P textual_features_1=$TEXTUAL_FEATURE1 \
-                          -P textual_features_2=$TEXTUAL_FEATURE2 \
-                          -P categorical_features_1=$FEATURE1 \
-                          -P categorical_features_2=$FEATURE2 \
-                          -P categorical_features_3=$FEATURE3 \
-                          -P categorical_features_4=$FEATURE4 \
-                          -P categorical_features_5=$FEATURE5 \
-                          -P start_year={{inputs.parameters.START_YEAR}} \
-                          -P model_class={{inputs.parameters.MODEL_CLASS}} \
-                          -P revision={{inputs.parameters.REVISION}} "
+                python train.py -m {{inputs}} "
               ]
         env:
           # env var for s3 connexion
@@ -128,21 +88,3 @@ spec:
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
           - name: ENTRY_POINT
             value: main
-          - name: PREFIX
-            value: __label__
-          - name: TEXT_FEATURE
-            value: libelle
-          - name: TEXTUAL_FEATURE1
-            value: activ_nat_lib_et
-          - name: TEXTUAL_FEATURE2
-            value: activ_sec_agri_et
-          - name: FEATURE1
-            value: TYP
-          - name: FEATURE2
-            value: NAT
-          - name: FEATURE3
-            value: SRF
-          - name: FEATURE4
-            value: CJ
-          - name: FEATURE5
-            value: CRT

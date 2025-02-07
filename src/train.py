@@ -1,3 +1,5 @@
+import sys
+
 import hydra
 import mlflow
 import numpy as np
@@ -204,4 +206,16 @@ def train(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    print("check sys.argv", sys.argv, len(sys.argv))
+
+    for i in range(len(sys.argv)):
+        if sys.argv[-1] == "":  # Hydra may get an empty string
+            print("Removing empty string argument")
+            sys.argv = sys.argv[:-1]  # Remove it
+        else:
+            break
+
+    # Merge all the args into one
+    args = " ".join(sys.argv)
+    print(args)
     train()
