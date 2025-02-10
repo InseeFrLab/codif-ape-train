@@ -39,7 +39,9 @@ def train(cfg: DictConfig):
         + str(cfg_dict["tokenizer"]["num_tokens"])
     )
 
+    print("Run name:", run_name)
     with mlflow.start_run(run_name=run_name):
+        mlflow.set_tag("mlflow.runName", run_name)
         # Log config
         mlflow.log_params(cfg_dict)
 
@@ -204,7 +206,7 @@ def train(cfg: DictConfig):
         )
         mlflow.pytorch.log_model(
             pytorch_model=best_model,
-            artifact_path=cfg_dict["mlflow"]["run_name"],
+            artifact_path=run_name,
             input_example=None,
         )
 
@@ -214,8 +216,6 @@ def train(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    print("check sys.argv", sys.argv, len(sys.argv))
-
     for i in range(len(sys.argv)):
         if sys.argv[-1] == "":  # Hydra may get an empty string
             print("Removing empty string argument")
@@ -225,5 +225,4 @@ if __name__ == "__main__":
 
     # Merge all the args into one
     args = " ".join(sys.argv)
-    print(args)
     train()
