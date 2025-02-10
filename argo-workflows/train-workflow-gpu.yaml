@@ -9,8 +9,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "HYDRA_COMMAND_1":"model.embedding_dim=40,80", "HYDRA_COMMAND_2": "tokenizer.num_tokens=10000,20000,100000"},
-          { "HYDRA_COMMAND_1":"model.embedding_dim=180", "HYDRA_COMMAND_2": "tokenizer.num_tokens=10000,20000,100000"}
+          { "embedding_dim":"40,80", "num_tokens": "10000,20000,100000"},
+          { "embedding_dim":"180", "num_tokens": "10000,20000,100000"}
             ]'
   templates:
     - name: main
@@ -21,10 +21,10 @@ spec:
             template: run-training-wt
             arguments:
               parameters:
-                - name: HYDRA_COMMAND_1
-                  value: "{{item.HYDRA_COMMAND_1}}"
-                - name: HYDRA_COMMAND_2
-                  value: "{{item.HYDRA_COMMAND_2}}"
+                - name: embedding_dim
+                  value: "{{item.embedding_dim}}"
+                - name: num_tokens
+                  value: "{{item.num_tokens}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -33,18 +33,25 @@ spec:
     - name: run-training-wt
       inputs:
         parameters:
-          - name: HYDRA_COMMAND_1
-          - name: HYDRA_COMMAND_2
+          - name: embedding_dim
+          - name: num_tokens
+      nodeSelector:
+        nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
+        resources:
+          limits:
+            nvidia.com/gpu: 1
         command: ["/bin/bash", -c]
-        args: ["git clone -b main https://github.com/InseeFrLab/codif-ape-train.git &&\
+        args: ["git clone -b refactoring https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
+                pip install -e torch-fastText &&\
+                pip install -r requirements.txt &&\
                 mlflow run ~/work/codif-ape-train/ \
-                          --env-manager=local
-                          -P script_args_1={{inputs.parameters.HYDRA_COMMAND_1}}
-                          -P script_args_2={{inputs.parameters.HYDRA_COMMAND_2}}"
+                          --env-manager=local  \
+                          -P embedding_dim={{inputs.parameters.embedding_dim}}
+                          -P num_tokens={{inputs.parameters.num_tokens}}"
               ]
         env:
           # env var for s3 connexion
