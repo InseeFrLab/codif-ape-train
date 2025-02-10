@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import hydra
@@ -21,6 +22,15 @@ from constants import (
 )
 from utils.data import get_df_naf, get_Y
 from utils.mlflow import create_or_restore_experiment
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler()],
+)
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -216,6 +226,7 @@ def train(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    logger.info("GPU ? ", torch.cuda.is_available())
     for i in range(len(sys.argv)):
         if sys.argv[-1] == "":  # Hydra may get an empty string
             print("Removing empty string argument")
