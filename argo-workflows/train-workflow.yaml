@@ -9,8 +9,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "EXPERIMENT_NAME": "NACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
-          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
+          { "HYDRA_COMMAND_1":"model.embedding_dim=40,80", "HYDRA_COMMAND_2": "tokenizer.num_tokens=10000,20000,100000"},
+          { "HYDRA_COMMAND_1":"model.embedding_dim=180", "HYDRA_COMMAND_2": "tokenizer.num_tokens=10000,20000,100000"}
             ]'
   templates:
     - name: main
@@ -21,34 +21,10 @@ spec:
             template: run-training-wt
             arguments:
               parameters:
-                - name: DIM
-                  value: "{{item.DIM}}"
-                - name: WS
-                  value: "{{item.WS}}"
-                - name: LR
-                  value: "{{item.LR}}"
-                - name: EPOCHS
-                  value: "{{item.EPOCHS}}"
-                - name: WORDNGRAMS
-                  value: "{{item.WORDNGRAMS}}"
-                - name: MINN
-                  value: "{{item.MINN}}"
-                - name: MAXN
-                  value: "{{item.MAXN}}"
-                - name: MINCOUNT
-                  value: "{{item.MINCOUNT}}"
-                - name: BUCKET
-                  value: "{{item.BUCKET}}"
-                - name: LOSS
-                  value: "{{item.LOSS}}"
-                - name: START_YEAR
-                  value: "{{item.START_YEAR}}"
-                - name: REVISION
-                  value: "{{item.REVISION}}"
-                - name: MODEL_CLASS
-                  value: "{{item.MODEL_CLASS}}"
-                - name: EXPERIMENT_NAME
-                  value: "{{item.EXPERIMENT_NAME}}"
+                - name: HYDRA_COMMAND_1
+                  value: "{{item.HYDRA_COMMAND_1}}"
+                - name: HYDRA_COMMAND_2
+                  value: "{{item.HYDRA_COMMAND_2}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -57,14 +33,18 @@ spec:
     - name: run-training-wt
       inputs:
         parameters:
-          - name: HYDRA_COMMAND
+          - name: HYDRA_COMMAND_1
+          - name: HYDRA_COMMAND_2
       container:
         image: inseefrlab/codif-ape-train:main
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone -b main https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
-                python train.py -m {{inputs}} "
+                mlflow run ~/work/codif-ape-train/ \
+                          --env-manager=local
+                          -P script_args_1={{inputs.parameters.HYDRA_COMMAND_1}}
+                          -P script_args_2={{inputs.parameters.HYDRA_COMMAND_2}}"
               ]
         env:
           # env var for s3 connexion
@@ -86,5 +66,7 @@ spec:
             value: https://minio.lab.sspcloud.fr
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: model_comparison
           - name: ENTRY_POINT
             value: main
