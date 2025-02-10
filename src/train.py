@@ -65,11 +65,6 @@ def train(cfg: DictConfig):
         # Preprocess data
         preprocessor = PREPROCESSORS[cfg_dict["model"]["preprocessor"]]()
 
-        # Debugging purposes only
-        df_s4 = df_s4.sample(frac=0.0001, random_state=1)
-        df_s3 = df_s3.sample(frac=0.0001, random_state=1)
-        ##########
-
         if df_s4 is not None:
             df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
                 df=df_s4,
@@ -226,7 +221,7 @@ def train(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    logger.info("GPU ? " + str(torch.cuda.is_available()))
+    logger.info("GPU available: " + str(torch.cuda.is_available()))
     for i in range(len(sys.argv)):
         if sys.argv[-1] == "":  # Hydra may get an empty string
             print("Removing empty string argument")

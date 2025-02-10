@@ -50,7 +50,7 @@ spec:
             set -x  # Print commands for debugging
 
             # Clone repository and submodules
-            git clone -b refactoring https://github.com/InseeFrLab/codif-ape-train.git
+            git clone -b main https://github.com/InseeFrLab/codif-ape-train.git
             cd codif-ape-train/
             git submodule update --init
 
