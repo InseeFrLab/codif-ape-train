@@ -16,3 +16,4 @@ sentencepiece
 accelerate
 datasets
 evaluate
+hydra-core
