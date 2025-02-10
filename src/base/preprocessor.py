@@ -38,13 +38,14 @@ class Preprocessor(ABC):
         test_size: float = 0.2,
         recase: bool = False,
         add_codes: bool = True,
+        s3: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
         training and evaluation.
 
         Args:
-            df (pd.DataFrame): Text descriptions to classify.
+            df (pd.DataFrame): Raw text descriptions to classify.
             df_naf (pd.DataFrame): NAF classification, level 5 detail.
             y (str): Name of the variable to predict.
             text_feature (str): Name of the text feature.
@@ -61,9 +62,12 @@ class Preprocessor(ABC):
             pd.DataFrame: Preprocessed DataFrames for training
                 and evaluation.
         """
-        # Adding APE codes at each level
-        df["APE_NIV5"] = df[y]
-        df = df.join(df_naf.set_index("APE_NIV5"), on="APE_NIV5")
+
+        # Add APE codes libelles (true labels) only for Sirene 4 data
+        if not s3:
+            df = pd.concat(
+                [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
+            )
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
         variables = [y] + [text_feature]
@@ -75,8 +79,9 @@ class Preprocessor(ABC):
             variables += categorical_features
             for feature in categorical_features:
                 df[feature] = df[feature].fillna(value="NaN")
-        df = df[variables + [f"APE_NIV{i}" for i in range(1, 6)]]
-        df = df.dropna(subset=[y] + [text_feature])
+
+        df = df[variables]
+        df = df.dropna(subset=[y] + [text_feature], axis=0)
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
@@ -96,7 +101,6 @@ class Preprocessor(ABC):
     def preprocess_for_model(
         self,
         df: pd.DataFrame,
-        df_naf: pd.DataFrame,
         y: str,
         text_feature: str,
         textual_features: Optional[List[str]] = None,

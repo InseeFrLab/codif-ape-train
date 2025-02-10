@@ -1,0 +1,3 @@
+[submodule "torch-fastText"]
+	path = torch-fastText
+	url = https://github.com/InseeFrLab/torch-fastText/

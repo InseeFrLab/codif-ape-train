@@ -1,66 +1,48 @@
 """
 Constants file.
 """
-from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
-from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
-from fasttext_classifier.fasttext_trainer import FastTextTrainer
-from fasttext_classifier.fasttext_wrapper import FastTextWrapper
-from pytorch_classifier.pytorch_evaluator import PytorchEvaluator
-from pytorch_classifier.pytorch_preprocessor import PytorchPreprocessor
-from pytorch_classifier.pytorch_trainer import PytorchTrainer
-from camembert.camembert_evaluator import CamembertEvaluator
-from camembert.camembert_preprocessor import CamembertPreprocessor
-from camembert.camembert_trainer import (
-    CustomCamembertTrainer,
-    OneHotCamembertTrainer,
-    EmbeddedCamembertTrainer,
-)
-from camembert.camembert_wrapper import (
-    CustomCamembertWrapper,
-    OneHotCategoricalCamembertWrapper,
-    EmbeddedCategoricalCamembertWrapper,
-)
-from camembert.camembert_model import (
-    CustomCamembertModel,
-    OneHotCategoricalCamembertModel,
-    EmbeddedCategoricalCamembertModel,
-)
 
+import torch
+from torchFastText.datasets import FastTextModelDataset, NGramTokenizer
+from torchFastText.model import FastTextModel, FastTextModule
 
-FRAMEWORK_CLASSES = {
-    "fasttext": {
-        "preprocessor": FastTextPreprocessor,
-        "trainer": FastTextTrainer,
-        "evaluator": FastTextEvaluator,
-        "wrapper": FastTextWrapper,
-        "model": None,
-    },
-    "pytorch": {
-        "preprocessor": PytorchPreprocessor,
-        "trainer": PytorchTrainer,
-        "evaluator": PytorchEvaluator,
-        "wrapper": None,
-        "model": None,
-    },
-    "camembert": {
-        "preprocessor": CamembertPreprocessor,
-        "trainer": CustomCamembertTrainer,
-        "evaluator": CamembertEvaluator,
-        "wrapper": CustomCamembertWrapper,
-        "model": CustomCamembertModel,
-    },
-    "camembert_one_hot": {
-        "preprocessor": CamembertPreprocessor,
-        "trainer": OneHotCamembertTrainer,
-        "evaluator": CamembertEvaluator,
-        "wrapper": OneHotCategoricalCamembertWrapper,
-        "model": OneHotCategoricalCamembertModel,
-    },
-    "camembert_embedded": {
-        "preprocessor": CamembertPreprocessor,
-        "trainer": EmbeddedCamembertTrainer,
-        "evaluator": CamembertEvaluator,
-        "wrapper": EmbeddedCategoricalCamembertWrapper,
-        "model": EmbeddedCategoricalCamembertModel,
-    },
+from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
+from pytorch_classifiers.trainers.build_trainers import (
+    build_lightning_trainer,
+    build_transformers_trainer,
+)
+from utils.data import get_all_data, get_sirene_3_data, get_sirene_4_data
+
+# from fasttext_classifier.fasttext_evaluator import FastTextEvaluator
+# from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
+# from fasttext_classifier.fasttext_trainer import FastTextTrainer
+# from fasttext_classifier.fasttext_wrapper import FastTextWrapper
+# from pytorch_classifiers.models.camembert.camembert_model import (
+#     CustomCamembertModel,
+#     EmbeddedCategoricalCamembertModel,
+#     OneHotCategoricalCamembertModel,
+# )
+# from pytorch_classifiers.models.camembert.camembert_wrapper import (
+#     CustomCamembertWrapper,
+#     EmbeddedCategoricalCamembertWrapper,
+#     OneHotCategoricalCamembertWrapper,
+# )
+
+PREPROCESSORS = {"PyTorch": PytorchPreprocessor}
+DATA_GETTER = {
+    "sirene_3": get_sirene_3_data,
+    "sirene_4": get_sirene_4_data,
+    "sirene_3+4": get_all_data,
 }
+TOKENIZERS = {"NGramTokenizer": NGramTokenizer}
+DATASETS = {"FastTextModelDataset": FastTextModelDataset}
+MODELS = {"torchFastText": FastTextModel}
+MODULES = {"torchFastText": FastTextModule}
+OPTIMIZERS = {
+    "Adam": torch.optim.Adam,
+    "SGD": torch.optim.SGD,
+    "SparseAdam": torch.optim.SparseAdam,
+}
+SCHEDULERS = {"ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau}
+LOSSES = {"CrossEntropyLoss": torch.nn.CrossEntropyLoss}
+TRAINERS = {"Lightning": build_lightning_trainer, "Transformers": build_transformers_trainer}

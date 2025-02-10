@@ -1,504 +1,234 @@
-"""
-Main script.
-"""
+import logging
+import sys
 
-import argparse
-import os
-import time
-
+import hydra
 import mlflow
+import numpy as np
 import pandas as pd
-import yaml
+import torch
+from omegaconf import DictConfig, OmegaConf
 
-from camembert.custom_pipeline import CustomPipeline
-from constants import FRAMEWORK_CLASSES
-from tests.test_main import run_test
-from utils.data import get_df_naf, get_sirene_3_data, get_sirene_4_data, get_test_data, get_Y
-from utils.mappings import mappings
-from utils.mlflow_tracking_queries import create_or_restore_experiment
+from constants import (
+    DATA_GETTER,
+    DATASETS,
+    LOSSES,
+    MODELS,
+    MODULES,
+    OPTIMIZERS,
+    PREPROCESSORS,
+    SCHEDULERS,
+    TOKENIZERS,
+    TRAINERS,
+)
+from utils.data import get_df_naf, get_Y
+from utils.mlflow import create_or_restore_experiment
 
-parser = argparse.ArgumentParser(
-    description="FastAPE 🚀 : Model for coding a company's main activity"
-)
-parser.add_argument(
-    "--remote_server_uri",
-    type=str,
-    default="https://projet-ape-mlflow.user.lab.sspcloud.fr",
-    help="MLflow URI",
-    required=True,
-)
-parser.add_argument(
-    "--experiment_name",
-    type=str,
-    # choices=["NACE2008", "NACE2025", "Experimentation", "Production", "Test"],
-    default="Test",
-    help="Experiment name in MLflow",
-)
-parser.add_argument(
-    "--run_name",
-    type=str,
-    default="default",
-    help="Run name in MLflow",
-)
-parser.add_argument(
-    "--revision",
-    type=str,
-    default="NAF2008",
-    help="Model output revision in MLflow",
-)
-parser.add_argument(
-    "--dim",
-    type=int,
-    default=180,
-    help="Size of word vectors",
-    required=True,
-)
-parser.add_argument("--ws", type=int, default=5, help="size of the context window")
-parser.add_argument(
-    "--lr", type=float, default=0.2, metavar="LR", help="Learning rate (default: 0.2)"
-)
-parser.add_argument(
-    "--epoch", type=int, default=50, metavar="N", help="Number of epochs to train (default: 50)"
-)
-parser.add_argument(
-    "--wordNgrams", type=int, default=3, metavar="N", help="Max length of word ngram (default: 3)"
-)
-parser.add_argument(
-    "--minn", type=int, default=3, metavar="N", help="Min length of char ngram (default: 3)"
-)
-parser.add_argument(
-    "--maxn", type=int, default=3, metavar="N", help="Max length of char ngram (default: 4)"
-)
-parser.add_argument(
-    "--minCount",
-    type=int,
-    default=3,
-    metavar="N",
-    help="Minimal number of word occurrences (default: 3)",
-)
-parser.add_argument(
-    "--bucket", type=int, default=2000000, metavar="N", help="Number of buckets (default: 2000000)"
-)
-parser.add_argument(
-    "--loss",
-    type=str,
-    choices=["ns", "hs", "softmax", "ova"],
-    default="ova",
-    help="Loss function",
-    required=True,
-)
-parser.add_argument(
-    "--label_prefix",
-    type=str,
-    default="__label__",
-    help="Labels prefix",
-    required=True,
-)
-parser.add_argument(
-    "--text_feature",
-    type=str,
-    help="Description of company's activity",
-    required=True,
-)
-parser.add_argument(
-    "--textual_features_1",
-    type=str,
-    default="activ_nat_lib_et",
-    help="Other nature of observation description",
-    required=True,
-)
-parser.add_argument(
-    "--textual_features_2",
-    type=str,
-    default="activ_sec_agri_et",
-    help="Additional description of company's agricultural activities",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_1",
-    type=str,
-    default="AUTO",
-    help="Type of observation",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_2",
-    type=str,
-    default="NAT_SICORE",
-    help="Nature of observation",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_3",
-    type=str,
-    default="SURF",
-    help="Surface of the company",
-    required=True,
-)
-# parser.add_argument(
-#     "--categorical_features_4",
-#     type=str,
-#     default="EVT_SICORE",
-#     help="Event of the observation",
-#     required=True,
-# )
-parser.add_argument(
-    "--categorical_features_4",
-    type=str,
-    default="CJ",
-    help="CJ of the company",
-    required=True,
-)
-parser.add_argument(
-    "--categorical_features_5",
-    type=str,
-    default="CRT",
-    help="Permanent or seasonal character of the activities of the company",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_1",
-    type=int,
-    default=3,
-    help="Embedding dimension for type",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_2",
-    type=int,
-    default=3,
-    help="Embedding dimension for nature",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_3",
-    type=int,
-    default=1,
-    help="Embedding dimension for surface",
-    required=True,
-)
-# parser.add_argument(
-#     "--embedding_dim_4",
-#     type=int,
-#     default=3,
-#     help="Embedding dimension for event",
-#     required=True,
-# )
-parser.add_argument(
-    "--embedding_dim_4",
-    type=int,
-    default=3,
-    help="Embedding dimension for cj",
-    required=True,
-)
-parser.add_argument(
-    "--embedding_dim_5",
-    type=int,
-    default=1,
-    help="Embedding dimension for permanence",
-    required=True,
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler()],
 )
 
-parser.add_argument(
-    "--pre_training_weights",
-    type=str,
-    default="camembert/camembert-base",
-    help="Pre-training weights on Huggingface",
-    required=True,
-)
-parser.add_argument(
-    "--model_class",
-    type=str,
-    choices=[
-        "fasttext",
-        "pytorch",
-        "camembert",
-        "camembert_one_hot",
-        "camembert_embedded",
-    ],
-    default="fasttext",
-    help="Model type",
-    required=True,
-)
-parser.add_argument(
-    "--start_month",
-    type=int,
-    default=1,
-    help="Start month for Sirene 3 data",
-    required=True,
-)
-parser.add_argument(
-    "--start_year",
-    type=int,
-    default=2018,
-    help="Start year for Sirene 3 data",
-    required=True,
-)
-args = parser.parse_args()
 
+@hydra.main(version_base=None, config_path="configs", config_name="config")
+def train(cfg: DictConfig):
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
-def main(
-    remote_server_uri: str,
-    experiment_name: str,
-    run_name: str,
-    revision: str,
-    dim: int,
-    ws: int,
-    lr: float,
-    epoch: int,
-    wordNgrams: int,
-    minn: int,
-    maxn: int,
-    minCount: int,
-    bucket: int,
-    loss: str,
-    label_prefix: str,
-    text_feature: str,
-    textual_features_1: str,
-    textual_features_2: str,
-    categorical_features_1: str,
-    categorical_features_2: str,
-    categorical_features_3: str,
-    categorical_features_4: str,
-    categorical_features_5: str,
-    embedding_dim_1: int,
-    embedding_dim_2: int,
-    embedding_dim_3: int,
-    embedding_dim_4: int,
-    embedding_dim_5: int,
-    model_class: str,
-    pre_training_weights: str,
-    start_month: int,
-    start_year: int,
-):
-    """
-    Main method.
-    """
+    mlflow.set_tracking_uri(cfg_dict["mlflow"]["remote_server_uri"])
+    create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
+    mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
-    # choose right output for training according to NAF revision
-    Y = get_Y(revision=revision)
+    run_name = (
+        cfg_dict["model"]["name"]
+        + "_"
+        + str(cfg_dict["model"]["model_params"]["embedding_dim"])
+        + "_"
+        + str(cfg_dict["tokenizer"]["num_tokens"])
+    )
 
-    params = {
-        key: value
-        for key, value in locals().items()
-        if (
-            key
-            not in [
-                "remote_server_uri",
-                "experiment_name",
-                "run_name",
-                "revision",
-                "Y",
-                "model_class",
-                "text_feature",
-                "pre_training_weights",
-                "start_month",
-                "start_year",
-            ]
-        )
-        and not key.startswith("textual_features")
-        and not key.startswith("categorical_features")
-        and not key.startswith("embedding_dim")
-    }
-    params["thread"] = os.cpu_count()
-    textual_features = [
-        value for key, value in locals().items() if key.startswith("textual_features")
-    ]
-    categorical_features = [
-        value for key, value in locals().items() if key.startswith("categorical_features")
-    ]
-    embedding_dims = [value for key, value in locals().items() if key.startswith("embedding_dim")]
-
-    mlflow.set_tracking_uri(remote_server_uri)
-    create_or_restore_experiment(experiment_name)
-    mlflow.set_experiment(experiment_name)
-
+    print("Run name:", run_name)
     with mlflow.start_run(run_name=run_name):
-        framework_classes = FRAMEWORK_CLASSES[model_class]
+        mlflow.set_tag("mlflow.runName", run_name)
+        # Log config
+        mlflow.log_params(cfg_dict)
 
-        preprocessor = framework_classes["preprocessor"]()
+        ##### Data #########
 
-        # Create trainer
-        if model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
-            trainer = framework_classes["trainer"](pre_training_weights)
-        else:
-            trainer = framework_classes["trainer"]()
-
-        print("\n\n*** 1- Preprocessing the database...\n")
-        t = time.time()
-        # Load data
-        # Sirene 4
-        df_s4 = get_sirene_4_data(revision=revision)
-        # Sirene 3
-        df_s3 = get_sirene_3_data(start_month=start_month, start_year=start_year)
-        # Detailed NAF
-        df_naf = get_df_naf(revision=revision)
+        # Fetch data
+        df_s3, df_s4 = DATA_GETTER[cfg_dict["data"]["sirene"]](**cfg_dict["data"])
+        Y = get_Y(revision=cfg_dict["data"]["revision"])
+        df_naf = get_df_naf(revision=cfg_dict["data"]["revision"])
 
         # Preprocess data
-        # Sirene 4
-        df_train_s4, df_test = preprocessor.preprocess(
-            df=df_s4,
-            df_naf=df_naf,
-            y=Y,
-            text_feature=text_feature,
-            textual_features=textual_features,
-            categorical_features=categorical_features,
-            test_size=0.1,
-        )
-        # Get test_data from LabelStudio
-        df_test_ls = pd.concat(
-            preprocessor.preprocess(
-                get_test_data(revision=revision, y=Y),
-                df_naf,
-                Y,
-                text_feature,
-                textual_features,
-                categorical_features,
-                add_codes=False,
-            ),
-            axis=0,
-        )
-        # Sirene 3
-        if df_s3.empty:
+        preprocessor = PREPROCESSORS[cfg_dict["model"]["preprocessor"]]()
+
+        if df_s4 is not None:
+            df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
+                df=df_s4,
+                df_naf=df_naf,
+                y=Y,
+                text_feature=cfg_dict["data"]["text_feature"],
+                textual_features=cfg_dict["data"]["textual_features"],
+                categorical_features=cfg_dict["data"]["categorical_features"],
+                test_size=0.1,
+            )
+        else:
+            raise ValueError("Sirene 4 data should be provided.")
+
+        if df_s3 is not None:
+            df_train_s3, df_val_s3, df_test_s3 = preprocessor.preprocess(
+                df=df_s3,
+                df_naf=df_naf,
+                y=Y,
+                text_feature=cfg_dict["data"]["text_feature"],
+                textual_features=cfg_dict["data"]["textual_features"],
+                categorical_features=cfg_dict["data"]["categorical_features"],
+                test_size=0.1,
+                s3=True,
+            )
+            # all sirene 3 data used as train set, we eval/test only on sirene 4 data
+            df_s3_processed = pd.concat([df_train_s3, df_val_s3, df_test_s3])
+            df_train = pd.concat([df_s3_processed, df_train_s4]).reset_index(drop=True)
+
+            # Assert we have not lost data in the process
+            assert len(df_s3) == len(df_s3_processed)
+            assert len(df_train_s4) + len(df_s3) == len(df_train)
+
+        else:
             df_train = df_train_s4
-        else:
-            df_train_s3 = pd.concat(
-                preprocessor.preprocess(
-                    df_s3,
-                    df_naf,
-                    Y,
-                    text_feature,
-                    textual_features,
-                    categorical_features,
-                    recase=True,
-                ),
-                axis=0,
-            )
-            # All train data together
-            df_train = pd.concat([df_train_s3, df_train_s4], axis=0).reset_index(drop=True)
-        # Shuffle in case it is not done later
-        df_train = df_train.sample(frac=1)
-        mlflow.log_param("number_of_observations", df_train.shape[0])
-        print(f"Number of observations in the training_set: {df_train.shape[0]}")
-        print(f"*** Done! Preprocessing lasted {round((time.time() - t)/60,1)} minutes.\n")
 
-        # Run training of the model
-        print("*** 2- Training the model...\n")
-        t = time.time()
+        mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
-        if model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
-            model = trainer.train(
-                df_train,
-                Y,
-                text_feature,
-                textual_features,
-                categorical_features,
-                params,
-                embedding_dims=embedding_dims,
-            )
-        else:
-            model = trainer.train(
-                df_train, Y, text_feature, textual_features, categorical_features, params
-            )
-        print(f"*** Done! Training lasted {round((time.time() - t)/60,1)} minutes.\n")
+        df_val = df_val_s4
 
-        inference_params = {
-            "k": 1,
-        }
-        # Infer the signature including parameters
-        signature = mlflow.models.infer_signature(
-            params=inference_params,
+        train_text, train_categorical_variables = (
+            df_train[cfg_dict["data"]["text_feature"]].values,
+            df_train[cfg_dict["data"]["categorical_features"]].values,
         )
-        if model_class == "fasttext":
-            fasttext_model_path = run_name + ".bin"
-            model.save_model(fasttext_model_path)
-
-            artifacts = {
-                "fasttext_model_path": fasttext_model_path,
-                "train_data": "train_text.txt",
-            }
-
-            mlflow.pyfunc.log_model(
-                artifact_path=run_name,
-                code_paths=["src/fasttext_classifier/", "src/base/", "src/utils/"],
-                python_model=framework_classes["wrapper"](
-                    text_feature, textual_features, categorical_features
-                ),
-                artifacts=artifacts,
-                signature=signature,
-            )
-        elif model_class == "pytorch":
-            mlflow.pytorch.log_model(pytorch_model=model, artifact_path=run_name)
-        elif model_class in ["camembert", "camembert_one_hot", "camembert_embedded"]:
-            model_output_dir = "./camembert_model"
-            pipeline_output_dir = "./camembert_pipeline"
-            model.save_model(model_output_dir)
-
-            pipe = CustomPipeline(
-                framework="pt",
-                model=framework_classes["model"].from_pretrained(
-                    model_output_dir,
-                    num_labels=len(mappings.get("APE_NIV5")),
-                    categorical_features=categorical_features,
-                ),
-                tokenizer=trainer.tokenizer,
-            )
-
-            pipe.save_pretrained(pipeline_output_dir)
-            mlflow.pyfunc.log_model(
-                artifacts={"pipeline": pipeline_output_dir},
-                code_path=["src/camembert/", "src/base/", "src/utils/"],
-                artifact_path=run_name,
-                python_model=framework_classes["wrapper"](text_feature, categorical_features),
-                signature=signature,
-            )
-        else:
-            raise KeyError("Model type is not valid.")
-
-        # Log additional params
-        mlflow.log_param("features", categorical_features)
-        mlflow.log_param("Y", Y)
-
-        # Evaluation
-        print("*** 3- Evaluating the model...\n")
-        t = time.time()
-        if model_class in ["fasttext", "camembert", "camembert_one_hot", "camembert_embedded"]:
-            evaluator = framework_classes["evaluator"](model)
-        elif model_class == "pytorch":
-            evaluator = framework_classes["evaluator"](model, trainer.tokenizer)
-        else:
-            raise KeyError("Model type is not valid.")
-
-        accuracies = evaluator.evaluate(
-            df_test, Y, text_feature, textual_features, categorical_features, 5
+        val_text, val_categorical_variables = (
+            df_val[cfg_dict["data"]["text_feature"]].values,
+            df_val[cfg_dict["data"]["categorical_features"]].values,
         )
 
-        # Log metrics
-        for metric, value in accuracies.items():
-            mlflow.log_metric(metric, value)
+        ###### Tokenizer ######
 
-        accuracies = evaluator.evaluate(
-            df_test_ls, Y, text_feature, textual_features, categorical_features, 5
+        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["name"]](
+            **cfg_dict["tokenizer"], training_text=train_text
+        )
+        print(tokenizer)
+
+        ###### Dataset ######
+
+        if cfg_dict["model"]["dataset"] is not None:
+            dataset_class = DATASETS[cfg_dict["model"]["dataset"]]
+
+            train_dataset = dataset_class(
+                texts=train_text,
+                categorical_variables=train_categorical_variables,
+                tokenizer=tokenizer,
+                outputs=df_train[Y].values,
+            )
+            val_dataset = dataset_class(
+                texts=val_text,
+                categorical_variables=val_categorical_variables,
+                tokenizer=tokenizer,
+                outputs=df_val[Y].values,
+            )
+
+            if cfg_dict["model"]["dataset"] == "FastTextModelDataset":
+                train_dataloader = train_dataset.create_dataloader(
+                    **cfg_dict["model"]["training_params"]
+                )
+                val_dataloader = val_dataset.create_dataloader(
+                    **cfg_dict["model"]["training_params"]
+                )
+
+        ###### Model #####
+
+        num_classes = int(np.max(df_train[Y].values) + 1)
+        categorical_vocab_sizes = np.max(train_categorical_variables, axis=0) + 1
+        categorical_vocab_sizes = categorical_vocab_sizes.astype(int).tolist()
+        print("num classes:", num_classes)
+        print("categorical_vocab_sizes ", categorical_vocab_sizes)
+
+        if cfg_dict["model"]["name"] == "torchFastText":
+            # for torchFastText only, we add the number of words in the vocabulary
+            # In general, tokenizer.num_tokens == num_orws is a invariant
+            num_rows = tokenizer.num_tokens + tokenizer.get_nwords() + 1
+            padding_idx = num_rows - 1
+
+        # PyTorch model
+        model = MODELS[cfg_dict["model"]["name"]](
+            **cfg_dict["model"]["model_params"],
+            tokenizer=tokenizer,
+            num_tokens=num_rows,
+            num_classes=num_classes,
+            categorical_vocabulary_sizes=categorical_vocab_sizes,
+            padding_idx=padding_idx,
+        )
+        print(model)
+
+        # Lightning
+        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]()
+        optimizer = OPTIMIZERS[
+            cfg_dict["model"]["training_params"]["optimizer_name"]
+        ]  # without the () !
+        scheduler = SCHEDULERS[cfg_dict["model"]["training_params"]["scheduler_name"]]
+
+        module = MODULES[cfg_dict["model"]["name"]](
+            model=model,
+            loss=loss,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            **cfg_dict["model"]["training_params"],
+        )
+        print(module)
+
+        ###### Trainer #####
+        trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
+            **cfg_dict["model"]["training_params"]
         )
 
-        # Log additional metrics
-        for metric, value in accuracies.items():
-            metric = "ls_" + metric
-            mlflow.log_metric(metric, value)
+        if cfg_dict["model"]["preprocessor"] == "PyTorch":
+            mlflow.pytorch.autolog()
+            torch.cuda.empty_cache()
+            torch.set_float32_matmul_precision("medium")
 
-        print(f"*** Done! Evaluation lasted {round((time.time() - t)/60,1)} minutes.\n")
+        trainer.fit(module, train_dataloader, val_dataloader)
 
-        # Tests: dependent on categorical features
-        if "CJ" not in categorical_features:
-            print("*** 4- Performing standard tests...\n")
-            t = time.time()
-            with open("src/tests/tests.yaml", "r", encoding="utf-8") as stream:
-                tests = yaml.safe_load(stream)
-            for case in tests.keys():
-                run_test(tests[case], preprocessor, evaluator)
+        # Save model
 
-            print(f"*** Done! Tests lasted {round((time.time() - t)/60,1)} minutes.\n")
+        best_model = type(module).load_from_checkpoint(
+            checkpoint_path=trainer.checkpoint_callback.best_model_path,
+            model=module.model,
+            loss=loss,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            **cfg_dict["model"]["training_params"],
+        )
+        mlflow.pytorch.log_model(
+            pytorch_model=best_model,
+            artifact_path=run_name,
+            input_example=None,
+        )
+
+        ########## Evaluation ##########
+
+        # To do
 
 
 if __name__ == "__main__":
-    main(**vars(args))
+    logger.info("GPU available: " + str(torch.cuda.is_available()))
+    for i in range(len(sys.argv)):
+        if sys.argv[-1] == "":  # Hydra may get an empty string
+            print("Removing empty string argument")
+            sys.argv = sys.argv[:-1]  # Remove it
+        else:
+            break
+
+    # Merge all the args into one
+    args = " ".join(sys.argv)
+    train()

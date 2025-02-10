@@ -1,14 +1,17 @@
 """
 Camembert model for text classification.
 """
-from torch import nn
+
+from typing import List, Optional
+
 import torch
+import torch.nn.functional as F
+from torch import nn
+from torch.nn import CrossEntropyLoss
 from transformers import CamembertConfig, CamembertModel, CamembertPreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput
-from torch.nn import CrossEntropyLoss
-from typing import List, Optional
+
 from utils.mappings import mappings
-import torch.nn.functional as F
 
 
 class ClassificationHead(nn.Module):
@@ -370,11 +373,21 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
             output_hidden_states: Optional[bool] = None,
             return_dict: Optional[bool] = None,
             categorical_inputs: Optional[List[torch.LongTensor]] = None,
-            additional_text_embeds: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional text embeddings
-            additional_attention_masks: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional attention masks
-            additional_token_type_ids: Optional[List[torch.LongTensor]] = None,  # New parameter for additional token type IDs
-            additional_position_ids: Optional[List[torch.LongTensor]] = None,  # New parameter for additional position IDs
-            additional_head_masks: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional head mask
+            additional_text_embeds: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional text embeddings
+            additional_attention_masks: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional attention masks
+            additional_token_type_ids: Optional[
+                List[torch.LongTensor]
+            ] = None,  # New parameter for additional token type IDs
+            additional_position_ids: Optional[
+                List[torch.LongTensor]
+            ] = None,  # New parameter for additional position IDs
+            additional_head_masks: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional head mask
         ) -> torch.Tensor:
             """
             Forward method
@@ -430,7 +443,9 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
                         else None
                     )
                     additional_position_id = (
-                        additional_position_ids[idx] if additional_position_ids is not None else None
+                        additional_position_ids[idx]
+                        if additional_position_ids is not None
+                        else None
                     )
                     additional_head_mask = (
                         additional_head_masks[idx] if additional_head_masks is not None else None
@@ -456,7 +471,9 @@ class OneHotCategoricalCamembertModel(CamembertPreTrainedModel):
                 # Sum additional text embeddings
                 additional_embeds = torch.stack(additional_outputs, dim=0).sum(dim=0)
             else:
-                additional_embeds = torch.zeros_like(sequence_output[:, 0, :])  # Ensure compatibility
+                additional_embeds = torch.zeros_like(
+                    sequence_output[:, 0, :]
+                )  # Ensure compatibility
 
             # Combine all embeddings
             combined_output = sequence_output[:, 0, :] + additional_embeds + cat_output
@@ -603,11 +620,21 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
             output_hidden_states: Optional[bool] = None,
             return_dict: Optional[bool] = None,
             categorical_inputs: Optional[List[torch.LongTensor]] = None,
-            additional_text_embeds: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional text embeddings
-            additional_attention_masks: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional attention masks
-            additional_token_type_ids: Optional[List[torch.LongTensor]] = None,  # New parameter for additional token type IDs
-            additional_position_ids: Optional[List[torch.LongTensor]] = None,  # New parameter for additional position IDs
-            additional_head_masks: Optional[List[torch.FloatTensor]] = None,  # New parameter for additional head masks
+            additional_text_embeds: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional text embeddings
+            additional_attention_masks: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional attention masks
+            additional_token_type_ids: Optional[
+                List[torch.LongTensor]
+            ] = None,  # New parameter for additional token type IDs
+            additional_position_ids: Optional[
+                List[torch.LongTensor]
+            ] = None,  # New parameter for additional position IDs
+            additional_head_masks: Optional[
+                List[torch.FloatTensor]
+            ] = None,  # New parameter for additional head masks
         ) -> torch.Tensor:
             """
             Forward method.
@@ -661,7 +688,9 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
                         else None
                     )
                     additional_position_id = (
-                        additional_position_ids[idx] if additional_position_ids is not None else None
+                        additional_position_ids[idx]
+                        if additional_position_ids is not None
+                        else None
                     )
                     additional_head_mask = (
                         additional_head_masks[idx] if additional_head_masks is not None else None
@@ -687,7 +716,9 @@ class EmbeddedCategoricalCamembertModel(CamembertPreTrainedModel):
                 # Sum additional text embeddings
                 additional_embeds = torch.stack(additional_outputs, dim=0).sum(dim=0)
             else:
-                additional_embeds = torch.zeros_like(sequence_output[:, 0, :])  # Ensure compatibility
+                additional_embeds = torch.zeros_like(
+                    sequence_output[:, 0, :]
+                )  # Ensure compatibility
 
             # Combine all embeddings
             combined_output = sequence_output[:, 0, :] + additional_embeds + cat_output

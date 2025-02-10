@@ -212,9 +212,15 @@ doc/seminaire-dms-oct-2022/slides/index_files/
 doc/journee-ssphub/slides/index_files/
 doc/unece-conf/slides/index_files/
 
-data/
 !doc/unece-conf/slides/data/
 
 log_files/
-*.ipynb
+# *.ipynb
 train_text.txt
+
+# Hydra
+outputs/
+multirun/
+
+#Lightning
+lightning_logs/

@@ -1,0 +1,6 @@
+name: "NGramTokenizer"
+min_count: 3
+min_n: 3
+max_n: 6
+len_word_ngrams: 3
+num_tokens: 20000

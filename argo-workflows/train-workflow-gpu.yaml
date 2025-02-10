@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: parallel-training
+spec:
+  serviceAccountName: workflow
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: training-conf-list
+        value: '[
+          { "embedding_dim":"40,80", "num_tokens": "10000,20000,100000"},
+          { "embedding_dim":"180", "num_tokens": "10000,20000,100000"}
+            ]'
+  templates:
+    - name: main
+      # Entrypoint DAG template
+      dag:
+        tasks:
+          - name: run-training-with-params
+            template: run-training-wt
+            arguments:
+              parameters:
+                - name: embedding_dim
+                  value: "{{item.embedding_dim}}"
+                - name: num_tokens
+                  value: "{{item.num_tokens}}"
+
+            # Pass the inputs to the task using "withParam"
+            withParam: "{{workflow.parameters.training-conf-list}}"
+
+    # Worker template for task-1
+    - name: run-training-wt
+      inputs:
+        parameters:
+          - name: embedding_dim
+          - name: num_tokens
+      nodeSelector:
+        nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
+      container:
+        image: inseefrlab/onyxia-vscode-pytorch:py3.12.7-gpu
+        imagePullPolicy: Always
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        command: ["/bin/bash", -c]
+        args:
+          - |
+            set -e  # Exit on error
+            set -x  # Print commands for debugging
+
+            # Clone repository and submodules
+            git clone -b main https://github.com/InseeFrLab/codif-ape-train.git
+            cd codif-ape-train/
+            git submodule update --init
+
+            # Install dependencies
+            pip install -e torch-fastText
+            pip install -r requirements.txt
+
+            # Download necessary NLTK data
+            python -m nltk.downloader stopwords
+
+            # Run MLflow experiment
+            mlflow run ~/work/codif-ape-train/ \
+              --env-manager=local  \
+              -P embedding_dim={{inputs.parameters.embedding_dim}} \
+              -P num_tokens={{inputs.parameters.num_tokens}}
+        env:
+          # env var for s3 connexion
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: accessKey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-s3-creds
+                key: secretKey
+          - name: AWS_DEFAULT_REGION
+            value: us-east-1
+          - name: AWS_S3_ENDPOINT
+            value: minio.lab.sspcloud.fr
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: https://minio.lab.sspcloud.fr
+          - name: MLFLOW_TRACKING_URI
+            value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
+          - name: MLFLOW_EXPERIMENT_NAME
+            value: model_comparison
+          - name: ENTRY_POINT
+            value: main

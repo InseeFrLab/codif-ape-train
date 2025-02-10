@@ -1,3 +1,4 @@
+import mlflow
 from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 
@@ -28,3 +29,11 @@ def create_or_restore_experiment(experiment_name):
 
     except RestException as e:
         print(f"An error occurred while handling the experiment '{experiment_name}': {e}")
+
+
+def mlflow_log_model(logging_type, model, artifact_path):
+    if logging_type == "model":
+        mlflow.pytorch.log_model(
+            pytorch_model=model,
+            artifact_path=artifact_path,
+        )

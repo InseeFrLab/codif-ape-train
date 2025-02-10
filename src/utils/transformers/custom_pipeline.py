@@ -2,10 +2,12 @@
 Pipeline for text classification with additional
 categorical features.
 """
+
 from typing import Dict, Tuple
+
+import torch
 from transformers import Pipeline
 from transformers.utils import ModelOutput
-import torch
 
 
 class CustomPipeline(Pipeline):

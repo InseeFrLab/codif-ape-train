@@ -1,0 +1,14 @@
+sirene : "sirene_3+4"
+revision : "NAF2008"
+start_month : 1
+start_year : 2018
+text_feature : "libelle"
+textual_features :
+  - "NAT_LIB"
+  - "AGRI"
+categorical_features:
+  - "TYP"
+  - "NAT"
+  - "SRF"
+  - "CJ"
+  - "CRT"

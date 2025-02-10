@@ -1,19 +1,22 @@
 """
 Custom model class for a Huggingface model.
 """
-from typing import Optional, Dict, Any
-import pandas as pd
-from camembert.camembert_preprocessor import CamembertPreprocessor
-from camembert.custom_pipeline import CustomPipeline
-from camembert.camembert_model import (
-    CustomCamembertModel,
-    OneHotCategoricalCamembertModel,
-    EmbeddedCategoricalCamembertModel,
-)
-from transformers import CamembertTokenizer
+
+from typing import Any, Dict, Optional
+
 import mlflow
+import pandas as pd
 import torch
+from transformers import CamembertTokenizer
+
+from pytorch_classifiers.models.camembert.camembert_model import (
+    CustomCamembertModel,
+    EmbeddedCategoricalCamembertModel,
+    OneHotCategoricalCamembertModel,
+)
+from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
 from utils.mappings import mappings
+from utils.transformers.custom_pipeline import CustomPipeline
 
 
 class CamembertWrapper(mlflow.pyfunc.PythonModel):
@@ -22,7 +25,7 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
     """
 
     def __init__(self, text_feature, textual_features, categorical_features):
-        self.preprocessor = CamembertPreprocessor()
+        self.preprocessor = PytorchPreprocessor()
         self.text_feature = text_feature
         self.textual_features = textual_features
         self.categorical_features = categorical_features
@@ -80,7 +83,10 @@ class CamembertWrapper(mlflow.pyfunc.PythonModel):
 
         # Clean text feature
         df = self.preprocessor.clean_lib(
-            df=pd.DataFrame(model_input, columns=[self.text_feature] + self.textual_features + self.categorical_features),
+            df=pd.DataFrame(
+                model_input,
+                columns=[self.text_feature] + self.textual_features + self.categorical_features,
+            ),
             text_feature=self.text_feature,
             method="evaluation",
             recase=False,

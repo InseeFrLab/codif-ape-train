@@ -1,0 +1,12 @@
+defaults:
+  - model: torchFastText
+  - data: NAF2008_sirene4
+  - tokenizer: NGramTokenizer
+  - override hydra/job_logging: default
+  - _self_
+
+mlflow:
+  remote_server_uri: "https://projet-ape-mlflow.user.lab.sspcloud.fr"
+  experiment_name: "model_comparison"
+
+output_dir: ./outputs
