@@ -226,7 +226,7 @@ def train(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    logger.info("GPU ? ", torch.cuda.is_available())
+    logger.info("GPU ? " + str(torch.cuda.is_available()))
     for i in range(len(sys.argv)):
         if sys.argv[-1] == "":  # Hydra may get an empty string
             print("Removing empty string argument")

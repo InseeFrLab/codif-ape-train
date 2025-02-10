@@ -38,7 +38,7 @@ spec:
       nodeSelector:
         nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
       container:
-        image: inseefrlab/codif-ape-train:main
+        image: inseefrlab/onyxia-vscode-pytorch:py3.12.7-gpu
         imagePullPolicy: Always
         resources:
           limits:
