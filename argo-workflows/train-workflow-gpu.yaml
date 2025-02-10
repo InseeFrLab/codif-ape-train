@@ -44,17 +44,28 @@ spec:
           limits:
             nvidia.com/gpu: 1
         command: ["/bin/bash", -c]
-        args: ["git clone -b refactoring https://github.com/InseeFrLab/codif-ape-train.git &&\
-                cd codif-ape-train/ &&\
-                git submodule init &&\
-                git submodule update &&\
-                pip install -e torch-fastText &&\
-                pip install -r requirements.txt &&\
-                mlflow run ~/work/codif-ape-train/ \
-                          --env-manager=local  \
-                          -P embedding_dim={{inputs.parameters.embedding_dim}}
-                          -P num_tokens={{inputs.parameters.num_tokens}}"
-              ]
+        args:
+          - |
+            set -e  # Exit on error
+            set -x  # Print commands for debugging
+
+            # Clone repository and submodules
+            git clone -b refactoring https://github.com/InseeFrLab/codif-ape-train.git
+            cd codif-ape-train/
+            git submodule update --init
+
+            # Install dependencies
+            pip install -e torch-fastText
+            pip install -r requirements.txt
+
+            # Download necessary NLTK data
+            python -m nltk.downloader stopwords
+
+            # Run MLflow experiment
+            mlflow run ~/work/codif-ape-train/ \
+              --env-manager=local  \
+              -P embedding_dim={{inputs.parameters.embedding_dim}} \
+              -P num_tokens={{inputs.parameters.num_tokens}}
         env:
           # env var for s3 connexion
           - name: AWS_ACCESS_KEY_ID
