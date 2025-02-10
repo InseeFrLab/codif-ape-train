@@ -32,7 +32,11 @@ def train(cfg: DictConfig):
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
     run_name = (
-        cfg_dict["model"]["name"] + "_" + str(cfg_dict["model"]["model_params"]["embedding_dim"])
+        cfg_dict["model"]["name"]
+        + "_"
+        + str(cfg_dict["model"]["model_params"]["embedding_dim"])
+        + "_"
+        + str(cfg_dict["tokenizer"]["num_tokens"])
     )
 
     with mlflow.start_run(run_name=run_name):

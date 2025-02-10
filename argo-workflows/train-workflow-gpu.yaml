@@ -46,6 +46,8 @@ spec:
         command: ["/bin/bash", -c]
         args: ["git clone -b refactoring https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
+                git submodule init &&\
+                git submodule update &&\
                 pip install -e torch-fastText &&\
                 pip install -r requirements.txt &&\
                 mlflow run ~/work/codif-ape-train/ \
