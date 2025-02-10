@@ -31,7 +31,11 @@ def train(cfg: DictConfig):
     create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
-    with mlflow.start_run(run_name=cfg_dict["mlflow"]["run_name"]):
+    run_name = (
+        cfg_dict["model"]["name"] + "_" + str(cfg_dict["model"]["model_params"]["embedding_dim"])
+    )
+
+    with mlflow.start_run(run_name=run_name):
         # Log config
         mlflow.log_params(cfg_dict)
 
