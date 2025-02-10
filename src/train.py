@@ -164,7 +164,7 @@ def train(cfg: DictConfig):
         model = MODELS[cfg_dict["model"]["name"]](
             **cfg_dict["model"]["model_params"],
             tokenizer=tokenizer,
-            num_tokens=num_rows,
+            num_rows=num_rows,
             num_classes=num_classes,
             categorical_vocabulary_sizes=categorical_vocab_sizes,
             padding_idx=padding_idx,
