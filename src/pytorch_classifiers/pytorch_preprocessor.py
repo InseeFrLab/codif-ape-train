@@ -62,18 +62,18 @@ class PytorchPreprocessor(Preprocessor):
         Returns:
             df (pd.DataFrame): DataFrame.
         """
-
         for surface_col in SURFACE_COLS:
             if surface_col in categorical_features:
                 df[surface_col] = df[surface_col].astype(float)
                 df = categorize_surface(df, surface_col)
-
         for variable in categorical_features:
             if variable not in SURFACE_COLS:  # Mapping already done for this variable
-                if len(set(df[variable].unique()) - set(mappings[variable].keys())) < 0:
-                    raise ValueError(f"Missing values in mapping for {variable}")
+                if len(set(df[variable].unique()) - set(mappings[variable].keys())) > 0:
+                    raise ValueError(
+                        f"Missing values in mapping for {variable} ",
+                        set(df[variable].unique()) - set(mappings[variable].keys()),
+                    )
                 df[variable] = df[variable].apply(mappings[variable].get)
-
         if y is not None:
             if len(set(df[y].unique()) - set(mappings[y].keys())) < 0:
                 raise ValueError(f"Missing values in mapping for {y}")
