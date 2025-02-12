@@ -6,7 +6,7 @@ import json
 
 mappings = {}
 for key in ["apet_finale", "CJ", "CRT", "NAT", "TYP"]:
-    file = f"../../data/mappings/{key}_mapping.json"
+    file = f"data/mappings/{key}_mapping.json"
     with open(file, "r") as f:
         mappings[key] = json.load(f)
 

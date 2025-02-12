@@ -55,7 +55,7 @@ spec:
             git submodule update --init
 
             # Install dependencies
-            pip install -e torch-fastText
+            pip install -e src/models/torch-fastText
             pip install -r requirements.txt
 
             # Download necessary NLTK data

@@ -51,7 +51,7 @@ def train(cfg: DictConfig):
 
     logger.info("Run name: " + run_name)
     with mlflow.start_run(run_name=run_name):
-        mlflow.set_tag("mlflow.runName " + run_name)
+        mlflow.set_tag("mlflow.runName", run_name)
         # Log config
         mlflow.log_params(cfg_dict)
 
