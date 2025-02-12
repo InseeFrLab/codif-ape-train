@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 import hydra
@@ -34,6 +35,8 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler()],
 )
+
+print(os.cpu_count())
 
 
 @memory.cache
@@ -154,7 +157,7 @@ def train(cfg: DictConfig):
 
             if cfg_dict["model"]["dataset"] == "FastTextModelDataset":
                 train_dataloader = train_dataset.create_dataloader(
-                    **cfg_dict["model"]["training_params"]
+                    **cfg_dict["model"]["training_params"], num_workers=os.cpu_count() - 1
                 )
                 val_dataloader = val_dataset.create_dataloader(
                     **cfg_dict["model"]["training_params"]
