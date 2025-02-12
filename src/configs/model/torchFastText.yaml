@@ -9,7 +9,7 @@ model_params:
 
 training_params:
   trainer_name: "Lightning"
-  num_epochs: 1
+  num_epochs: 10
   patience_early_stopping: 3
   batch_size: 256
   num_workers: 12
