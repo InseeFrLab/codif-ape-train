@@ -49,10 +49,6 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     # Preprocess data
     preprocessor = PREPROCESSORS[cfg_dict_model_preprocessor]()
 
-    # Debugging purposes only (remove in production)
-    df_s4 = df_s4.sample(frac=0.0001, random_state=1)
-    df_s3 = df_s3.sample(frac=0.0001, random_state=1)
-
     if df_s4 is not None:
         df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
             df=df_s4,
