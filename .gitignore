@@ -224,3 +224,6 @@ multirun/
 
 #Lightning
 lightning_logs/
+
+# joblib
+cache_dir/

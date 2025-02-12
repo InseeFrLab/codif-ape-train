@@ -3,9 +3,9 @@ import sys
 
 import hydra
 import mlflow
-import numpy as np
 import pandas as pd
 import torch
+from joblib import Memory
 from omegaconf import DictConfig, OmegaConf
 
 from framework_classes import (
@@ -21,7 +21,10 @@ from framework_classes import (
     TRAINERS,
 )
 from utils.data import get_df_naf, get_Y
+from utils.mappings import mappings
 from utils.mlflow import create_or_restore_experiment
+
+memory = Memory(location="cache_dir", verbose=1)  # Set cache location
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,62 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler()],
 )
+
+
+@memory.cache
+def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
+    """
+    Load and preprocess data, using joblib caching to avoid redundant computation.
+    """
+    # Fetch data
+    df_s3, df_s4 = DATA_GETTER[cfg_dict_data["sirene"]](**cfg_dict_data)
+    Y = get_Y(revision=cfg_dict_data["revision"])
+    df_naf = get_df_naf(revision=cfg_dict_data["revision"])
+
+    # Preprocess data
+    preprocessor = PREPROCESSORS[cfg_dict_model_preprocessor]()
+
+    # Debugging purposes only (remove in production)
+    df_s4 = df_s4.sample(frac=0.0001, random_state=1)
+    df_s3 = df_s3.sample(frac=0.0001, random_state=1)
+
+    if df_s4 is not None:
+        df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
+            df=df_s4,
+            df_naf=df_naf,
+            y=Y,
+            text_feature=cfg_dict_data["text_feature"],
+            textual_features=cfg_dict_data["textual_features"],
+            categorical_features=cfg_dict_data["categorical_features"],
+            test_size=0.1,
+        )
+    else:
+        raise ValueError("Sirene 4 data should be provided.")
+
+    if df_s3 is not None:
+        df_train_s3, df_val_s3, df_test_s3 = preprocessor.preprocess(
+            df=df_s3,
+            df_naf=df_naf,
+            y=Y,
+            text_feature=cfg_dict_data["text_feature"],
+            textual_features=cfg_dict_data["textual_features"],
+            categorical_features=cfg_dict_data["categorical_features"],
+            test_size=0.1,
+            s3=True,
+        )
+        # Merge Sirene 3 into the training set
+        df_s3_processed = pd.concat([df_train_s3, df_val_s3, df_test_s3])
+        df_train = pd.concat([df_s3_processed, df_train_s4]).reset_index(drop=True)
+
+        # Assert no data was lost
+        assert len(df_s3) == len(df_s3_processed)
+        assert len(df_train_s4) + len(df_s3) == len(df_train)
+
+    else:
+        df_train = df_train_s4
+
+    df_val = df_val_s4
+    return df_train, df_val, Y
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -57,52 +116,11 @@ def train(cfg: DictConfig):
 
         ##### Data #########
 
-        # Fetch data
-        df_s3, df_s4 = DATA_GETTER[cfg_dict["data"]["sirene"]](**cfg_dict["data"])
-        Y = get_Y(revision=cfg_dict["data"]["revision"])
-        df_naf = get_df_naf(revision=cfg_dict["data"]["revision"])
+        df_train, df_val, Y = load_or_preprocess_data(
+            cfg_dict["data"], cfg_dict["model"]["preprocessor"]
+        )
 
-        # Preprocess data
-        preprocessor = PREPROCESSORS[cfg_dict["model"]["preprocessor"]]()
-
-        if df_s4 is not None:
-            df_train_s4, df_val_s4, df_test = preprocessor.preprocess(
-                df=df_s4,
-                df_naf=df_naf,
-                y=Y,
-                text_feature=cfg_dict["data"]["text_feature"],
-                textual_features=cfg_dict["data"]["textual_features"],
-                categorical_features=cfg_dict["data"]["categorical_features"],
-                test_size=0.1,
-            )
-        else:
-            raise ValueError("Sirene 4 data should be provided.")
-
-        if df_s3 is not None:
-            df_train_s3, df_val_s3, df_test_s3 = preprocessor.preprocess(
-                df=df_s3,
-                df_naf=df_naf,
-                y=Y,
-                text_feature=cfg_dict["data"]["text_feature"],
-                textual_features=cfg_dict["data"]["textual_features"],
-                categorical_features=cfg_dict["data"]["categorical_features"],
-                test_size=0.1,
-                s3=True,
-            )
-            # all sirene 3 data used as train set, we eval/test only on sirene 4 data
-            df_s3_processed = pd.concat([df_train_s3, df_val_s3, df_test_s3])
-            df_train = pd.concat([df_s3_processed, df_train_s4]).reset_index(drop=True)
-
-            # Assert we have not lost data in the process
-            assert len(df_s3) == len(df_s3_processed)
-            assert len(df_train_s4) + len(df_s3) == len(df_train)
-
-        else:
-            df_train = df_train_s4
-
-        mlflow.log_param("number_of_training_observations " + df_train.shape[0])
-
-        df_val = df_val_s4
+        mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
         train_text, train_categorical_variables = (
             df_train[cfg_dict["data"]["text_feature"]].values,
@@ -148,11 +166,17 @@ def train(cfg: DictConfig):
 
         ###### Model #####
 
-        num_classes = int(np.max(df_train[Y].values) + 1)
-        categorical_vocab_sizes = np.max(train_categorical_variables, axis=0) + 1
-        categorical_vocab_sizes = categorical_vocab_sizes.astype(int).tolist()
-        logger.info("Number of classes: " + num_classes)
-        logger.info("categorical_vocab_sizes " + categorical_vocab_sizes)
+        num_classes = max(mappings[Y].values()) + 1
+
+        categorical_vocab_sizes = []
+        for feature in cfg_dict["data"]["categorical_features"]:
+            if feature == "SRF":
+                categorical_vocab_sizes.append(5)
+            else:
+                categorical_vocab_sizes.append(max(mappings[feature].values()) + 1)
+
+        logger.info("Number of classes: " + str(num_classes))
+        logger.info("categorical_vocab_sizes " + str(categorical_vocab_sizes))
 
         if cfg_dict["model"]["name"] == "torchFastText":
             # for torchFastText only, we add the number of words in the vocabulary
