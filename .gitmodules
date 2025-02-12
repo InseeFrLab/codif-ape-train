@@ -1,3 +1,3 @@
-[submodule "torch-fastText"]
-	path = torch-fastText
-	url = https://github.com/InseeFrLab/torch-fastText/
+[submodule "src/models/torch-fastText"]
+	path = src/models/torch-fastText
+	url = https://github.com/InseeFrLab/torch-fastText.git

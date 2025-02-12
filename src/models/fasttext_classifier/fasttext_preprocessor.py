@@ -203,7 +203,7 @@ class FastTextPreprocessor(Preprocessor):
         text_feature: str,
         textual_features: list,
         categorical_features: list,
-        add_all: bool = False
+        add_all: bool = False,
     ):
         """
         Adds missing APE codes in the train database by adding the official label as text feature.
@@ -225,7 +225,6 @@ class FastTextPreprocessor(Preprocessor):
             missing_codes = set(df_naf["APE_NIV5"]) - set(df[y])
         else:
             missing_codes = set(df_naf["APE_NIV5"])
-
 
         fake_obs = df_naf[df_naf["APE_NIV5"].isin(missing_codes)]
         fake_obs.loc[:, text_feature] = self.clean_lib(fake_obs.LIB_NIV5.to_list())

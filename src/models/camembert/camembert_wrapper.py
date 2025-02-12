@@ -7,14 +7,14 @@ from typing import Any, Dict, Optional
 import mlflow
 import pandas as pd
 import torch
-from transformers import CamembertTokenizer
-
 from pytorch_classifiers.models.camembert.camembert_model import (
     CustomCamembertModel,
     EmbeddedCategoricalCamembertModel,
     OneHotCategoricalCamembertModel,
 )
 from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
+from transformers import CamembertTokenizer
+
 from utils.mappings import mappings
 from utils.transformers.custom_pipeline import CustomPipeline
 
