@@ -39,6 +39,7 @@ class Preprocessor(ABC):
         recase: bool = False,
         add_codes: bool = True,
         s3: bool = False,
+        mapping: Optional[bool] = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Preprocesses data to feed to any model for
@@ -57,6 +58,8 @@ class Preprocessor(ABC):
             test_size (float): Size of the test set.
             recase (bool): Whether to recase the text.
             add_codes (bool): Whether to add missing APE codes.
+            s3 (bool): Whether we are dealing with Sirene 3 data.
+            mapping (Optional[bool]): Set True for early return (useful to compute mappings)
 
         Returns:
             pd.DataFrame: Preprocessed DataFrames for training
@@ -82,6 +85,9 @@ class Preprocessor(ABC):
 
         df = df[variables]
         df = df.dropna(subset=[y] + [text_feature], axis=0)
+
+        if mapping:
+            return df
 
         # Specific preprocessing for model
         return self.preprocess_for_model(
