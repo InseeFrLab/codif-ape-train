@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from constants import (
+from framework_classes import (
     DATA_GETTER,
     DATASETS,
     LOSSES,
@@ -49,9 +49,9 @@ def train(cfg: DictConfig):
         + str(cfg_dict["tokenizer"]["num_tokens"])
     )
 
-    print("Run name:", run_name)
+    logger.info("Run name: " + run_name)
     with mlflow.start_run(run_name=run_name):
-        mlflow.set_tag("mlflow.runName", run_name)
+        mlflow.set_tag("mlflow.runName " + run_name)
         # Log config
         mlflow.log_params(cfg_dict)
 
@@ -100,7 +100,7 @@ def train(cfg: DictConfig):
         else:
             df_train = df_train_s4
 
-        mlflow.log_param("number_of_training_observations", df_train.shape[0])
+        mlflow.log_param("number_of_training_observations " + df_train.shape[0])
 
         df_val = df_val_s4
 
@@ -118,7 +118,7 @@ def train(cfg: DictConfig):
         tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["name"]](
             **cfg_dict["tokenizer"], training_text=train_text
         )
-        print(tokenizer)
+        logger.info(tokenizer)
 
         ###### Dataset ######
 
@@ -151,8 +151,8 @@ def train(cfg: DictConfig):
         num_classes = int(np.max(df_train[Y].values) + 1)
         categorical_vocab_sizes = np.max(train_categorical_variables, axis=0) + 1
         categorical_vocab_sizes = categorical_vocab_sizes.astype(int).tolist()
-        print("num classes:", num_classes)
-        print("categorical_vocab_sizes ", categorical_vocab_sizes)
+        logger.info("Number of classes: " + num_classes)
+        logger.info("categorical_vocab_sizes " + categorical_vocab_sizes)
 
         if cfg_dict["model"]["name"] == "torchFastText":
             # for torchFastText only, we add the number of words in the vocabulary
@@ -169,7 +169,7 @@ def train(cfg: DictConfig):
             categorical_vocabulary_sizes=categorical_vocab_sizes,
             padding_idx=padding_idx,
         )
-        print(model)
+        logger.info(model)
 
         # Lightning
         loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]()
@@ -185,7 +185,7 @@ def train(cfg: DictConfig):
             scheduler=scheduler,
             **cfg_dict["model"]["training_params"],
         )
-        print(module)
+        logger.info(module)
 
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     logger.info("GPU available: " + str(torch.cuda.is_available()))
     for i in range(len(sys.argv)):
         if sys.argv[-1] == "":  # Hydra may get an empty string
-            print("Removing empty string argument")
+            logger.info("Removing empty string argument")
             sys.argv = sys.argv[:-1]  # Remove it
         else:
             break

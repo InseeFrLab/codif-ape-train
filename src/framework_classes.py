@@ -6,8 +6,8 @@ import torch
 from torchFastText.datasets import FastTextModelDataset, NGramTokenizer
 from torchFastText.model import FastTextModel, FastTextModule
 
-from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
-from pytorch_classifiers.trainers.build_trainers import (
+from preprocessors.pytorch_preprocessor import PytorchPreprocessor
+from trainers.build_trainers import (
     build_lightning_trainer,
     build_transformers_trainer,
 )
