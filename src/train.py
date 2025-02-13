@@ -46,10 +46,6 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     Y = get_Y(revision=cfg_dict_data["revision"])
     df_naf = get_df_naf(revision=cfg_dict_data["revision"])
 
-    # Debugging purposes only
-    df_s4 = df_s4.sample(frac=0.01, random_state=1)
-    ##########
-
     # Preprocess data
     preprocessor = PREPROCESSORS[cfg_dict_model_preprocessor]()
 
