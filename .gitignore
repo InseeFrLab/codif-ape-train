@@ -227,3 +227,5 @@ lightning_logs/
 
 # joblib
 cache_dir/
+
+*.ckpt
