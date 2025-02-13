@@ -1,6 +1,11 @@
 #!/bin/bash
 git config --global credential.helper store
 
+git submodule update --init
+
+# Install dependencies
+pip install -e src/models/torch-fastText
+
 pip install -r requirements.txt
 pre-commit install
 

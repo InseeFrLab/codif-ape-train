@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 
 import hydra
@@ -36,8 +35,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 
-print(os.cpu_count())
-
 
 @memory.cache
 def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
@@ -48,6 +45,10 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     df_s3, df_s4 = DATA_GETTER[cfg_dict_data["sirene"]](**cfg_dict_data)
     Y = get_Y(revision=cfg_dict_data["revision"])
     df_naf = get_df_naf(revision=cfg_dict_data["revision"])
+
+    # Debugging purposes only
+    df_s4 = df_s4.sample(frac=0.01, random_state=1)
+    ##########
 
     # Preprocess data
     preprocessor = PREPROCESSORS[cfg_dict_model_preprocessor]()
@@ -157,7 +158,7 @@ def train(cfg: DictConfig):
 
             if cfg_dict["model"]["dataset"] == "FastTextModelDataset":
                 train_dataloader = train_dataset.create_dataloader(
-                    **cfg_dict["model"]["training_params"], num_workers=os.cpu_count() - 1
+                    **cfg_dict["model"]["training_params"], num_workers=8
                 )
                 val_dataloader = val_dataset.create_dataloader(
                     **cfg_dict["model"]["training_params"]
@@ -212,7 +213,9 @@ def train(cfg: DictConfig):
 
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
-            **cfg_dict["model"]["training_params"]
+            **cfg_dict["model"]["training_params"],
+            experiment_name=cfg_dict["mlflow"]["experiment_name"],
+            run_name=run_name,
         )
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":
@@ -221,22 +224,6 @@ def train(cfg: DictConfig):
             torch.set_float32_matmul_precision("medium")
 
         trainer.fit(module, train_dataloader, val_dataloader)
-
-        # Save model
-
-        best_model = type(module).load_from_checkpoint(
-            checkpoint_path=trainer.checkpoint_callback.best_model_path,
-            model=module.model,
-            loss=loss,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            **cfg_dict["model"]["training_params"],
-        )
-        mlflow.pytorch.log_model(
-            pytorch_model=best_model,
-            artifact_path=run_name,
-            input_example=None,
-        )
 
         ########## Evaluation ##########
 

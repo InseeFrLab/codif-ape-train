@@ -4,13 +4,16 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
+from pytorch_lightning.loggers.mlflow import MLFlowLogger
 
 
-def build_lightning_trainer(patience_early_stopping, num_epochs, **kwargs):
+def build_lightning_trainer(
+    patience_early_stopping, num_epochs, experiment_name, run_name, **kwargs
+):
     # Trainer callbacks
     checkpoints = [
         {
-            "monitor": "validation_loss_epoch",
+            "monitor": "val_loss",
             "save_top_k": 1,
             "save_last": False,
             "mode": "min",
@@ -19,12 +22,16 @@ def build_lightning_trainer(patience_early_stopping, num_epochs, **kwargs):
     callbacks = [ModelCheckpoint(**checkpoint) for checkpoint in checkpoints]
     callbacks.append(
         EarlyStopping(
-            monitor="validation_loss_epoch",
+            monitor="val_loss",
             patience=patience_early_stopping,
             mode="min",
         )
     )
     callbacks.append(LearningRateMonitor(logging_interval="step"))
+
+    mlf_logger = MLFlowLogger(
+        experiment_name=experiment_name, log_model=True, artifact_location=run_name
+    )
 
     # Strategy
     strategy = "auto"
@@ -32,10 +39,12 @@ def build_lightning_trainer(patience_early_stopping, num_epochs, **kwargs):
     trainer = pl.Trainer(
         callbacks=callbacks,
         max_epochs=num_epochs,
-        num_sanity_val_steps=2,
+        num_sanity_val_steps=0,
         strategy=strategy,
         log_every_n_steps=1,
         enable_progress_bar=True,
+        profiler="simple",
+        logger=mlf_logger,
     )
     return trainer
 

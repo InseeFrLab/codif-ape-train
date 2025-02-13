@@ -11,7 +11,7 @@ from s3fs import S3FileSystem
 logging.getLogger("botocore.httpchecksum").setLevel(logging.ERROR)
 
 PATH_SIRENE_3 = "projet-ape/data/data_sirene3.parquet"
-PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/20241027_sirene4.parquet"
+PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/JMS_baseline_20230101_20250211_sirene4.parquet"
 PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
 
 
