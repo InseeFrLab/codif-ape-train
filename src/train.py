@@ -35,6 +35,8 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     """
@@ -151,14 +153,15 @@ def train(cfg: DictConfig):
 
             if cfg_dict["model"]["dataset"] == "FastTextModelDataset":
                 train_dataloader = train_dataset.create_dataloader(
-                    **cfg_dict["model"]["training_params"], num_workers=8
+                    **cfg_dict["model"]["training_params"]
                 )
                 val_dataloader = val_dataset.create_dataloader(
                     **cfg_dict["model"]["training_params"]
                 )
 
-        ###### Model #####
+        print(train_dataloader.num_workers)
 
+        ###### Model #####
         num_classes = max(mappings[Y].values()) + 1
 
         categorical_vocab_sizes = []
@@ -173,7 +176,7 @@ def train(cfg: DictConfig):
 
         if cfg_dict["model"]["name"] == "torchFastText":
             # for torchFastText only, we add the number of words in the vocabulary
-            # In general, tokenizer.num_tokens == num_orws is a invariant
+            # In general, tokenizer.num_tokens == num_rows is a invariant
             num_rows = tokenizer.num_tokens + tokenizer.get_nwords() + 1
             padding_idx = num_rows - 1
 
@@ -186,10 +189,12 @@ def train(cfg: DictConfig):
             categorical_vocabulary_sizes=categorical_vocab_sizes,
             padding_idx=padding_idx,
         )
+
+        model = model.to(device)
         logger.info(model)
 
         # Lightning
-        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]()
+        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]().to(device)
         optimizer = OPTIMIZERS[
             cfg_dict["model"]["training_params"]["optimizer_name"]
         ]  # without the () !

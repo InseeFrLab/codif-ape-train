@@ -45,6 +45,7 @@ def build_lightning_trainer(
         enable_progress_bar=True,
         profiler="simple",
         logger=mlf_logger,
+        accelerator="gpu",
     )
     return trainer
 
