@@ -1,5 +1,6 @@
 import logging
 import sys
+import uuid
 
 import hydra
 import mlflow
@@ -102,7 +103,7 @@ def train(cfg: DictConfig):
         + "_"
         + str(cfg_dict["model"]["model_params"]["embedding_dim"])
         + "_"
-        + str(cfg_dict["tokenizer"]["num_tokens"])
+        + str(cfg_dict["tokenizer"]["num_tokens"] + f"_{uuid.uuid4().hex[:8]}")
     )
 
     logger.info("Run name: " + run_name)
