@@ -36,7 +36,7 @@ spec:
           - name: embedding_dim
           - name: num_tokens
       nodeSelector:
-        nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
+        nvidia.com/gpu.product: "NVIDIA-A2"
       container:
         image: inseefrlab/onyxia-vscode-pytorch:py3.12.7-gpu
         imagePullPolicy: Always
@@ -87,6 +87,6 @@ spec:
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
           - name: MLFLOW_EXPERIMENT_NAME
-            value: model_comparison
+            value: model_comparison_s4
           - name: ENTRY_POINT
             value: main
