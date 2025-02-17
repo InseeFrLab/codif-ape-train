@@ -14,6 +14,10 @@ PATH_SIRENE_3 = "projet-ape/data/data_sirene3.parquet"
 PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/JMS_baseline_20230101_20250211_sirene4.parquet"
 PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
 
+PATH_TRAIN = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_train.parquet"
+PATH_VAL = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_val.parquet"
+PATH_TEST = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_test.parquet"
+
 
 COL_RENAMING = {
     "cj": "CJ",  # specific to sirene 4
@@ -226,6 +230,18 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
 
     # Return test data
     return df
+
+
+def get_processed_data():
+    """
+    Get processed data.
+    """
+    fs = get_file_system()
+    df_train = pd.read_parquet(PATH_TRAIN, filesystem=fs)
+    df_val = pd.read_parquet(PATH_VAL, filesystem=fs)
+    df_test = pd.read_parquet(PATH_TEST, filesystem=fs)
+
+    return df_train, df_val, df_test
 
 
 def categorize_surface(

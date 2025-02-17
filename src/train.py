@@ -20,7 +20,7 @@ from framework_classes import (
     TOKENIZERS,
     TRAINERS,
 )
-from utils.data import get_df_naf, get_Y
+from utils.data import get_df_naf, get_processed_data, get_Y
 from utils.mappings import mappings
 from utils.mlflow import create_or_restore_experiment
 
@@ -36,7 +36,6 @@ logging.basicConfig(
 )
 
 
-@memory.cache
 def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     """
     Load and preprocess data, using joblib caching to avoid redundant computation.
@@ -85,7 +84,7 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
         df_train = df_train_s4
 
     df_val = df_val_s4
-    return df_train, df_val, Y
+    return df_train, df_val, df_test, Y
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -111,10 +110,8 @@ def train(cfg: DictConfig):
         mlflow.log_params(cfg_dict)
 
         ##### Data #########
-
-        df_train, df_val, Y = load_or_preprocess_data(
-            cfg_dict["data"], cfg_dict["model"]["preprocessor"]
-        )
+        Y = get_Y(revision=cfg_dict["data"]["revision"])
+        df_train, df_val, df_test = get_processed_data()
 
         mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
