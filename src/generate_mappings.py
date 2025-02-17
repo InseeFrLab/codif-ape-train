@@ -9,7 +9,7 @@ from preprocessors.pytorch_preprocessor import PytorchPreprocessor
 from utils.data import get_all_data, get_df_naf, get_Y
 
 """ Run this file using the following command:
-> python -m data.generate_mappings
+> python src/generate_mappings.py
 
 from the root directory of the project (codif-ape-train).
 
