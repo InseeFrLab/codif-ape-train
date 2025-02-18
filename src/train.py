@@ -103,7 +103,8 @@ def train(cfg: DictConfig):
         + "_"
         + str(cfg_dict["model"]["model_params"]["embedding_dim"])
         + "_"
-        + str(cfg_dict["tokenizer"]["num_tokens"] + f"_{uuid.uuid4().hex[:8]}")
+        + str(cfg_dict["tokenizer"]["num_tokens"])
+        + f"_{uuid.uuid4().hex[:8]}"
     )
 
     logger.info("Run name: " + run_name)
@@ -160,8 +161,6 @@ def train(cfg: DictConfig):
                     **cfg_dict["model"]["training_params"]
                 )
 
-        print(train_dataloader.num_workers)
-
         ###### Model #####
         num_classes = max(mappings[Y].values()) + 1
 
@@ -209,6 +208,9 @@ def train(cfg: DictConfig):
             **cfg_dict["model"]["training_params"],
         )
         logger.info(module)
+
+        num_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        mlflow.log_param("num_trainable_parameters", num_trainable)
 
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
