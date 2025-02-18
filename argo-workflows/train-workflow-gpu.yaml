@@ -4,6 +4,11 @@ metadata:
   generateName: parallel-training
 spec:
   serviceAccountName: workflow
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 64Gi
   entrypoint: main
   arguments:
     parameters:
@@ -66,6 +71,9 @@ spec:
               --env-manager=local  \
               -P embedding_dim={{inputs.parameters.embedding_dim}} \
               -P num_tokens={{inputs.parameters.num_tokens}}
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
         env:
           # env var for s3 connexion
           - name: AWS_ACCESS_KEY_ID
