@@ -6,7 +6,6 @@ import hydra
 import mlflow
 import pandas as pd
 import torch
-from joblib import Memory
 from omegaconf import DictConfig, OmegaConf
 
 from framework_classes import (
@@ -24,8 +23,6 @@ from framework_classes import (
 from utils.data import get_df_naf, get_processed_data, get_Y
 from utils.mappings import mappings
 from utils.mlflow import create_or_restore_experiment
-
-memory = Memory(location="cache_dir", verbose=1)  # Set cache location
 
 logger = logging.getLogger(__name__)
 
