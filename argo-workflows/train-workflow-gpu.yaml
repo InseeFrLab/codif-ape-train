@@ -72,10 +72,8 @@ spec:
             python -m nltk.downloader stopwords
 
             # Run MLflow experiment
-            mlflow run ~/work/codif-ape-train/ \
-              --env-manager=local  \
-              -P embedding_dim={{inputs.parameters.embedding_dim}} \
-              -P num_tokens={{inputs.parameters.num_tokens}}
+            python src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}}
+
         volumeMounts:
           - mountPath: /dev/shm
             name: dshm
