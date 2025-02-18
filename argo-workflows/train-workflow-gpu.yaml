@@ -14,7 +14,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "embedding_dim":"40,80", "num_tokens": "10000,20000,100000"},
+          { "embedding_dim":"20", "num_tokens": "10000,20000,100000"},
           { "embedding_dim":"180", "num_tokens": "10000,20000,100000"}
             ]'
   templates:
@@ -41,13 +41,18 @@ spec:
           - name: embedding_dim
           - name: num_tokens
       nodeSelector:
-        nvidia.com/gpu.product: "NVIDIA-A2"
+        nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
       container:
         image: inseefrlab/onyxia-vscode-pytorch:py3.12.7-gpu
         imagePullPolicy: Always
         resources:
           limits:
             nvidia.com/gpu: 1
+            cpu: 30000m
+            memory: 50Gi
+          requests:
+              cpu: 100m
+              memory: 2Gi
         command: ["/bin/bash", -c]
         args:
           - |
@@ -55,7 +60,7 @@ spec:
             set -x  # Print commands for debugging
 
             # Clone repository and submodules
-            git clone -b main https://github.com/InseeFrLab/codif-ape-train.git
+            git clone -b dev-fasttext-meta https://github.com/InseeFrLab/codif-ape-train.git
             cd codif-ape-train/
             git submodule update --init
 
@@ -94,7 +99,3 @@ spec:
             value: https://minio.lab.sspcloud.fr
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
-          - name: MLFLOW_EXPERIMENT_NAME
-            value: model_comparison_s4
-          - name: ENTRY_POINT
-            value: main
