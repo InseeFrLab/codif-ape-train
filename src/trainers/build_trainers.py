@@ -3,17 +3,16 @@ from pytorch_lightning.callbacks import (
     EarlyStopping,
     LearningRateMonitor,
     ModelCheckpoint,
-    TQDMProgressBar
+    TQDMProgressBar,
 )
+
 
 class CustomProgressBar(TQDMProgressBar):
     def __init__(self, refresh_rate=20):  # Set refresh rate to 10 batches
         super().__init__(refresh_rate=refresh_rate)
 
 
-def build_lightning_trainer(
-    patience_early_stopping, num_epochs, experiment_name, **kwargs
-):
+def build_lightning_trainer(patience_early_stopping, num_epochs, experiment_name, **kwargs):
     # Trainer callbacks
     checkpoints = [
         {
