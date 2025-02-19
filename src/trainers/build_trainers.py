@@ -3,8 +3,12 @@ from pytorch_lightning.callbacks import (
     EarlyStopping,
     LearningRateMonitor,
     ModelCheckpoint,
+    TQDMProgressBar
 )
-from pytorch_lightning.loggers.mlflow import MLFlowLogger
+
+class CustomProgressBar(TQDMProgressBar):
+    def __init__(self, refresh_rate=20):  # Set refresh rate to 10 batches
+        super().__init__(refresh_rate=refresh_rate)
 
 
 def build_lightning_trainer(
@@ -28,6 +32,7 @@ def build_lightning_trainer(
         )
     )
     callbacks.append(LearningRateMonitor(logging_interval="step"))
+    callbacks.append(CustomProgressBar())
 
     # Strategy
     strategy = "auto"
@@ -39,7 +44,6 @@ def build_lightning_trainer(
         strategy=strategy,
         log_every_n_steps=1,
         enable_progress_bar=True,
-        progress_bar_refresh_rate=20,
         profiler="simple",
         accelerator="gpu",
     )
