@@ -39,6 +39,7 @@ def build_lightning_trainer(
         strategy=strategy,
         log_every_n_steps=1,
         enable_progress_bar=True,
+        progress_bar_refresh_rate=20,
         profiler="simple",
         accelerator="gpu",
     )
