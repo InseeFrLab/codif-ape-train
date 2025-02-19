@@ -8,7 +8,7 @@ from pytorch_lightning.loggers.mlflow import MLFlowLogger
 
 
 def build_lightning_trainer(
-    patience_early_stopping, num_epochs, experiment_name, run_name, **kwargs
+    patience_early_stopping, num_epochs, experiment_name, **kwargs
 ):
     # Trainer callbacks
     checkpoints = [
@@ -29,10 +29,6 @@ def build_lightning_trainer(
     )
     callbacks.append(LearningRateMonitor(logging_interval="step"))
 
-    mlf_logger = MLFlowLogger(
-        experiment_name=experiment_name, log_model=True, artifact_location=run_name
-    )
-
     # Strategy
     strategy = "auto"
     # Trainer
@@ -44,7 +40,6 @@ def build_lightning_trainer(
         log_every_n_steps=1,
         enable_progress_bar=True,
         profiler="simple",
-        logger=mlf_logger,
         accelerator="gpu",
     )
     return trainer

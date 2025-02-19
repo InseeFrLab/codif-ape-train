@@ -37,3 +37,12 @@ def mlflow_log_model(logging_type, model, artifact_path):
             pytorch_model=model,
             artifact_path=artifact_path,
         )
+        
+
+def log_dict(cfg_dict):
+    for key, value in cfg_dict.items():
+        if isinstance(value, dict):
+            log_dict(value)
+        else:
+            mlflow.log_param(key, value)
+    return

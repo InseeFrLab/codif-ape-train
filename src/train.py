@@ -22,7 +22,7 @@ from framework_classes import (
 )
 from utils.data import get_df_naf, get_processed_data, get_Y
 from utils.mappings import mappings
-from utils.mlflow import create_or_restore_experiment
+from utils.mlflow import create_or_restore_experiment, log_dict
 
 logger = logging.getLogger(__name__)
 
@@ -91,24 +91,13 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
 def train(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
-    mlflow.set_tracking_uri(cfg_dict["mlflow"]["remote_server_uri"])
     create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
-    run_name = (
-        cfg_dict["model"]["name"]
-        + "_"
-        + str(cfg_dict["model"]["model_params"]["embedding_dim"])
-        + "_"
-        + str(cfg_dict["tokenizer"]["num_tokens"])
-        + f"_{uuid.uuid4().hex[:8]}"
-    )
+    with mlflow.start_run():
 
-    logger.info("Run name: " + run_name)
-    with mlflow.start_run(run_name=run_name):
-        mlflow.set_tag("mlflow.runName", run_name)
         # Log config
-        mlflow.log_params(cfg_dict)
+        log_dict(cfg_dict)
 
         ##### Data #########
         Y = get_Y(revision=cfg_dict["data"]["revision"])
@@ -127,7 +116,7 @@ def train(cfg: DictConfig):
 
         ###### Tokenizer ######
 
-        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["name"]](
+        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["tokenizer_name"]](
             **cfg_dict["tokenizer"], training_text=train_text
         )
         logger.info(tokenizer)
@@ -212,8 +201,7 @@ def train(cfg: DictConfig):
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
             **cfg_dict["model"]["training_params"],
-            experiment_name=cfg_dict["mlflow"]["experiment_name"],
-            run_name=run_name,
+            experiment_name=cfg_dict["mlflow"]["experiment_name"]
         )
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":
