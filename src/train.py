@@ -1,11 +1,11 @@
 import logging
 import sys
+import uuid
 
 import hydra
 import mlflow
 import pandas as pd
 import torch
-from joblib import Memory
 from omegaconf import DictConfig, OmegaConf
 
 from framework_classes import (
@@ -20,11 +20,9 @@ from framework_classes import (
     TOKENIZERS,
     TRAINERS,
 )
-from utils.data import get_df_naf, get_Y
+from utils.data import get_df_naf, get_processed_data, get_Y
 from utils.mappings import mappings
-from utils.mlflow import create_or_restore_experiment
-
-memory = Memory(location="cache_dir", verbose=1)  # Set cache location
+from utils.mlflow import create_or_restore_experiment, log_dict
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +33,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-@memory.cache
+
 def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
     """
     Load and preprocess data, using joblib caching to avoid redundant computation.
@@ -85,36 +84,24 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
         df_train = df_train_s4
 
     df_val = df_val_s4
-    return df_train, df_val, Y
+    return df_train, df_val, df_test, Y
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def train(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
-    mlflow.set_tracking_uri(cfg_dict["mlflow"]["remote_server_uri"])
     create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
-    run_name = (
-        cfg_dict["model"]["name"]
-        + "_"
-        + str(cfg_dict["model"]["model_params"]["embedding_dim"])
-        + "_"
-        + str(cfg_dict["tokenizer"]["num_tokens"])
-    )
+    with mlflow.start_run():
 
-    logger.info("Run name: " + run_name)
-    with mlflow.start_run(run_name=run_name):
-        mlflow.set_tag("mlflow.runName", run_name)
         # Log config
-        mlflow.log_params(cfg_dict)
+        log_dict(cfg_dict)
 
         ##### Data #########
-
-        df_train, df_val, Y = load_or_preprocess_data(
-            cfg_dict["data"], cfg_dict["model"]["preprocessor"]
-        )
+        Y = get_Y(revision=cfg_dict["data"]["revision"])
+        df_train, df_val, df_test = get_processed_data()
 
         mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
@@ -129,7 +116,7 @@ def train(cfg: DictConfig):
 
         ###### Tokenizer ######
 
-        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["name"]](
+        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["tokenizer_name"]](
             **cfg_dict["tokenizer"], training_text=train_text
         )
         logger.info(tokenizer)
@@ -161,7 +148,6 @@ def train(cfg: DictConfig):
                 )
 
         ###### Model #####
-
         num_classes = max(mappings[Y].values()) + 1
 
         categorical_vocab_sizes = []
@@ -176,7 +162,7 @@ def train(cfg: DictConfig):
 
         if cfg_dict["model"]["name"] == "torchFastText":
             # for torchFastText only, we add the number of words in the vocabulary
-            # In general, tokenizer.num_tokens == num_orws is a invariant
+            # In general, tokenizer.num_tokens == num_rows is a invariant
             num_rows = tokenizer.num_tokens + tokenizer.get_nwords() + 1
             padding_idx = num_rows - 1
 
@@ -189,10 +175,12 @@ def train(cfg: DictConfig):
             categorical_vocabulary_sizes=categorical_vocab_sizes,
             padding_idx=padding_idx,
         )
+
+        model = model.to(device)
         logger.info(model)
 
         # Lightning
-        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]()
+        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]().to(device)
         optimizer = OPTIMIZERS[
             cfg_dict["model"]["training_params"]["optimizer_name"]
         ]  # without the () !
@@ -207,9 +195,13 @@ def train(cfg: DictConfig):
         )
         logger.info(module)
 
+        num_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        mlflow.log_param("num_trainable_parameters", num_trainable)
+
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
-            **cfg_dict["model"]["training_params"]
+            **cfg_dict["model"]["training_params"],
+            experiment_name=cfg_dict["mlflow"]["experiment_name"]
         )
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":
@@ -218,22 +210,6 @@ def train(cfg: DictConfig):
             torch.set_float32_matmul_precision("medium")
 
         trainer.fit(module, train_dataloader, val_dataloader)
-
-        # Save model
-
-        best_model = type(module).load_from_checkpoint(
-            checkpoint_path=trainer.checkpoint_callback.best_model_path,
-            model=module.model,
-            loss=loss,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            **cfg_dict["model"]["training_params"],
-        )
-        mlflow.pytorch.log_model(
-            pytorch_model=best_model,
-            artifact_path=run_name,
-            input_example=None,
-        )
 
         ########## Evaluation ##########
 

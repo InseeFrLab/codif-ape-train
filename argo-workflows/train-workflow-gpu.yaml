@@ -4,12 +4,17 @@ metadata:
   generateName: parallel-training
 spec:
   serviceAccountName: workflow
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 64Gi
   entrypoint: main
   arguments:
     parameters:
       - name: training-conf-list
         value: '[
-          { "embedding_dim":"40,80", "num_tokens": "10000,20000,100000"},
+          { "embedding_dim":"20", "num_tokens": "10000,20000,100000"},
           { "embedding_dim":"180", "num_tokens": "10000,20000,100000"}
             ]'
   templates:
@@ -43,6 +48,11 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
+            cpu: 30000m
+            memory: 50Gi
+          requests:
+              cpu: 100m
+              memory: 2Gi
         command: ["/bin/bash", -c]
         args:
           - |
@@ -62,10 +72,11 @@ spec:
             python -m nltk.downloader stopwords
 
             # Run MLflow experiment
-            mlflow run ~/work/codif-ape-train/ \
-              --env-manager=local  \
-              -P embedding_dim={{inputs.parameters.embedding_dim}} \
-              -P num_tokens={{inputs.parameters.num_tokens}}
+            python src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}}
+
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
         env:
           # env var for s3 connexion
           - name: AWS_ACCESS_KEY_ID
@@ -86,7 +97,3 @@ spec:
             value: https://minio.lab.sspcloud.fr
           - name: MLFLOW_TRACKING_URI
             value: https://projet-ape-mlflow.user.lab.sspcloud.fr/
-          - name: MLFLOW_EXPERIMENT_NAME
-            value: model_comparison
-          - name: ENTRY_POINT
-            value: main

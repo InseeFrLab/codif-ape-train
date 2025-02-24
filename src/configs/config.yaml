@@ -6,7 +6,6 @@ defaults:
   - _self_
 
 mlflow:
-  remote_server_uri: "https://projet-ape-mlflow.user.lab.sspcloud.fr"
-  experiment_name: "model_comparison"
+  experiment_name: "model_comparison_s4"
 
 output_dir: ./outputs
