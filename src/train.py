@@ -1,6 +1,5 @@
 import logging
 import sys
-import uuid
 
 import hydra
 import mlflow
@@ -95,7 +94,6 @@ def train(cfg: DictConfig):
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
     with mlflow.start_run():
-
         # Log config
         log_dict(cfg_dict)
 
@@ -201,7 +199,7 @@ def train(cfg: DictConfig):
         ###### Trainer #####
         trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
             **cfg_dict["model"]["training_params"],
-            experiment_name=cfg_dict["mlflow"]["experiment_name"]
+            experiment_name=cfg_dict["mlflow"]["experiment_name"],
         )
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":

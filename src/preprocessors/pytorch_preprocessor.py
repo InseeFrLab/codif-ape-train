@@ -76,7 +76,7 @@ class PytorchPreprocessor(Preprocessor):
                     )
                 df[variable] = df[variable].apply(mappings[variable].get)
         if y is not None:
-            if len(set(df[y].unique()) - set(mappings[y].keys())) < 0:
+            if len(set(df[y].unique()) - set(mappings[y].keys())) > 0:
                 raise ValueError(f"Missing values in mapping for {y}")
             df[y] = df[y].apply(mappings[y].get)
 

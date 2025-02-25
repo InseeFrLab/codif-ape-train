@@ -5,8 +5,9 @@ FastTextEvaluator class.
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from base.evaluator import Evaluator
 from fasttext import FastText
+
+from .base import Evaluator
 
 
 class FastTextEvaluator(Evaluator):
