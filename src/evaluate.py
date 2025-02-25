@@ -50,9 +50,4 @@ def evaluate(cfg: DictConfig):
 
     # Dataset
 
-    test_text, test_categorical_variables = (
-        df_test[cfg_dict["data"]["text_feature"]].values,
-        df_test[cfg_dict["data"]["categorical_features"]].values,
-    )
-
-    return test_text, test_categorical_variables
+    return
