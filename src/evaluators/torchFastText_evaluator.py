@@ -2,6 +2,7 @@ import time
 
 import torch
 from pytorch_lightning import Trainer
+from sklearn.metrics import roc_auc_score
 from torchFastText.datasets import FastTextModelDataset
 from torchFastText.model import FastTextModule
 
@@ -30,11 +31,18 @@ class torchFastTextEvaluator(FastTextModule, Evaluator):
         outputs = self.forward(inputs)
         end = time.time()
 
-        self.log("test_time", end - start, on_epoch=True, on_step=True, prog_bar=True)
+        self.log("batch_time", end - start, on_epoch=True, on_step=True, prog_bar=True)
         loss = self.loss(outputs, targets)
 
         accuracy = self.accuracy_fn(outputs, targets)
-        return loss, accuracy
+        auc = roc_auc_score(
+            targets.cpu().numpy(), outputs.cpu().numpy(), average="weighted", multi_class="ovr"
+        )
+        self.log("test_loss", loss, on_epoch=True, on_step=True, prog_bar=True)
+        self.log("test_accuracy", accuracy, on_epoch=True, on_step=False, prog_bar=True)
+        self.log("test_auc", auc, on_epoch=True, on_step=False, prog_bar=True)
+
+        return loss, accuracy, auc
 
     def on_test_end(self):
         return
