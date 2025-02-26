@@ -7,9 +7,12 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 
-from utils.data import get_file_system
+from utils.data import get_df_naf
+from utils.mappings import mappings
+
+APE_NIV5_MAPPING = mappings["APE_NIV5"]
+INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}
 
 
 class Evaluator(ABC):
@@ -55,11 +58,13 @@ class Evaluator(ABC):
     def get_aggregated_preds(
         self,
         df: pd.DataFrame,
-        y: str,
+        Y: str,
         text_feature: str,
         textual_features: Optional[List[str]],
         categorical_features: Optional[List[str]],
-        k: int,
+        top_k: Optional[int] = 1,
+        revision: Optional[str] = "NAF2008",
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Computes the underlying aggregated levels of the NAF classification
@@ -79,47 +84,42 @@ class Evaluator(ABC):
             pd.DataFrame: DataFrame of true and predicted labels at
                 each level of the NAF classification.
         """
-        preds = self.get_preds(df, y, text_feature, textual_features, categorical_features, k)
-        level = 5  # Hard code for now because we only predict level 5
+        df_naf = get_df_naf(revision=revision)
+        preds, probs = self.get_preds(
+            df=df,
+            Y=Y,
+            text_feature=text_feature,
+            textual_features=textual_features,
+            categorical_features=categorical_features,
+            k=top_k,
+            **kwargs,
+        )
 
-        predicted_classes = {
-            f"predictions_{level}_k{rank_pred+1}": [pred[0] for pred in preds[rank_pred]]
-            for rank_pred in range(k)
-        }
-        probs_prediction = {
-            f"probabilities_k{rank_pred+1}": [prob[1] for prob in preds[rank_pred]]
-            for rank_pred in range(k)
-        }
-        liasse_nb = df.index
+        df_res = df.copy()
 
-        preds_df = pd.DataFrame(predicted_classes)
-        preds_df.set_index(liasse_nb, inplace=True)
+        # Ground truth: add all niv in str format and LIB
+        df_res = df_res.rename(columns={Y: "APE_NIV5"})
+        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
+        df_naf["APE_NIV5"] = df_naf["APE_NIV5"]
+        df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
 
-        proba_df = pd.DataFrame(probs_prediction)
-        proba_df.set_index(liasse_nb, inplace=True)
-
-        df_naf = pq.read_table(
-            "projet-ape/data/naf2025_extended.parquet",
-            columns=[f"APE_NIV{i}" for i in range(1, level + 1)],
-            filesystem=get_file_system(),
-        ).to_pandas()
-
-        for rank_pred in range(k):
-            df_naf_renamed = df_naf.rename(
-                columns={
-                    f"APE_NIV{i}": f"predictions_{i}_k{rank_pred+1}" for i in range(1, level + 1)
-                }
+        # For each pred, all niv in str format and LIB (from df_naf)
+        for k in range(top_k):
+            df_res[f"APE_NIV5_pred_k{k+1}"] = preds[:, k]
+            df_res[f"APE_NIV5_pred_k{k+1}"] = df_res[f"APE_NIV5_pred_k{k+1}"].map(
+                INV_APE_NIV5_MAPPING
             )
-            preds_df = preds_df.join(
-                df_naf_renamed.set_index(f"predictions_{level}_k{rank_pred+1}"),
-                on=f"predictions_{level}_k{rank_pred+1}",
+
+            df_res = df_res.merge(
+                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k+1}"}),
+                on=f"APE_NIV5_pred_k{k+1}",
+                how="left",
+                suffixes=("", f"_pred_k{k+1}"),
             )
-            preds_df = preds_df[~preds_df.index.duplicated(keep="first")]
 
-        df = self.remap_labels(df)
-        df = df.rename(columns={f"APE_NIV{i}": f"ground_truth_{i}" for i in range(1, level + 1)})
+            df_res[f"proba_k{k+1}"] = probs[:, k]
 
-        return df.join(preds_df.join(proba_df))
+        return df_res
 
     @staticmethod
     @abstractmethod
