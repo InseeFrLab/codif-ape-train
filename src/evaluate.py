@@ -1,13 +1,17 @@
 import logging
+import os
 
 import hydra
+import mlflow
 import pandas as pd
 from omegaconf import DictConfig, OmegaConf
 
 from framework_classes import (
+    EVALUATORS,
     PREPROCESSORS,
 )
 from utils.data import get_df_naf, get_processed_data, get_test_data, get_Y
+from utils.mlflow import create_or_restore_experiment, log_dict
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,8 +50,40 @@ def evaluate(cfg: DictConfig):
         axis=0,
     )
 
-    ###### Fetch model & tokenizer ######
+    ###### Fetch module from MLFlow ######
 
-    # Dataset
+    mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+
+    exp_name = cfg_dict["mlflow"]["experiment_name"]
+    create_or_restore_experiment(exp_name)
+    mlflow.set_experiment(exp_name)
+    run_id = cfg_dict["model"]["test_params"]["run_id"]
+    module = mlflow.pytorch.load_model(run_id)
+    evaluator = EVALUATORS[cfg_dict["model"]["name"]](module)
+
+    ##### Launch evaluation #####
+    mlflow.set_experiment(exp_name + "_test")
+    with mlflow.start_run():
+        log_dict(cfg_dict)
+
+        test_res = evaluator.launch_test(
+            df_test_ls,
+            text_feature=cfg_dict["data"]["text_feature"],
+            categorical_features=cfg_dict["data"]["categorical_features"],
+            Y=Y,
+            batch_size=cfg_dict["model"]["test_params"]["test_batch_size"],
+            num_workers=os.cpu_count() - 1,
+        )[0]  # trainer.test returns a single element list
+        mlflow.log_dict(test_res, "test_results_ls")
+
+        test_res = evaluator.launch_test(
+            df_test,
+            text_feature=cfg_dict["data"]["text_feature"],
+            categorical_features=cfg_dict["data"]["categorical_features"],
+            Y=Y,
+            batch_size=cfg_dict["model"]["test_params"]["test_batch_size"],
+            num_workers=os.cpu_count() - 1,
+        )[0]
+        mlflow.log_dict(test_res, "test_results_s4")
 
     return

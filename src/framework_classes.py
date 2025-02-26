@@ -6,6 +6,7 @@ import torch
 from torchFastText.datasets import FastTextModelDataset, NGramTokenizer
 from torchFastText.model import FastTextModel, FastTextModule
 
+from evaluators import torchFastTextEvaluator
 from preprocessors.pytorch_preprocessor import PytorchPreprocessor
 from trainers.build_trainers import (
     build_lightning_trainer,
@@ -46,3 +47,4 @@ OPTIMIZERS = {
 SCHEDULERS = {"ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau}
 LOSSES = {"CrossEntropyLoss": torch.nn.CrossEntropyLoss}
 TRAINERS = {"Lightning": build_lightning_trainer, "Transformers": build_transformers_trainer}
+EVALUATORS = {"torchFastText": torchFastTextEvaluator}
