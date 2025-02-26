@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 import hydra
@@ -89,7 +90,7 @@ def load_or_preprocess_data(cfg_dict_data, cfg_dict_model_preprocessor):
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def train(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
-
+    mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
     mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
 
@@ -139,11 +140,9 @@ def train(cfg: DictConfig):
 
             if cfg_dict["model"]["dataset"] == "FastTextModelDataset":
                 train_dataloader = train_dataset.create_dataloader(
-                    **cfg_dict["model"]["training_params"]
+                    **cfg_dict["model"]["train_params"]
                 )
-                val_dataloader = val_dataset.create_dataloader(
-                    **cfg_dict["model"]["training_params"]
-                )
+                val_dataloader = val_dataset.create_dataloader(**cfg_dict["model"]["train_params"])
 
         ###### Model #####
         num_classes = max(mappings[Y].values()) + 1
@@ -178,18 +177,18 @@ def train(cfg: DictConfig):
         logger.info(model)
 
         # Lightning
-        loss = LOSSES[cfg_dict["model"]["training_params"]["loss_name"]]().to(device)
+        loss = LOSSES[cfg_dict["model"]["train_params"]["loss_name"]]().to(device)
         optimizer = OPTIMIZERS[
-            cfg_dict["model"]["training_params"]["optimizer_name"]
+            cfg_dict["model"]["train_params"]["optimizer_name"]
         ]  # without the () !
-        scheduler = SCHEDULERS[cfg_dict["model"]["training_params"]["scheduler_name"]]
+        scheduler = SCHEDULERS[cfg_dict["model"]["train_params"]["scheduler_name"]]
 
         module = MODULES[cfg_dict["model"]["name"]](
             model=model,
             loss=loss,
             optimizer=optimizer,
             scheduler=scheduler,
-            **cfg_dict["model"]["training_params"],
+            **cfg_dict["model"]["train_params"],
         )
         logger.info(module)
 
@@ -197,8 +196,8 @@ def train(cfg: DictConfig):
         mlflow.log_param("num_trainable_parameters", num_trainable)
 
         ###### Trainer #####
-        trainer = TRAINERS[cfg_dict["model"]["training_params"]["trainer_name"]](
-            **cfg_dict["model"]["training_params"],
+        trainer = TRAINERS[cfg_dict["model"]["train_params"]["trainer_name"]](
+            **cfg_dict["model"]["train_params"],
             experiment_name=cfg_dict["mlflow"]["experiment_name"],
         )
 
