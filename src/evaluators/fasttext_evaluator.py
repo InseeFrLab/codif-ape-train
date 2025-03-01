@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from fasttext import FastText
 
-from base.evaluator import Evaluator
+from .base import Evaluator
 
 
 class FastTextEvaluator(Evaluator):

@@ -7,7 +7,7 @@ model_params:
   sparse: False
   direct_bagging: True
 
-training_params:
+train_params:
   trainer_name: "Lightning"
   num_epochs: 10
   patience_early_stopping: 3
@@ -21,3 +21,7 @@ training_params:
     patience: 2
     min_lr: 1e-6
   loss_name: "CrossEntropyLoss"
+
+test_params:
+  test_batch_size: 256
+  run_id: 'runs:/45afc22a961a4cdcb282aad93693326d/model'

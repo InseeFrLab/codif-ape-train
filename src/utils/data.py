@@ -62,7 +62,7 @@ All of them return a tuple of two DataFrames: sirene_3 and sirene_4  in that ord
 """
 
 
-def get_sirene_4_data(revision: str, return_col_names: bool = False, **kwargs) -> pd.DataFrame:
+def get_sirene_4_data(revision: str, **kwargs) -> pd.DataFrame:
     """
     Get Sirene 4 data.
 
@@ -107,7 +107,7 @@ def get_sirene_3_data(
     df = filter_on_date(df, start_month, start_year, date_feature)
 
     # Edit surface column
-    df["SURF"] = df["SURF"].fillna("0").astype(int)
+    df["SURF"] = df["SURF"].fillna("0").astype(float)
     # Rename columns
     df = df.rename(
         columns={
@@ -169,7 +169,7 @@ def filter_on_date(
     return df.loc[df["DATE"] >= start_date]
 
 
-def get_test_data(revision: str, y: str) -> pd.DataFrame:
+def get_test_data(revision: str, y: str, **kwargs) -> pd.DataFrame:
     """
     Get test data.
 
@@ -193,40 +193,35 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
 
     # Reformat dataframe to have column names consistent
     # with Sirene 4 data
-    df = df.rename(
-        columns={
-            "apet_manual": y,
-            "text_description": "libelle",
-            "event": "EVT",
-            "evenement_type": "EVT",
-            "cj": "CJ",
-            "surface": "SRF",
-            "activ_surf_et": "SRF",
-            "nature": "NAT",
-            "activ_nat_et": "NAT",
-            "liasse_type": "TYP",
-            "type_": "TYP",
-            "permanence": "CRT",
-            "activ_perm_et": "CRT",
-            "other_nature_text": "activ_nat_lib_et",
-        }
-    )
+    rename_col = {
+        "apet_manual": y,
+        "text_description": "libelle",
+        "event": "EVT",
+        "evenement_type": "EVT",
+        "surface": "SRF",
+        "nature": "NAT",
+        "liasse_type": "TYP",
+        "type_": "TYP",
+        "permanence": "CRT",
+        "activ_perm_et": "CRT",
+        "other_nature_text": "NAT_LIB",
+    }
+    df = df.rename(columns=COL_RENAMING | rename_col)
+
     # Drop rows with no APE code
     df = df[df[y] != ""]
 
     # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
     df["NAT"] = df["NAT"].replace("", "NaN")
     df["CJ"] = df["CJ"].replace("", "NaN")
-    # df["CRT"] = df["CRT"].replace("", "NaN")
-    df["SRF"] = df["SRF"].str.replace("", "NaN")  # TODO: What if we use srf as float?
+    df["CRT"] = df["CRT"].replace("", "NaN")
 
-    # TODO: need to add activ_sec_agri_et in data next time
-    if "activ_sec_agri_et" not in df:
-        df["activ_sec_agri_et"] = ""
+    # SRF float, as a surface column
+    df["SRF"] = df["SRF"].replace("", "0").astype(float)
 
-    # TODO : need to add CRT in data next time
-    if "CRT" not in df:
-        df["CRT"] = "NaN"
+    # Align schema to sirene4 (adding AGRI column for instance, full of NaN)
+    df_s4 = get_sirene_4_data(revision=revision, **kwargs)[1].sample(frac=0.01)
+    df, right = df.align(df_s4, axis=1, join="outer")
 
     # Return test data
     return df

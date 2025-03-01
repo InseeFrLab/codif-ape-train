@@ -8,9 +8,8 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import unidecode
-from sklearn.model_selection import train_test_split
-
 from base.preprocessor import Preprocessor
+from sklearn.model_selection import train_test_split
 
 pd.options.mode.chained_assignment = None
 
