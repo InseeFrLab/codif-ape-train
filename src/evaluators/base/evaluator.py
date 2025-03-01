@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from utils.data import get_df_naf
 from utils.mappings import mappings
 
 APE_NIV5_MAPPING = mappings["APE_NIV5"]
@@ -55,8 +54,8 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_aggregated_preds(
-        self,
         df: pd.DataFrame,
         Y: str,
         text_feature: str,
@@ -64,6 +63,7 @@ class Evaluator(ABC):
         categorical_features: Optional[List[str]],
         top_k: Optional[int] = 1,
         revision: Optional[str] = "NAF2008",
+        return_inference_time=False,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -84,42 +84,7 @@ class Evaluator(ABC):
             pd.DataFrame: DataFrame of true and predicted labels at
                 each level of the NAF classification.
         """
-        df_naf = get_df_naf(revision=revision)
-        preds, probs = self.get_preds(
-            df=df,
-            Y=Y,
-            text_feature=text_feature,
-            textual_features=textual_features,
-            categorical_features=categorical_features,
-            k=top_k,
-            **kwargs,
-        )
-
-        df_res = df.copy()
-
-        # Ground truth: add all niv in str format and LIB
-        df_res = df_res.rename(columns={Y: "APE_NIV5"})
-        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
-        df_naf["APE_NIV5"] = df_naf["APE_NIV5"]
-        df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
-
-        # For each pred, all niv in str format and LIB (from df_naf)
-        for k in range(top_k):
-            df_res[f"APE_NIV5_pred_k{k+1}"] = preds[:, k]
-            df_res[f"APE_NIV5_pred_k{k+1}"] = df_res[f"APE_NIV5_pred_k{k+1}"].map(
-                INV_APE_NIV5_MAPPING
-            )
-
-            df_res = df_res.merge(
-                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k+1}"}),
-                on=f"APE_NIV5_pred_k{k+1}",
-                how="left",
-                suffixes=("", f"_pred_k{k+1}"),
-            )
-
-            df_res[f"proba_k{k+1}"] = probs[:, k]
-
-        return df_res
+        return NotImplementedError()
 
     @staticmethod
     @abstractmethod

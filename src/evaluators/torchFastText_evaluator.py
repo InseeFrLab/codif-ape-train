@@ -1,11 +1,18 @@
 import time
+from typing import Optional
 
 import torch
 from pytorch_lightning import Trainer
 from torchFastText.datasets import FastTextModelDataset
 from torchFastText.model import FastTextModule
 
+from utils.data import get_df_naf
+from utils.mappings import mappings
+
 from .base import Evaluator
+
+APE_NIV5_MAPPING = mappings["APE_NIV5"]
+INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}
 
 
 class torchFastTextEvaluator(FastTextModule, Evaluator):
@@ -88,7 +95,16 @@ class torchFastTextEvaluator(FastTextModule, Evaluator):
         return test_results
 
     def get_preds(
-        self, df, text_feature, categorical_features, Y, batch_size, num_workers, k=None, **kwargs
+        self,
+        df,
+        text_feature,
+        categorical_features,
+        Y,
+        batch_size,
+        num_workers,
+        k=None,
+        return_inference_time=False,
+        **kwargs,
     ):
         """
         Returns the prediction of the model for pd.DataFrame `df`
@@ -101,16 +117,11 @@ class torchFastTextEvaluator(FastTextModule, Evaluator):
             Y (str): Name of the variable to predict.
             batch_size (int): Batch size for the evaluation.
             num_workers (int): Number of workers for the evaluation.
-            k (int): Number of predictions.
-                If k is None, return the probabilities of each class.
-                If k is not None, return the top k predictions and their probabilities.
 
         Returns:
-            If k is None:
                 predictions (torch.Tensor): Tensor of shape (n_samples, n_classes) containing the probabilities of each class.
-            If k is not None:
-                preds (np.ndarray): Array of shape (n_samples, k) containing the top k indices (int).
-                probs (np.ndarray): Array of shape (n_samples, k) containing the probabilities of the top k predictions.
+                + If return_inference_time is True:
+                    inference_time (float): Inference time in seconds.
 
 
         """
@@ -128,18 +139,57 @@ class torchFastTextEvaluator(FastTextModule, Evaluator):
         dataloader = dataset.create_dataloader(
             batch_size=batch_size, shuffle=False, num_workers=num_workers
         )
-
+        start = time.time()
         predictions = self.trainer.predict(self, dataloader)
+        end = time.time()
+        inference_time = end - start
+
+        inference_time = inference_time if return_inference_time else None
 
         predictions = torch.cat(predictions, dim=0)
         predictions = torch.nn.functional.softmax(predictions, dim=1)
 
-        if k is not None:
-            preds = torch.topk(predictions, k=k, dim=1).indices
-            probs = torch.topk(predictions, k=k, dim=1).values
-            return preds.numpy(), probs.numpy()
+        if return_inference_time:
+            return predictions, inference_time
+        else:
+            return predictions
 
-        return predictions
+    def get_aggregated_preds(
+        self, df, Y, predictions=None, top_k=1, revision: Optional[str] = "NAF2008", **kwargs
+    ):
+        # if predictions is None:
+        #     predictions = self.get_preds(df, return_inference_time=False, **kwargs)
+
+        df_naf = get_df_naf(revision=revision)
+
+        preds = torch.topk(predictions, k=top_k, dim=1).indices
+        probs = torch.topk(predictions, k=top_k, dim=1).values
+
+        df_res = df.copy()
+
+        # Ground truth: add all niv in str format and LIB
+        df_res = df_res.rename(columns={Y: "APE_NIV5"})
+        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
+        df_naf["APE_NIV5"] = df_naf["APE_NIV5"]
+        df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
+
+        # For each pred, all niv in str format and LIB (from df_naf)
+        for k in range(top_k):
+            df_res[f"APE_NIV5_pred_k{k + 1}"] = preds[:, k]
+            df_res[f"APE_NIV5_pred_k{k + 1}"] = df_res[f"APE_NIV5_pred_k{k + 1}"].map(
+                INV_APE_NIV5_MAPPING
+            )
+
+            df_res = df_res.merge(
+                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k + 1}"}),
+                on=f"APE_NIV5_pred_k{k + 1}",
+                how="left",
+                suffixes=("", f"_pred_k{k + 1}"),
+            )
+
+            df_res[f"proba_k{k + 1}"] = probs[:, k]
+
+        return df_res
 
     def remap_labels():
         return
