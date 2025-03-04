@@ -7,7 +7,7 @@ from torchFastText.datasets import FastTextModelDataset, NGramTokenizer
 from torchFastText.model import FastTextModel, FastTextModule
 
 from evaluators import FastTextEvaluator, torchFastTextEvaluator
-from models.fasttext_classifier.fasttext_wrapper import FastTextWrapper
+from models.fasttext_classifier import FastTextWrapper
 from preprocessors import FastTextPreprocessor, PytorchPreprocessor
 from trainers.build_trainers import (
     build_lightning_trainer,
