@@ -8,7 +8,7 @@ import fasttext
 import mlflow
 import pandas as pd
 
-from fasttext_classifier.fasttext_preprocessor import FastTextPreprocessor
+from preprocessors import FastTextPreprocessor
 
 
 class FastTextWrapper(mlflow.pyfunc.PythonModel):
@@ -16,7 +16,7 @@ class FastTextWrapper(mlflow.pyfunc.PythonModel):
     Class to wrap and use FastText Models.
     """
 
-    def __init__(self, text_feature, textual_features, categorical_features):
+    def __init__(self, text_feature, textual_features, categorical_features, **kwargs):
         self.preprocessor = FastTextPreprocessor()
         self.text_feature = text_feature
         self.textual_features = textual_features

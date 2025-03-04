@@ -7,7 +7,8 @@ from typing import Dict, List, Optional
 
 import fasttext
 import pandas as pd
-from base.trainer import Trainer
+
+from trainers import Trainer
 
 
 class FastTextTrainer(Trainer):
