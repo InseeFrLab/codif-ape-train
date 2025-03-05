@@ -18,3 +18,4 @@ datasets
 evaluate
 hydra-core
 seaborn
+pytest
