@@ -6,10 +6,10 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from torchFastText.preprocess import clean_text_feature
 
 from utils.data import categorize_surface
 from utils.mappings import SURFACE_COLS, mappings
+from utils.preprocess import clean_text_feature
 
 from .base import Preprocessor
 
