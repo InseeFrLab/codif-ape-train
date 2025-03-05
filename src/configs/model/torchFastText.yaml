@@ -5,12 +5,12 @@ model_params:
   embedding_dim: 180
   categorical_embedding_dims: 5
   sparse: False
-  direct_bagging: True
+  direct_bagging: False
 
 train_params:
   trainer_name: "Lightning"
-  num_epochs: 10
-  patience_early_stopping: 3
+  num_epochs: 50
+  patience_early_stopping: 5
   batch_size: 256
   optimizer_name: "Adam"
   optimizer_params:
