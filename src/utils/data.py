@@ -14,9 +14,18 @@ PATH_SIRENE_3 = "projet-ape/data/data_sirene3.parquet"
 PATH_SIRENE_4_NAF2008 = "projet-ape/extractions/JMS_baseline_20230101_20250211_sirene4.parquet"
 PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
 
-PATH_TRAIN = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_train.parquet"
-PATH_VAL = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_val.parquet"
-PATH_TEST = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_test.parquet"
+PATH_TRAIN_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_train.parquet"
+PATH_VAL_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_val.parquet"
+PATH_TEST_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_test.parquet"
+
+PATH_TRAIN_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_train.parquet"
+PATH_VAL_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_val.parquet"
+PATH_TEST_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_test.parquet"
+
+PATHS = {
+    "NAF2008": {PATH_TRAIN_NAF2008, PATH_VAL_NAF2008, PATH_TEST_NAF2008},
+    "NAF2025": {PATH_TRAIN_NAF2025, PATH_VAL_NAF2025, PATH_TEST_NAF2025},
+}
 
 
 COL_RENAMING = {
@@ -227,11 +236,14 @@ def get_test_data(revision: str, y: str, **kwargs) -> pd.DataFrame:
     return df
 
 
-def get_processed_data():
+def get_processed_data(revision):
     """
     Get processed data.
     """
     fs = get_file_system()
+
+    PATH_TRAIN, PATH_VAL, PATH_TEST = PATHS[revision]
+
     df_train = pd.read_parquet(PATH_TRAIN, filesystem=fs)
     df_val = pd.read_parquet(PATH_VAL, filesystem=fs)
     df_test = pd.read_parquet(PATH_TEST, filesystem=fs)

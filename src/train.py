@@ -46,7 +46,7 @@ def train(cfg: DictConfig):
 
         ##### Data #########
         Y = get_Y(revision=cfg_dict["data"]["revision"])
-        df_train, df_val, df_test = get_processed_data()
+        df_train, df_val, df_test = get_processed_data(revision=cfg_dict["data"]["revision"])
 
         mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
