@@ -14,7 +14,7 @@ from framework_classes import (
     DATA_GETTER,
     PREPROCESSORS,
 )
-from utils.data import get_df_naf, get_Y
+from utils.data import get_df_naf, get_file_system, get_Y
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def preprocess_and_save(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
     ##### Data #########
-    df_train, df_val, df_test = load_and_preprocess_data(
+    df_train, df_val, df_test, Y = load_and_preprocess_data(
         cfg_dict["data"], cfg_dict["model"]["preprocessor"]
     )
 
@@ -93,15 +93,13 @@ def preprocess_and_save(cfg: DictConfig):
     else:
         date = "20250211"
 
-    df_train.to_parquet(
-        f"model_comparison_splits/{cfg_dict["data"]["sirene"]}_{cfg_dict["data"]["revision"]}_{date}/df_train.parquet"
-    )
-    df_val.to_parquet(
-        f"model_comparison_splits/{cfg_dict["data"]["sirene"]}_{cfg_dict["data"]["revision"]}_{date}/df_val.parquet"
-    )
-    df_test.to_parquet(
-        f"model_comparison_splits/{cfg_dict["data"]["sirene"]}_{cfg_dict["data"]["revision"]}_{date}/df_test.parquet"
-    )
+    fs = get_file_system()
+    BUCKET_OUT = f"projet-ape/model_comparison_splits/{cfg_dict["data"]["sirene"]}_{cfg_dict["data"]["revision"]}_{date}"
+
+    for df, tag in zip([df_train, df_val, df_test], ["train", "val", "test"]):
+        file_path = f"{BUCKET_OUT}/df_{tag}.parquet"
+        with fs.open(file_path, "wb") as f:
+            df.to_parquet(f)
 
     return
 
