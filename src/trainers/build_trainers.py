@@ -44,7 +44,6 @@ def build_lightning_trainer(patience_early_stopping, num_epochs, experiment_name
         log_every_n_steps=1,
         enable_progress_bar=True,
         profiler="simple",
-        accelerator="gpu",
     )
     return trainer
 
