@@ -19,3 +19,5 @@ evaluate
 hydra-core
 seaborn
 pytest
+ipywidgets
+plotly
