@@ -3,10 +3,8 @@ git config --global credential.helper store
 
 git submodule update --init
 
-# Install dependencies
-pip install -e src/models/torch-fastText
-
-pip install -r requirements.txt
+pip install uv
+uv sync
 pre-commit install
 
 export PYTHONPATH="$PWD:$PYTHONPATH"

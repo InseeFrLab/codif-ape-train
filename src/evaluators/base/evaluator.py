@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from utils.data import get_df_naf
 from utils.mappings import mappings
 
 APE_NIV5_MAPPING = mappings["APE_NIV5"]
@@ -54,37 +55,56 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
-    @abstractmethod
+    @staticmethod
     def get_aggregated_preds(
-        df: pd.DataFrame,
-        Y: str,
-        text_feature: str,
-        textual_features: Optional[List[str]],
-        categorical_features: Optional[List[str]],
-        top_k: Optional[int] = 1,
+        df,
+        Y,
+        predictions=None,
+        probabilities=None,
+        top_k=1,
         revision: Optional[str] = "NAF2008",
-        return_inference_time=False,
+        int_to_str=True,
         **kwargs,
-    ) -> pd.DataFrame:
-        """
-        Computes the underlying aggregated levels of the NAF classification
-        for ground truth and predictions for pd.DataFrame `df`.
+    ):
+        # if predictions is None:
+        #     predictions = self.get_preds(df, return_inference_time=False, **kwargs)
 
-        Args:
-            df (pd.DataFrame): Evaluation DataFrame.
-            y (str): Name of the variable to predict.
-            text_feature (str): Name of the text feature.
-            textual_features (Optional[List[str]]): Names of the
-                other textual features.
-            categorical_features (Optional[List[str]]): Names of the
-                categorical features.
-            k (int): Number of predictions.
+        df_naf = get_df_naf(revision=revision)
 
-        Returns:
-            pd.DataFrame: DataFrame of true and predicted labels at
-                each level of the NAF classification.
-        """
-        return NotImplementedError()
+        predictions = predictions.reshape(len(df), -1)
+
+        if probabilities is None:
+            preds = np.argsort(predictions, axis=1)[:, -top_k:]
+            probs = np.take_along_axis(predictions, preds, axis=1)
+        else:
+            probabilities = probabilities.reshape(len(df), -1)
+            preds, probs = predictions, probabilities
+
+        df_res = df.copy()
+
+        # Ground truth: add all niv in str format and LIB
+        df_res = df_res.rename(columns={Y: "APE_NIV5"})
+        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
+        df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
+
+        # For each pred, all niv in str format and LIB (from df_naf)
+        for k in range(top_k):
+            df_res[f"APE_NIV5_pred_k{k + 1}"] = preds[:, k]
+            if int_to_str:
+                df_res[f"APE_NIV5_pred_k{k + 1}"] = df_res[f"APE_NIV5_pred_k{k + 1}"].map(
+                    INV_APE_NIV5_MAPPING
+                )
+
+            df_res = df_res.merge(
+                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k + 1}"}),
+                on=f"APE_NIV5_pred_k{k + 1}",
+                how="left",
+                suffixes=("", f"_pred_k{k + 1}"),
+            )
+
+            df_res[f"proba_k{k + 1}"] = probs[:, k]
+
+        return df_res
 
     @staticmethod
     @abstractmethod
