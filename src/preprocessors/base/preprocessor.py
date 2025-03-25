@@ -68,9 +68,10 @@ class Preprocessor(ABC):
 
         # Add APE codes libelles (true labels) only for Sirene 4 data
         if not s3:
-            df = pd.concat(
-                [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
-            )
+            if add_codes:
+                df = pd.concat(
+                    [df, df_naf.rename(columns={"LIB_NIV5": text_feature, "APE_NIV5": y})], axis=0
+                )
 
         # General preprocessing (We keep only necessary features + fill NA by "NaN")
         variables = [y] + [text_feature]
