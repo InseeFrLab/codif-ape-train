@@ -1,12 +1,10 @@
 import time
-from typing import Optional
 
 import torch
 from pytorch_lightning import Trainer
 from torchFastText.datasets import FastTextModelDataset
 from torchFastText.model import FastTextModule
 
-from utils.data import get_df_naf
 from utils.mappings import mappings
 
 from .base import Evaluator
@@ -153,43 +151,6 @@ class torchFastTextEvaluator(FastTextModule, Evaluator):
             return predictions, inference_time
         else:
             return predictions
-
-    def get_aggregated_preds(
-        self, df, Y, predictions=None, top_k=1, revision: Optional[str] = "NAF2008", **kwargs
-    ):
-        # if predictions is None:
-        #     predictions = self.get_preds(df, return_inference_time=False, **kwargs)
-
-        df_naf = get_df_naf(revision=revision)
-
-        preds = torch.topk(predictions, k=top_k, dim=1).indices
-        probs = torch.topk(predictions, k=top_k, dim=1).values
-
-        df_res = df.copy()
-
-        # Ground truth: add all niv in str format and LIB
-        df_res = df_res.rename(columns={Y: "APE_NIV5"})
-        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
-        df_naf["APE_NIV5"] = df_naf["APE_NIV5"]
-        df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
-
-        # For each pred, all niv in str format and LIB (from df_naf)
-        for k in range(top_k):
-            df_res[f"APE_NIV5_pred_k{k + 1}"] = preds[:, k]
-            df_res[f"APE_NIV5_pred_k{k + 1}"] = df_res[f"APE_NIV5_pred_k{k + 1}"].map(
-                INV_APE_NIV5_MAPPING
-            )
-
-            df_res = df_res.merge(
-                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k + 1}"}),
-                on=f"APE_NIV5_pred_k{k + 1}",
-                how="left",
-                suffixes=("", f"_pred_k{k + 1}"),
-            )
-
-            df_res[f"proba_k{k + 1}"] = probs[:, k]
-
-        return df_res
 
     def remap_labels():
         return
