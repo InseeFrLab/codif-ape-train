@@ -12,9 +12,14 @@ As for now, the suffix is "_mapping.json".
 import json
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Get absolute path
+mapping_dir = os.path.join(BASE_DIR, "../../data/mappings")  # Adjust path
+mapping_dir = os.path.abspath(mapping_dir)  # Normalize
+
+
 mappings = {}
-mapping_dir = "data/mappings"
 suffix = "_mapping.json"
+keys = [f[: -len(suffix)] for f in os.listdir(mapping_dir) if f.endswith(suffix)]
 
 # dynamically fetch the mapping jsons in the mapping directory
 keys = [f[: -len(suffix)] for f in os.listdir(mapping_dir) if f.endswith(suffix)]
