@@ -70,7 +70,6 @@ class Evaluator(ABC):
         #     predictions = self.get_preds(df, return_inference_time=False, **kwargs)
 
         df_naf = get_df_naf(revision=revision)
-
         predictions = predictions.reshape(len(df), -1)
 
         if probabilities is None:
@@ -84,9 +83,9 @@ class Evaluator(ABC):
 
         # Ground truth: add all niv in str format and LIB
         df_res = df_res.rename(columns={Y: "APE_NIV5"})
-        df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
+        if int_to_str:
+            df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
         df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
-
         # For each pred, all niv in str format and LIB (from df_naf)
         for k in range(top_k):
             df_res[f"APE_NIV5_pred_k{k + 1}"] = preds[:, k]
@@ -103,7 +102,6 @@ class Evaluator(ABC):
             )
 
             df_res[f"proba_k{k + 1}"] = probs[:, k]
-
         return df_res
 
     @staticmethod
