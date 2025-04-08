@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
+import fireducks.pandas as pd
 
 from utils.data import get_df_naf
 from utils.mappings import mappings
@@ -66,42 +66,68 @@ class Evaluator(ABC):
         int_to_str=True,
         **kwargs,
     ):
-        # if predictions is None:
-        #     predictions = self.get_preds(df, return_inference_time=False, **kwargs)
-
-        df_naf = get_df_naf(revision=revision)
+        # Reshape predictions
         predictions = predictions.reshape(len(df), -1)
-
+        
+        # Get top-k predictions and probabilities
         if probabilities is None:
-            preds = np.argsort(predictions, axis=1)[:, -top_k:]
+            preds = np.argpartition(-predictions, top_k, axis=1)[:, :top_k]
+            sorted_indices = np.argsort(-np.take_along_axis(predictions, preds, axis=1), axis=1)
+            preds = np.take_along_axis(preds, sorted_indices, axis=1)
             probs = np.take_along_axis(predictions, preds, axis=1)
         else:
             probabilities = probabilities.reshape(len(df), -1)
             preds, probs = predictions, probabilities
-
+        
         df_res = df.copy()
-
-        # Ground truth: add all niv in str format and LIB
+        
         df_res = df_res.rename(columns={Y: "APE_NIV5"})
+        
         if int_to_str:
             df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
+        
+        df_naf = get_df_naf(revision=revision)
+        
         df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
-        # For each pred, all niv in str format and LIB (from df_naf)
+        
         for k in range(top_k):
-            df_res[f"APE_NIV5_pred_k{k + 1}"] = preds[:, k]
+            k_index = k + 1
+            col_name = f"APE_NIV5_pred_k{k_index}"
+            
+            # Ajouter la colonne de prédiction
+            df_res[col_name] = preds[:, k]
+            
+            # Convertir si nécessaire
             if int_to_str:
-                df_res[f"APE_NIV5_pred_k{k + 1}"] = df_res[f"APE_NIV5_pred_k{k + 1}"].map(
-                    INV_APE_NIV5_MAPPING
-                )
+                df_res[col_name] = df_res[col_name].map(INV_APE_NIV5_MAPPING)
+            
+            df_res[f"proba_k{k_index}"] = probs[:, k]
 
+        merge_cols = []
+        rename_dict = {}
+        
+        for k in range(top_k):
+            k_index = k + 1
+            col_name = f"APE_NIV5_pred_k{k_index}"
+            merge_cols.append(col_name)
+            
+            for naf_col in df_naf.columns:
+                if naf_col != "APE_NIV5":
+                    rename_dict[(col_name, naf_col)] = f"{naf_col}_pred_k{k_index}"
+
+        for k in range(top_k):
+            k_index = k + 1
+            col_name = f"APE_NIV5_pred_k{k_index}"
+
+            temp_df = df_naf.rename(columns={"APE_NIV5": col_name})
+   
             df_res = df_res.merge(
-                df_naf.rename(columns={"APE_NIV5": f"APE_NIV5_pred_k{k + 1}"}),
-                on=f"APE_NIV5_pred_k{k + 1}",
+                temp_df,
+                on=col_name,
                 how="left",
-                suffixes=("", f"_pred_k{k + 1}"),
+                suffixes=("", f"_pred_k{k_index}")
             )
-
-            df_res[f"proba_k{k + 1}"] = probs[:, k]
+        
         return df_res
 
     @staticmethod
