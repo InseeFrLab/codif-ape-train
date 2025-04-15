@@ -1,15 +1,14 @@
-name: "torchFastText"
+model_name: "torchFastText"
 preprocessor: "PyTorch"
-dataset: "FastTextModelDataset"
 model_params:
-  embedding_dim: 180
+  embedding_dim: 80
   categorical_embedding_dims: 5
   sparse: False
   direct_bagging: False
 
 train_params:
   trainer_name: "Lightning"
-  num_epochs: 50
+  num_epochs: 35
   patience_early_stopping: 5
   batch_size: 256
   optimizer_name: "Adam"

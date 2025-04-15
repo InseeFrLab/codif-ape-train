@@ -1,2 +1,2 @@
-name: "fastText"
+model_name: "fastText"
 preprocessor: "fastText"

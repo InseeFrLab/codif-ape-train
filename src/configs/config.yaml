@@ -1,11 +1,12 @@
 defaults:
   - model: torchFastText
+  - dataset: soft_classif
   - data: NAF2008_sirene4
   - tokenizer: NGramTokenizer
   - override hydra/job_logging: default
   - _self_
 
 mlflow:
-  experiment_name: "model_comparison_s4"
+  experiment_name: "model_improvement"
 
 output_dir: ./outputs
