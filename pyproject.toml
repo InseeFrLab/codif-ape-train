@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "accelerate>=1.5.2",
-    "datasets>=3.4.1",
     "dotenv>=0.9.9",
     "evaluate>=0.4.3",
     "fasttext==0.9.3",
@@ -40,4 +39,4 @@ line-length = 100
 extend-include = ["*.ipynb"]
 
 [tool.uv.sources]
-torchfasttext = { path = "src/models/torch-fastText" }
+torchfasttext = { git = "https://github.com/InseeFrLab/torch-fastText.git", branch = "main" }

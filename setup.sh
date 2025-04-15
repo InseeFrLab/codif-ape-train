@@ -1,12 +1,8 @@
 #!/bin/bash
-git config --global credential.helper store
-
-git submodule update --init
-
 pip install uv
 uv sync
 uv run -m nltk.downloader stopwords
-pre-commit install
+uv run pre-commit install
 
 export PYTHONPATH="$PWD:$PYTHONPATH"
 
