@@ -12,7 +12,7 @@ class CustomProgressBar(TQDMProgressBar):
         super().__init__(refresh_rate=refresh_rate)
 
 
-def build_lightning_trainer(patience_early_stopping, num_epochs, experiment_name, **kwargs):
+def build_lightning_trainer(patience_early_stopping, num_epochs, **kwargs):
     # Trainer callbacks
     checkpoints = [
         {
@@ -41,7 +41,7 @@ def build_lightning_trainer(patience_early_stopping, num_epochs, experiment_name
         max_epochs=num_epochs,
         num_sanity_val_steps=0,
         strategy=strategy,
-        log_every_n_steps=1,
+        log_every_n_steps=5,
         enable_progress_bar=True,
         profiler="simple",
     )
