@@ -5,8 +5,8 @@ Evaluator base class.
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 import fireducks.pandas as pd
+import numpy as np
 
 from utils.data import get_df_naf
 from utils.mappings import mappings
@@ -59,7 +59,7 @@ class Evaluator(ABC):
     def get_aggregated_preds(
         df,
         Y,
-        predictions=None,
+        predictions,
         probabilities=None,
         top_k=1,
         revision: Optional[str] = "NAF2008",
@@ -68,7 +68,7 @@ class Evaluator(ABC):
     ):
         # Reshape predictions
         predictions = predictions.reshape(len(df), -1)
-        
+
         # Get top-k predictions and probabilities
         if probabilities is None:
             preds = np.argpartition(-predictions, top_k, axis=1)[:, :top_k]
@@ -78,39 +78,39 @@ class Evaluator(ABC):
         else:
             probabilities = probabilities.reshape(len(df), -1)
             preds, probs = predictions, probabilities
-        
+
         df_res = df.copy()
-        
+
         df_res = df_res.rename(columns={Y: "APE_NIV5"})
-        
+
         if int_to_str:
             df_res["APE_NIV5"] = df_res["APE_NIV5"].map(INV_APE_NIV5_MAPPING)
-        
+
         df_naf = get_df_naf(revision=revision)
-        
+
         df_res = df_res.merge(df_naf, on="APE_NIV5", how="left")
-        
+
         for k in range(top_k):
             k_index = k + 1
             col_name = f"APE_NIV5_pred_k{k_index}"
-            
+
             # Ajouter la colonne de prédiction
             df_res[col_name] = preds[:, k]
-            
+
             # Convertir si nécessaire
             if int_to_str:
                 df_res[col_name] = df_res[col_name].map(INV_APE_NIV5_MAPPING)
-            
+
             df_res[f"proba_k{k_index}"] = probs[:, k]
 
         merge_cols = []
         rename_dict = {}
-        
+
         for k in range(top_k):
             k_index = k + 1
             col_name = f"APE_NIV5_pred_k{k_index}"
             merge_cols.append(col_name)
-            
+
             for naf_col in df_naf.columns:
                 if naf_col != "APE_NIV5":
                     rename_dict[(col_name, naf_col)] = f"{naf_col}_pred_k{k_index}"
@@ -120,14 +120,11 @@ class Evaluator(ABC):
             col_name = f"APE_NIV5_pred_k{k_index}"
 
             temp_df = df_naf.rename(columns={"APE_NIV5": col_name})
-   
+
             df_res = df_res.merge(
-                temp_df,
-                on=col_name,
-                how="left",
-                suffixes=("", f"_pred_k{k_index}")
+                temp_df, on=col_name, how="left", suffixes=("", f"_pred_k{k_index}")
             )
-        
+
         return df_res
 
     @staticmethod
@@ -144,7 +141,10 @@ class Evaluator(ABC):
         """
         raise NotImplementedError()
 
-    def compute_accuracies(self, df: pd.DataFrame, level: int) -> Dict[str, float]:
+    @staticmethod
+    def compute_accuracies(
+        aggregated_preds: pd.DataFrame, level: int = 5, suffix="val"
+    ) -> Dict[str, float]:
         """
         Computes accuracies (for different levels of the NAF classification)
         of the trained model on DataFrame `df`.
@@ -158,9 +158,11 @@ class Evaluator(ABC):
             Dict[str, float]: Accuracies dictionary.
         """
 
+        assert suffix in ["val", "test"], "suffix must be 'val' or 'test'"
+
         accuracies = {
-            f"accuracy_level_{lvl}": np.mean(
-                (df[f"predictions_{lvl}_k1"] == df[f"ground_truth_{lvl}"])
+            f"accuracy_{suffix}_level_{lvl}": np.mean(
+                (aggregated_preds[f"APE_NIV{lvl}_pred_k1"] == aggregated_preds[f"APE_NIV{lvl}"])
             )
             for lvl in range(1, level + 1)
         }
