@@ -28,6 +28,7 @@ dependencies = [
     "seaborn>=0.13.2",
     "sentencepiece>=0.2.0",
     "torch>=2.2.0",
+    "torch-uncertainty>=0.4.3",
     "torchfasttext",
     "tqdm>=4.66.2",
     "transformers>=4.50.0",
