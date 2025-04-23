@@ -4,14 +4,10 @@ import sys
 
 import hydra
 import mlflow
-import numpy as np
-import pandas as pd
-import sklearn
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torchFastText.datasets import FastTextModelDataset
 
-from evaluators import Evaluator
 from framework_classes import (
     DATASETS,
     LOSSES,
@@ -22,16 +18,10 @@ from framework_classes import (
     TOKENIZERS,
     TRAINERS,
 )
-from utils.data import PATHS, get_file_system, get_processed_data, get_Y
+from utils.data import get_processed_data, get_Y
+from utils.evaluation import run_evaluation
 from utils.mappings import mappings
 from utils.mlflow import create_or_restore_experiment, log_dict
-from utils.validation_viz import (
-    calibration_curve,
-    confidence_histogram,
-    get_automatic_accuracy,
-    plot_automatic_coding_accuracy_curve,
-    sort_and_get_pred,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -192,80 +182,18 @@ def train(cfg: DictConfig):
         trainer.fit(module, train_dataloader, val_dataloader)
 
         ########## Evaluation ##########
+
         logger.info("Starting evaluation...")
-        fs = get_file_system()
-        df_res_ft = pd.read_parquet(
-            PATHS[cfg_dict["data"]["revision"]][-1][:-8] + "_predictions_ft.parquet", filesystem=fs
+
+        zipped = zip([df_val, df_test], [val_dataloader, test_dataloader], ["val", "test"])
+
+        run_evaluation(
+            trainer=trainer,
+            module=module,
+            revision=cfg_dict["data"]["revision"],
+            Y=Y,
+            zipped_data=zipped,
         )
-        fasttext_preds_labels = df_res_ft["APE_NIV5_pred_k1"].values
-        fasttext_preds_scores = df_res_ft["proba_k1"].values
-        ground_truth = df_res_ft["APE_NIV5"]
-
-        def run_eval(df, dataloader, suffix="val", n_bins=100):
-            """
-            Run evaluation on the given dataloader and log the results.
-            """
-
-            predictions = trainer.predict(
-                module, dataloader
-            )  # accumulates predictions over batches
-            predictions_tensor = torch.cat(predictions).cpu()  # (num_test_samples, num_classes)
-
-            (
-                sorted_confidence,
-                well_predicted,
-                predicted_confidence,
-                predicted_class,
-                true_values,
-            ) = sort_and_get_pred(predictions=predictions_tensor, df=df, Y=Y)
-            fig1 = confidence_histogram(sorted_confidence, well_predicted, df=df)
-            fig2 = calibration_curve(
-                n_bins=n_bins,
-                confidences=predicted_confidence,
-                predicted_classes=predicted_class,
-                true_labels=true_values,
-            )
-            mlflow.log_figure(fig1, "confidence_histogram_" + suffix + ".png")
-            mlflow.log_figure(fig2, "calibration_curve_" + suffix + ".png")
-
-            brier_score = sklearn.metrics.brier_score_loss(
-                well_predicted, predicted_confidence.numpy(), sample_weight=None, pos_label=1
-            )
-            mlflow.log_metric("brier_score" + suffix, brier_score)
-
-            # Use your aggregation function
-            aggregated_results = Evaluator.get_aggregated_preds(
-                df=df, Y=Y, predictions=predictions_tensor.numpy(), top_k=1
-            )
-
-            accuracy = Evaluator.compute_accuracies(
-                aggregated_preds=aggregated_results, suffix=suffix
-            )
-            mlflow.log_metrics(accuracy)
-
-            if suffix == "test":
-                thresholds = np.linspace(0, 1, 100)
-                torchft_scores = sorted_confidence[:, 0] - sorted_confidence[:, 1:5].sum(axis=1)
-                torchft_plot = get_automatic_accuracy(
-                    thresholds,
-                    torch.clamp(torchft_scores, 0, 1).numpy(),
-                    predicted_class.numpy(),
-                    true_values,
-                )
-                ft_plot = get_automatic_accuracy(
-                    thresholds,
-                    np.clip(fasttext_preds_scores.reshape(-1), 0, 1),
-                    fasttext_preds_labels.reshape(-1),
-                    ground_truth.values,
-                )
-
-                fig = plot_automatic_coding_accuracy_curve(torchft_plot, ft_plot, thresholds)
-                mlflow.log_figure(fig, "automatic_coding_accuracy_curve.png")
-
-            return
-
-        run_eval(df_val, val_dataloader, suffix="val")
-        run_eval(df_test, test_dataloader, suffix="test")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import torch
+from torch_uncertainty.metrics import CalibrationError
 from torchFastText.model import FastTextModule
 
 from utils.mappings import mappings
@@ -16,32 +17,24 @@ class torchFastTextClassifier(FastTextModule):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def test_step(self, batch, batch_idx):
+        self.ece = CalibrationError(task="multiclass", num_classes=self.model.num_classes)
+
+    def on_predict_start(self):
         """
-        Designed for evaluation on a labeled set, inference AND computation of some metrics.
-        To be called with trainer.test(module, dataloader).
-
+        Called at the beginning of the predict epoch.
         """
-
-        inputs, targets = batch[:-1], batch[-1]
-        outputs = self.forward(inputs)
-
-        loss = self.loss(outputs, targets)
-
-        accuracy = self.accuracy_fn(outputs, targets)
-        self.log("test_loss", loss, on_epoch=True, on_step=False, prog_bar=True)
-        self.log("test_accuracy", accuracy, on_epoch=True, on_step=False, prog_bar=True)
-
-        return loss, accuracy, outputs
+        self.ece.reset()
 
     def predict_step(self, batch, batch_idx):
         """
         Same as test_step but without the loss and accuracy computation: boilerplate inference.
-        To be called with trainer.predict(module, dataloader) - see get_preds method.
+        To be called with trainer.predict(module, dataloader).
 
         Here, we use the softmax function to get the probabilities of each class.
         """
-
-        outputs = self.forward(batch)
+        inputs, targets = batch[:-1], batch[-1]
+        outputs = self.forward(inputs)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
+        targets_class = targets.argmax(dim=1)
+        self.ece.update(outputs, targets_class)
         return outputs

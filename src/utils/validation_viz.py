@@ -5,18 +5,6 @@ import seaborn as sns
 import torch
 
 
-def sort_and_get_pred(predictions, df, Y):
-    sorted_confidence, sorted_confidence_indices = predictions.sort(descending=True)
-
-    predicted_class = sorted_confidence_indices[:, 0]
-    predicted_confidence = sorted_confidence[:, 0]
-
-    true_values = df[Y].values
-    well_predicted = (predicted_class == true_values).float()
-
-    return sorted_confidence, well_predicted, predicted_confidence, predicted_class, true_values
-
-
 def confidence_histogram(sorted_confidence, well_predicted, df):
     confidence_score = sorted_confidence[:, 0] - sorted_confidence[:, 1]
 
@@ -76,7 +64,7 @@ def get_automatic_accuracy(thresholds, predicted_confidence, predicted_class, tr
         predicted_confidence (torch.Tensor, shape (n_samples, 1): The confidence of the predictions.
         predicted_class (torch.Tensor, shape (n_samples, 1)
             The predicted class of the APEs.
-        true_values (torch.Tensor, shape (n_samples, 1): The true values of the APEs.
+        true_values (torch.Tensor / np.array, shape (n_samples, 1): The true values of the APEs.
 
     Returns:
         automatic_coding_rate (float): The rate of automatically coded APEs.
