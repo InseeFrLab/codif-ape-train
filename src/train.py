@@ -40,10 +40,6 @@ def train(cfg: DictConfig):
         Y = get_Y(revision=cfg.data.revision)
         df_train, df_val, df_test = get_processed_data(revision=cfg.data.revision)
 
-        df_train = df_train.sample(frac=0.001)
-        df_val = df_val.sample(frac=0.01)
-        df_test = df_test.sample(frac=0.01)
-
         mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
         train_text, train_categorical_variables = (

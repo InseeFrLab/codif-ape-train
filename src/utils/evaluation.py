@@ -32,8 +32,6 @@ def run_evaluation(trainer, module, revision, Y, zipped_data):
     """
     df_naf = get_df_naf(revision=revision)
     fasttext_preds_labels, fasttext_preds_scores = get_fasttext_preds(revision=revision)
-    fasttext_preds_labels = fasttext_preds_labels.sample(frac=0.01)
-    fasttext_preds_scores = fasttext_preds_scores.sample(frac=0.01)
     for df, dataloader, suffix in zipped_data:
         predictions = trainer.predict(module, dataloader)  # accumulates predictions over batches
 
