@@ -38,3 +38,25 @@ class torchFastTextClassifier(FastTextModule):
         targets_class = targets.argmax(dim=1)
         self.ece.update(outputs, targets_class)
         return outputs
+
+    def configure_optimizers(self):
+        """
+        Configure optimizers and schedulers.
+        Here, unlike in torchFastText, we can handle when optimizer and scheduler are already instantiated.
+        """
+        if self.optimizer_params is None:
+            optimizer = self.optimizer
+        else:
+            optimizer = self.optimizer(self.parameters(), **self.optimizer_params)
+        if self.scheduler_params is None:
+            scheduler = self.scheduler
+        else:
+            scheduler = self.scheduler(optimizer, **self.scheduler_params)
+
+        scheduler = {
+            "scheduler": scheduler,
+            "monitor": "val_loss",
+            "interval": self.scheduler_interval,
+        }
+
+        return [optimizer], [scheduler]

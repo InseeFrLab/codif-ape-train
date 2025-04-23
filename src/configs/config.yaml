@@ -1,12 +1,16 @@
 defaults:
-  - model: torchFastText
-  - dataset: soft_classif
+# Keys should exactly match the folders in src/configs. Each value corresponds to yaml files within the folder.
   - data: NAF2008_sirene4
+  - dataset: soft_classif
+  - loss: cross_entropy
+  - model: torchFastText
+  - optimizer: adam
+  - scheduler: plateau
   - tokenizer: NGramTokenizer
   - override hydra/job_logging: default
   - _self_
 
 mlflow:
   experiment_name: "model_improvement"
-
+batch_size: 256
 output_dir: ./outputs
