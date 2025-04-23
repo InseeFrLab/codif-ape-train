@@ -1,4 +1,5 @@
 dataset_name: "SoftClassif"
+_target_: datasets.SoftClassifDataset
 similarity_coefficients:
 # one for each level (1 to 5), each element should be in [0, 1]
 # See src/datasets/SoftClassifDataset.py for more details

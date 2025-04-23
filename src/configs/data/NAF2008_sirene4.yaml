@@ -1,5 +1,6 @@
 sirene : "sirene_4"
 revision : "NAF2008"
+_target_: src.utils.data.get_sirene_4_data
 start_month : 1
 start_year : 2018
 text_feature : "libelle"

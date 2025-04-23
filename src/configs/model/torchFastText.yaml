@@ -1,5 +1,7 @@
+_target_: torchFastText.model.FastTextModel
 model_name: "torchFastText"
-preprocessor: "PyTorch"
+preprocessor: PyTorch
+
 model_params:
   embedding_dim: 80
   categorical_embedding_dims: 5
@@ -7,20 +9,12 @@ model_params:
   direct_bagging: False
 
 train_params:
-  trainer_name: "Lightning"
+
+
+trainer:
+  _target_: trainers.build_trainers.build_lightning_trainer
   num_epochs: 35
   patience_early_stopping: 5
-  batch_size: 256
-  optimizer_name: "Adam"
-  optimizer_params:
-    lr: 1e-3
-  scheduler_name: "ReduceLROnPlateau"
-  scheduler_params:
-    factor: 0.5
-    patience: 2
-    min_lr: 1e-6
-  loss_name: "CrossEntropyLoss"
 
-test_params:
-  test_batch_size: 256
-  run_id: 'runs:/45afc22a961a4cdcb282aad93693326d/model'
+module:
+  _target_: models.torch_fasttext.torchFastTextClassifier

@@ -8,16 +8,6 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from torchFastText.datasets import FastTextModelDataset
 
-from framework_classes import (
-    DATASETS,
-    LOSSES,
-    MODELS,
-    MODULES,
-    OPTIMIZERS,
-    SCHEDULERS,
-    TOKENIZERS,
-    TRAINERS,
-)
 from utils.data import get_processed_data, get_Y
 from utils.evaluation import run_evaluation
 from utils.mappings import mappings
@@ -39,16 +29,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-    create_or_restore_experiment(cfg_dict["mlflow"]["experiment_name"])
-    mlflow.set_experiment(cfg_dict["mlflow"]["experiment_name"])
+    create_or_restore_experiment(cfg.mlflow.experiment_name)
+    mlflow.set_experiment(cfg.mlflow.experiment_name)
 
     with mlflow.start_run():
         # Log config
         log_dict(cfg_dict)
 
         ##### Data #########
-        Y = get_Y(revision=cfg_dict["data"]["revision"])
-        df_train, df_val, df_test = get_processed_data(revision=cfg_dict["data"]["revision"])
+        Y = get_Y(revision=cfg.data.revision)
+        df_train, df_val, df_test = get_processed_data(revision=cfg.data.revision)
 
         df_train = df_train.sample(frac=0.001)
         df_val = df_val.sample(frac=0.01)
@@ -57,72 +47,74 @@ def train(cfg: DictConfig):
         mlflow.log_param("number_of_training_observations", df_train.shape[0])
 
         train_text, train_categorical_variables = (
-            df_train[cfg_dict["data"]["text_feature"]].values,
-            df_train[cfg_dict["data"]["categorical_features"]].values,
+            df_train[cfg.data.text_feature].values,
+            df_train[cfg.data.categorical_features].values,
         )
         val_text, val_categorical_variables = (
-            df_val[cfg_dict["data"]["text_feature"]].values,
-            df_val[cfg_dict["data"]["categorical_features"]].values,
+            df_val[cfg.data.text_feature].values,
+            df_val[cfg.data.categorical_features].values,
         )
         test_text, test_categorical_variables = (
-            df_test[cfg_dict["data"]["text_feature"]].values,
-            df_test[cfg_dict["data"]["categorical_features"]].values,
+            df_test[cfg.data.text_feature].values,
+            df_test[cfg.data.categorical_features].values,
         )
 
         ###### Tokenizer ######
 
-        tokenizer = TOKENIZERS[cfg_dict["tokenizer"]["tokenizer_name"]](
-            **cfg_dict["tokenizer"], training_text=train_text
-        )
+        tokenizer = hydra.utils.instantiate(cfg.tokenizer, training_text=train_text)
         logger.info(tokenizer)
 
         ###### Dataset ######
 
-        if cfg_dict["dataset"] is not None:
-            similarity_coefficients = cfg_dict["dataset"].get("similarity_coefficients", None)
+        if cfg.dataset is not None:
+            similarity_coefficients = cfg.dataset.get("similarity_coefficients", None)
 
-            dataset_class = DATASETS[cfg_dict["dataset"]["dataset_name"]]
+            dataset_base_config = {
+                "tokenizer": tokenizer,
+                "revision": cfg.data.revision,
+                "similarity_coefficients": similarity_coefficients,
+            }
 
-            train_dataset = dataset_class(
+            train_dataset = hydra.utils.instantiate(
+                cfg.dataset,
                 texts=train_text,
                 categorical_variables=train_categorical_variables,
-                tokenizer=tokenizer,
                 outputs=df_train[Y].values,
-                revision=cfg_dict["data"]["revision"],
-                similarity_coefficients=similarity_coefficients,
-            )
-            val_dataset = dataset_class(
-                texts=val_text,
-                categorical_variables=val_categorical_variables,
-                tokenizer=tokenizer,
-                outputs=df_val[Y].values,
-                revision=cfg_dict["data"]["revision"],
-                similarity_coefficients=similarity_coefficients,
+                **dataset_base_config,
             )
 
-            test_dataset = dataset_class(
+            val_dataset = hydra.utils.instantiate(
+                cfg.dataset,
+                texts=val_text,
+                categorical_variables=val_categorical_variables,
+                outputs=df_val[Y].values,
+                **dataset_base_config,
+            )
+
+            test_dataset = hydra.utils.instantiate(
+                cfg.dataset,
                 texts=test_text,
                 categorical_variables=test_categorical_variables,
-                tokenizer=tokenizer,
                 outputs=df_test[Y].values,
-                revision=cfg_dict["data"]["revision"],
-                similarity_coefficients=similarity_coefficients,
+                **dataset_base_config,
             )
 
             if isinstance(train_dataset, FastTextModelDataset):
                 train_dataloader = train_dataset.create_dataloader(
-                    **cfg_dict["model"]["train_params"]
+                    batch_size=cfg.batch_size, shuffle=True
                 )
-                val_dataloader = val_dataset.create_dataloader(**cfg_dict["model"]["train_params"])
+                val_dataloader = val_dataset.create_dataloader(
+                    batch_size=cfg.batch_size, shuffle=False
+                )
                 test_dataloader = test_dataset.create_dataloader(
-                    **cfg_dict["model"]["train_params"]
+                    batch_size=cfg.batch_size, shuffle=False
                 )
 
         ###### Model #####
         num_classes = max(mappings[Y].values()) + 1
 
         categorical_vocab_sizes = []
-        for feature in cfg_dict["data"]["categorical_features"]:
+        for feature in cfg.data.categorical_features:
             if feature == "SRF":
                 categorical_vocab_sizes.append(5)
             else:
@@ -131,38 +123,43 @@ def train(cfg: DictConfig):
         logger.info("Number of classes: " + str(num_classes))
         logger.info("categorical_vocab_sizes " + str(categorical_vocab_sizes))
 
-        if cfg_dict["model"]["model_name"] == "torchFastText":
+        if cfg.model.model_name == "torchFastText":
             # for torchFastText only, we add the number of words in the vocabulary
             # In general, tokenizer.num_tokens == num_rows is a invariant
             num_rows = tokenizer.num_tokens + tokenizer.get_nwords() + 1
             padding_idx = num_rows - 1
 
         # PyTorch model
-        model = MODELS[cfg_dict["model"]["model_name"]](
-            **cfg_dict["model"]["model_params"],
+        model_params = OmegaConf.to_container(cfg.model.model_params, resolve=True)
+
+        model = hydra.utils.instantiate(
+            {"_target_": cfg.model._target_, "_convert_": "partial"},
             tokenizer=tokenizer,
             num_rows=num_rows,
             num_classes=num_classes,
             categorical_vocabulary_sizes=categorical_vocab_sizes,
             padding_idx=padding_idx,
+            **model_params,
         )
 
         model = model.to(device)
         logger.info(model)
 
         # Lightning
-        loss = LOSSES[cfg_dict["model"]["train_params"]["loss_name"]]().to(device)
-        optimizer = OPTIMIZERS[
-            cfg_dict["model"]["train_params"]["optimizer_name"]
-        ]  # without the () !
-        scheduler = SCHEDULERS[cfg_dict["model"]["train_params"]["scheduler_name"]]
+        loss = hydra.utils.instantiate(cfg.loss).to(device)
+        mlflow.log_param("loss_name", cfg.loss._target_.split(".")[-1])
 
-        module = MODULES[cfg_dict["model"]["model_name"]](
+        optimizer = hydra.utils.instantiate(cfg.optimizer, params=model.parameters())
+        scheduler = hydra.utils.instantiate(cfg.scheduler, optimizer=optimizer)
+
+        module = hydra.utils.instantiate(
+            cfg.model.module,
             model=model,
             loss=loss,
             optimizer=optimizer,
+            optimizer_params=None,
             scheduler=scheduler,
-            **cfg_dict["model"]["train_params"],
+            scheduler_params=None,
         )
         logger.info(module)
 
@@ -170,9 +167,7 @@ def train(cfg: DictConfig):
         mlflow.log_param("num_trainable_parameters", num_trainable)
 
         ###### Trainer #####
-        trainer = TRAINERS[cfg_dict["model"]["train_params"]["trainer_name"]](
-            **cfg_dict["model"]["train_params"],
-        )
+        trainer = hydra.utils.instantiate(cfg.model.trainer)
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":
             mlflow.pytorch.autolog()
