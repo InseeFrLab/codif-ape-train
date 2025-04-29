@@ -28,9 +28,6 @@ class TextClassificationDataModule(LightningDataModule):
             revision=self.data_cfg.revision
         )
 
-        self.df_train = self.df_train.sample(frac=0.001)
-        self.df_val = self.df_val.sample(frac=0.001)
-
         self.Y = get_Y(revision=self.data_cfg.revision)
 
         self.tokenizer = hydra.utils.instantiate(
