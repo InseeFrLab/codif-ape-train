@@ -118,7 +118,7 @@ def train(cfg: DictConfig):
 
         zipped = zip(
             [data_module.df_val, data_module.df_test],
-            [data_module.val_dataloader, data_module.test_dataloader],
+            [data_module.val_dataloader(), data_module.test_dataloader()],
             ["val", "test"],
         )
 
