@@ -1,0 +1,7 @@
+_target_: src.datasets.TextClassificationDataModule
+
+data_cfg: ${data}
+tokenizer_cfg: ${tokenizer}
+dataset_cfg: ${dataset}
+
+batch_size: ${batch_size}

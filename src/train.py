@@ -6,9 +6,7 @@ import hydra
 import mlflow
 import torch
 from omegaconf import DictConfig, OmegaConf
-from torchFastText.datasets import FastTextModelDataset
 
-from utils.data import get_processed_data, get_Y
 from utils.evaluation import run_evaluation
 from utils.mappings import mappings
 from utils.mlflow import create_or_restore_experiment, log_dict
@@ -37,76 +35,18 @@ def train(cfg: DictConfig):
         log_dict(cfg_dict)
 
         ##### Data #########
-        Y = get_Y(revision=cfg.data.revision)
-        df_train, df_val, df_test = get_processed_data(revision=cfg.data.revision)
 
-        mlflow.log_param("number_of_training_observations", df_train.shape[0])
+        logger.info("Starting data preparation...")
 
-        train_text, train_categorical_variables = (
-            df_train[cfg.data.text_feature].values,
-            df_train[cfg.data.categorical_features].values,
-        )
-        val_text, val_categorical_variables = (
-            df_val[cfg.data.text_feature].values,
-            df_val[cfg.data.categorical_features].values,
-        )
-        test_text, test_categorical_variables = (
-            df_test[cfg.data.text_feature].values,
-            df_test[cfg.data.categorical_features].values,
-        )
+        data_module = hydra.utils.instantiate(cfg.datamodule, _recursive_=False)
+        data_module.setup()
+        tokenizer = data_module.tokenizer
+        Y = data_module.Y
 
-        ###### Tokenizer ######
-
-        tokenizer = hydra.utils.instantiate(cfg.tokenizer, training_text=train_text)
-        logger.info(tokenizer)
-
-        ###### Dataset ######
-
-        if cfg.dataset is not None:
-            similarity_coefficients = cfg.dataset.get("similarity_coefficients", None)
-
-            dataset_base_config = {
-                "tokenizer": tokenizer,
-                "revision": cfg.data.revision,
-                "similarity_coefficients": similarity_coefficients,
-            }
-
-            train_dataset = hydra.utils.instantiate(
-                cfg.dataset,
-                texts=train_text,
-                categorical_variables=train_categorical_variables,
-                outputs=df_train[Y].values,
-                **dataset_base_config,
-            )
-
-            val_dataset = hydra.utils.instantiate(
-                cfg.dataset,
-                texts=val_text,
-                categorical_variables=val_categorical_variables,
-                outputs=df_val[Y].values,
-                **dataset_base_config,
-            )
-
-            test_dataset = hydra.utils.instantiate(
-                cfg.dataset,
-                texts=test_text,
-                categorical_variables=test_categorical_variables,
-                outputs=df_test[Y].values,
-                **dataset_base_config,
-            )
-
-            if isinstance(train_dataset, FastTextModelDataset):
-                train_dataloader = train_dataset.create_dataloader(
-                    batch_size=cfg.batch_size, shuffle=True
-                )
-                val_dataloader = val_dataset.create_dataloader(
-                    batch_size=cfg.batch_size, shuffle=False
-                )
-                test_dataloader = test_dataset.create_dataloader(
-                    batch_size=cfg.batch_size, shuffle=False
-                )
+        mlflow.log_param("number_of_training_observations", len(data_module.train_dataset))
 
         ###### Model #####
+
         num_classes = max(mappings[Y].values()) + 1
 
         categorical_vocab_sizes = []
@@ -170,13 +110,17 @@ def train(cfg: DictConfig):
             torch.cuda.empty_cache()
             torch.set_float32_matmul_precision("medium")
 
-        trainer.fit(module, train_dataloader, val_dataloader)
+        trainer.fit(module, datamodule=data_module)
 
         ########## Evaluation ##########
 
         logger.info("Starting evaluation...")
 
-        zipped = zip([df_val, df_test], [val_dataloader, test_dataloader], ["val", "test"])
+        zipped = zip(
+            [data_module.df_val, data_module.df_test],
+            [data_module.val_dataloader, data_module.test_dataloader],
+            ["val", "test"],
+        )
 
         run_evaluation(
             trainer=trainer,

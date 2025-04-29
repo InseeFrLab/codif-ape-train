@@ -2,6 +2,7 @@ defaults:
 # Keys should exactly match the folders in src/configs. Each value corresponds to yaml files within the folder.
   - data: NAF2008_sirene4
   - dataset: soft_classif
+  - datamodule: text_classification
   - loss: cross_entropy
   - model: torchFastText
   - optimizer: adam
