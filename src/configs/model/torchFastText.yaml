@@ -8,9 +8,6 @@ model_params:
   sparse: False
   direct_bagging: False
 
-train_params:
-
-
 trainer:
   _target_: trainers.build_trainers.build_lightning_trainer
   num_epochs: 35
