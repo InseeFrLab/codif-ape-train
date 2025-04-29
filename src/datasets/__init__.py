@@ -1,1 +1,2 @@
+from .datamodule import TextClassificationDataModule as TextClassificationDataModule
 from .SoftClassifDataset import SoftClassifDataset as SoftClassifDataset
