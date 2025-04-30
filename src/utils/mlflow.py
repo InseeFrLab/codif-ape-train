@@ -1,6 +1,9 @@
+import os
+
 import mlflow
 from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
+from omegaconf import OmegaConf
 
 
 def create_or_restore_experiment(experiment_name):
@@ -49,3 +52,23 @@ def log_dict(cfg_dict):
             else:
                 mlflow.log_param(key, value)
     return
+
+
+def log_hydra_config(cfg, filename="hydra_config.yaml", save_dir=None):
+    """
+    Save and log the Hydra config to MLflow as an artifact.
+
+    Args:
+        cfg (omegaconf.DictConfig): Hydra config object.
+        filename (str): Name of the YAML file to save.
+        save_dir (str or None): Directory to save the config file in.
+                                If None, uses current working directory.
+    """
+    if save_dir is None:
+        save_dir = os.getcwd()
+
+    os.makedirs(save_dir, exist_ok=True)
+    config_save_path = os.path.join(save_dir, filename)
+
+    OmegaConf.save(config=cfg, f=config_save_path)
+    mlflow.log_artifact(config_save_path)

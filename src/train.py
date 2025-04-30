@@ -9,7 +9,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from utils.evaluation import run_evaluation
 from utils.mappings import mappings
-from utils.mlflow import create_or_restore_experiment, log_dict
+from utils.mlflow import create_or_restore_experiment, log_dict, log_hydra_config
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ def train(cfg: DictConfig):
     with mlflow.start_run():
         # Log config
         log_dict(cfg_dict)
+        log_hydra_config(cfg)
 
         ##### Data #########
 
@@ -103,6 +104,7 @@ def train(cfg: DictConfig):
         mlflow.log_param("num_trainable_parameters", num_trainable)
 
         ###### Trainer #####
+
         trainer = hydra.utils.instantiate(cfg.model.trainer)
 
         if cfg_dict["model"]["preprocessor"] == "PyTorch":
