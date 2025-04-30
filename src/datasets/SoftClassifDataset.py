@@ -84,6 +84,7 @@ class SoftClassifDataset(FastTextModelDataset):
         if self.outputs is not None:
             y = self.similarity_matrix[list(y), :]  # (batch_size, n_classes)
             y = torch.tensor(y, dtype=torch.float)
+            y = y / y.sum(dim=1, keepdim=True)  # Normalize to sum to 1
             return (padded_batch, categorical_tensors, y)
         else:
             return (padded_batch, categorical_tensors)
