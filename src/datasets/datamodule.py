@@ -14,7 +14,7 @@ class TextClassificationDataModule(LightningDataModule):
         tokenizer_cfg,
         dataset_cfg,
         batch_size: int,
-        num_workers: int = os.cpu_count() // 4,
+        num_workers: int = os.cpu_count() // 2,
     ):
         super().__init__()
         self.data_cfg = data_cfg
