@@ -25,6 +25,59 @@ class torchFastTextClassifier(FastTextModule):
         """
         self.ece.reset()
 
+    def training_step(self, batch, batch_idx: int) -> torch.Tensor:
+        """
+        Training step.
+
+        Args:
+            batch (List[torch.LongTensor]): Training batch.
+            batch_idx (int): Batch index.
+
+        Returns (torch.Tensor): Loss tensor.
+        """
+
+        inputs, targets = batch[:-1], batch[-1]
+        outputs = self.forward(inputs)
+        loss = self.loss(outputs, targets)
+        self.log("train_loss", loss, on_epoch=True, on_step=True, prog_bar=True)
+
+        if len(targets.shape) == 1:
+            accuracy = self.accuracy_fn(outputs, targets)
+        else:
+            # Handle soft classification
+            targets_class = targets.argmax(dim=1)
+            accuracy = self.accuracy_fn(outputs, targets_class)
+
+        self.log("train_accuracy", accuracy, on_epoch=True, on_step=False, prog_bar=True)
+
+        torch.cuda.empty_cache()
+
+        return loss
+
+    def validation_step(self, batch, batch_idx: int):
+        """
+        Validation step.
+
+        Args:
+            batch (List[torch.LongTensor]): Validation batch.
+            batch_idx (int): Batch index.
+
+        Returns (torch.Tensor): Loss tensor.
+        """
+        inputs, targets = batch[:-1], batch[-1]
+        outputs = self.forward(inputs)
+        loss = self.loss(outputs, targets)
+        self.log("val_loss", loss, on_epoch=True, on_step=False, prog_bar=True, sync_dist=True)
+
+        if len(targets.shape) == 1:
+            accuracy = self.accuracy_fn(outputs, targets)
+        else:
+            # Handle soft classification
+            targets_class = targets.argmax(dim=1)
+            accuracy = self.accuracy_fn(outputs, targets_class)
+        self.log("val_accuracy", accuracy, on_epoch=True, on_step=False, prog_bar=True)
+        return loss
+
     def predict_step(self, batch, batch_idx):
         """
         Same as test_step but without the loss and accuracy computation: boilerplate inference.
