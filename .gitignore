@@ -229,7 +229,5 @@ lightning_logs/
 cache_dir/
 
 *.ckpt
-src/ag_news_full.parquet
-src/ag-headline-classification(1).ipynb
-src/newsspace200.xml.bz.1
-src/newsspace200.xml
+
+hydra_config.yaml

@@ -14,8 +14,7 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "embedding_dim":"20", "num_tokens": "10000,20000,100000"},
-          { "embedding_dim":"180", "num_tokens": "10000,20000,100000"}
+          { "embedding_dim":"80", "num_tokens": "10000"}
             ]'
   templates:
     - name: main
@@ -62,17 +61,12 @@ spec:
             # Clone repository and submodules
             git clone -b main https://github.com/InseeFrLab/codif-ape-train.git
             cd codif-ape-train/
-            git submodule update --init
 
-            # Install dependencies
-            pip install -e src/models/torch-fastText
-            pip install -r requirements.txt
-
-            # Download necessary NLTK data
-            python -m nltk.downloader stopwords
+            # Setup
+            . setup.sh
 
             # Run MLflow experiment
-            python src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}}
+            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}}
 
         volumeMounts:
           - mountPath: /dev/shm
