@@ -88,7 +88,12 @@ class torchFastTextClassifier(FastTextModule):
         inputs, targets = batch[:-1], batch[-1]
         outputs = self.forward(inputs)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
-        targets_class = targets.argmax(dim=1)
+
+        if len(targets.shape) == 1:
+            targets_class = targets
+        else:
+            targets_class = targets.argmax(dim=1)
+
         self.ece.update(outputs, targets_class)
         return outputs
 
