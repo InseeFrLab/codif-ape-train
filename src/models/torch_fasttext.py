@@ -85,7 +85,10 @@ class torchFastTextClassifier(FastTextModule):
 
         Here, we use the softmax function to get the probabilities of each class.
         """
-        inputs, targets = batch[:-1], batch[-1]
+        inputs, targets = (
+            batch[:-1],
+            batch[-1],
+        )  # TODO: fix when no target (if len(batch) == 3 vs len(batch) == 2)
         outputs = self.forward(inputs)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
 
