@@ -41,10 +41,11 @@ class torchFastTextClassifier(FastTextModule):
         loss = self.loss(outputs, targets)
         self.log("train_loss", loss, on_epoch=True, on_step=True, prog_bar=True)
 
-        if len(targets.shape) == 1:
+        # Compute accuracy
+        if len(targets.shape) == 1:  # Hard classification
             accuracy = self.accuracy_fn(outputs, targets)
         else:
-            # Handle soft classification
+            # Soft classification
             targets_class = targets.argmax(dim=1)
             accuracy = self.accuracy_fn(outputs, targets_class)
 
