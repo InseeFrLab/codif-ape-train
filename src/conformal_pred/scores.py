@@ -2,33 +2,36 @@ import inspect
 
 import torch
 
+from .utils import find_y_position
+
 
 def get_adaptive_score(x, y):
-    # Get sorted predictions and indices
     n_samples = len(y)
 
-    sorted_pred, sorted_pred_idx = x.sort(dim=1, descending=True)
-    sorted_pred_cumsum = sorted_pred.cumsum(dim=1)  # Cumulative sum
+    # Get sorted predictions and indices
+    sorted_pred, sorted_pred_idx = x.sort(dim=-1, descending=True)
+    sorted_pred_cumsum = sorted_pred.cumsum(dim=-1)  # Cumulative sum
 
-    mask = (sorted_pred_idx == y.unsqueeze(-1)).int().argmax(dim=-1)
-    scores = sorted_pred_cumsum[torch.arange(n_samples), mask]
+    mask = find_y_position(sorted_pred_idx, y)  # ground truth position in the sorted probabilities
+    scores = sorted_pred_cumsum[
+        torch.arange(n_samples), mask
+    ]  # Cumulative sum up of the biggest scores till y
 
     return scores
 
 
 def high_proba_score(x, y):
-    scores = 1 - x[list(range(len(x))), y]
+    scores = 1 - x[list(range(len(x))), y]  # 1 - p(y|x)
     return scores
 
 
 def get_position_score(x, y):
     sorted_pred, sorted_pred_idx = x.sort(dim=1, descending=True)
-    mask = (sorted_pred_idx == y.unsqueeze(-1)).int().argmax(dim=-1)
-
+    mask = find_y_position(sorted_pred_idx, y)  # ground truth position in the sorted probabilities
     return mask
 
 
-def _validate_score_func(self, fn):
+def _validate_score_func(fn):
     sig = inspect.signature(fn)
     params = list(sig.parameters.values())
 
