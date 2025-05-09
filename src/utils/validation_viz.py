@@ -78,7 +78,9 @@ def get_automatic_accuracy(thresholds, predicted_confidence, predicted_class, tr
     predicted_class_expanded = np.repeat(predicted_class[:, None], n_thresholds, 1)
     true_values_expanded = np.repeat(true_values[:, None], n_thresholds, 1)
 
-    predicted_automatic = np.ma.array(predicted_class_expanded, mask=~automatic_coding_mask)
+    predicted_automatic = np.ma.array(
+        predicted_class_expanded, mask=~automatic_coding_mask
+    )  # In mask, True indicates masked data, so we invert
     ground_truth_automatic = np.ma.array(true_values_expanded, mask=~automatic_coding_mask)
     accuracy_automatic = (predicted_automatic == ground_truth_automatic).mean(axis=0)
     return automatic_coding_rate, accuracy_automatic
