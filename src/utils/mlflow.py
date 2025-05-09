@@ -1,6 +1,7 @@
 import os
 
 import mlflow
+import yaml
 from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
@@ -72,3 +73,16 @@ def log_hydra_config(cfg, filename="hydra_config.yaml", save_dir=None):
 
     OmegaConf.save(config=cfg, f=config_save_path)
     mlflow.log_artifact(config_save_path)
+
+
+def load_module_and_config(run_id):
+    logged_model = f"runs:/{run_id}/model"
+    module = mlflow.pytorch.load_model(logged_model)
+    # Download the artifact directory (e.g., to a temp dir)
+    local_artifacts_path = mlflow.artifacts.download_artifacts(run_id=run_id)
+
+    # Load the YAML config
+    with open(f"{local_artifacts_path}/hydra_config.yaml", "r") as f:
+        config = yaml.safe_load(f)
+
+    return module, config
