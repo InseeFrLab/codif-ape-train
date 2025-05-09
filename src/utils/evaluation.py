@@ -102,7 +102,7 @@ def run_eval(
 
     if suffix == "test":
         thresholds = np.linspace(0, 1, 100)
-        torchft_scores = sorted_confidence[:, 0] - sorted_confidence[:, 1:5].sum(axis=1)
+        torchft_scores = get_confidence_score(sorted_confidence)
         torchft_plot = get_automatic_accuracy(
             thresholds,
             torch.clamp(torchft_scores, 0, 1).numpy(),
@@ -120,6 +120,10 @@ def run_eval(
         mlflow.log_figure(fig, "automatic_coding_accuracy_curve.png")
 
     return
+
+
+def get_confidence_score(sorted_confidence):
+    return sorted_confidence[:, 0] - sorted_confidence[:, 1:5].sum(axis=1)
 
 
 def get_fasttext_preds(revision):
