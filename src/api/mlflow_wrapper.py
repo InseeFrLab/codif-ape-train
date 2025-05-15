@@ -12,13 +12,16 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         self, module, libs, inv_mapping, text_feature, categorical_features, textual_features
     ):
         """
-        Initialize the wrapper with model, preprocessing components, and prediction settings.
+        Initialize the wrapper with model, preprocessing components...
 
-        :param module: The Lightning module
-        :param libs: Additional libraries or context needed for processing
-        :param text_feature: Name of the text feature column
-        :param categorical_features: List of categorical feature column names
-        :param inv_mapping: Inverse mapping for class labels
+        Args:
+            module: The model to be wrapped.
+            libs: Mapping from APE codes to their descriptions.
+            inv_mapping: Inverse mapping for class labels.
+            text_feature: Name of the text feature in the input data.
+            categorical_features: List of categorical features in the input data.
+            textual_features: List of textual features in the input data.
+
         """
         self.module = module
         self.module.eval()  # Set model to evaluation mode
@@ -30,9 +33,15 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
 
     def predict(self, model_input: list[SingleForm], params=None) -> list[PredictionResponse]:
         """
-        Custom prediction method that includes preprocessing and postprocessing.
-        :param model_input: Input dataframe or numpy array
-        :param params: Additional parameters for prediction
+        Predict method that fits MLFlow requirements.
+        Args:
+            model_input (list[SingleForm]): List of input data to predict.
+            params (dict): Dictionary of parameters for prediction
+
+            Set ._get_input_data_example() to provide an example input.
+
+        Returns:
+            list[PredictionResponse]: List of prediction responses.
         """
 
         # Set default parameters if not provided
