@@ -7,9 +7,14 @@ import mlflow
 import torch
 from omegaconf import DictConfig, OmegaConf
 
+from mappings import mappings
 from utils.evaluation import run_evaluation
-from utils.mappings import mappings
-from utils.mlflow import create_or_restore_experiment, log_dict, log_hydra_config
+from utils.mlflow import (
+    create_or_restore_experiment,
+    init_and_log_wrapper,
+    log_dict,
+    log_hydra_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +118,14 @@ def train(cfg: DictConfig):
             torch.set_float32_matmul_precision("medium")
 
         trainer.fit(module, datamodule=data_module)
+
+        # Load the "best" weights (minimizing the val_loss)
+        best_ckpt_path = trainer.checkpoint_callback.best_model_path
+        checkpoint = torch.load(best_ckpt_path, weights_only=False)
+        module.load_state_dict(checkpoint["state_dict"])
+
+        # Log wrapper
+        init_and_log_wrapper(module, cfg)
 
         ########## Evaluation ##########
 

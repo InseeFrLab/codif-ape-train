@@ -6,6 +6,11 @@ from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
+from api.mlflow_wrapper import MLFlowPyTorchWrapper
+
+from .data import get_df_naf
+from .evaluation import get_inv_mapping
+
 
 def create_or_restore_experiment(experiment_name):
     client = MlflowClient()
@@ -86,3 +91,29 @@ def load_module_and_config(run_id):
         config = yaml.safe_load(f)
 
     return module, config
+
+
+def init_and_log_wrapper(module, cfg):
+    df_naf = get_df_naf(revision=cfg.data.revision)
+    ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
+    inv_mapping = get_inv_mapping(cfg.data.revision)
+
+    mlflow_wrapper = MLFlowPyTorchWrapper(
+        module=module,
+        libs=ape_to_lib,
+        inv_mapping=inv_mapping,
+        text_feature=cfg.data.text_feature,
+        categorical_features=cfg.data.categorical_features,
+        textual_features=cfg.data.textual_features,
+    )
+
+    input_example = mlflow_wrapper._get_input_data_example()
+    mlflow.log_artifacts("data", artifact_path="data")
+    mlflow.pyfunc.log_model(
+        artifact_path="pyfunc_model",
+        python_model=mlflow_wrapper,
+        input_example=input_example,
+        code_paths=["src/api/", "src/preprocessors/", "src/mappings/", "src/models/"],
+    )
+
+    return
