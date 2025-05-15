@@ -13,7 +13,7 @@ import json
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Get absolute path
-mapping_dir = os.path.join(BASE_DIR, "../../data/mappings")  # Adjust path
+mapping_dir = os.path.join(BASE_DIR, "data")  # Adjust path
 mapping_dir = os.path.abspath(mapping_dir)  # Normalize
 
 
