@@ -4,8 +4,9 @@ import pandas as pd
 import sklearn
 import torch
 
+from mappings import mappings
+
 from .data import PATHS, get_df_naf, get_file_system
-from .mappings import mappings
 from .validation_viz import (
     confidence_histogram,
     get_automatic_accuracy,

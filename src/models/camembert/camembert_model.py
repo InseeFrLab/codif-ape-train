@@ -11,7 +11,7 @@ from torch.nn import CrossEntropyLoss
 from transformers import CamembertConfig, CamembertModel, CamembertPreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput
 
-from utils.mappings import mappings
+from mappings import mappings
 
 
 class ClassificationHead(nn.Module):
