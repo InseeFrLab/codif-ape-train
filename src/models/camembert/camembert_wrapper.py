@@ -15,7 +15,7 @@ from pytorch_classifiers.models.camembert.camembert_model import (
 from pytorch_classifiers.pytorch_preprocessor import PytorchPreprocessor
 from transformers import CamembertTokenizer
 
-from utils.mappings import mappings
+from mappings import mappings
 from utils.transformers.custom_pipeline import CustomPipeline
 
 

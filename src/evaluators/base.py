@@ -8,8 +8,8 @@ from typing import Dict, List, Optional, Tuple
 import fireducks.pandas as pd
 import numpy as np
 
+from mappings import mappings
 from utils.data import get_df_naf
-from utils.mappings import mappings
 
 APE_NIV5_MAPPING = mappings["APE_NIV5"]
 INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}

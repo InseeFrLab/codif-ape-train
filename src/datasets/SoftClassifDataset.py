@@ -3,8 +3,8 @@ import pandas as pd
 import torch
 from torchFastText.datasets import FastTextModelDataset
 
+from mappings import mappings
 from src.utils.data import get_df_naf, get_Y
-from src.utils.mappings import mappings
 
 
 class SoftClassifDataset(FastTextModelDataset):

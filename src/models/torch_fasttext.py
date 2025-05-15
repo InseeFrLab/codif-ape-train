@@ -2,7 +2,7 @@ import torch
 from torch_uncertainty.metrics import CalibrationError
 from torchFastText.model import FastTextModule
 
-from utils.mappings import mappings
+from mappings import mappings
 
 APE_NIV5_MAPPING = mappings["APE_NIV5"]
 INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}
