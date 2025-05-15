@@ -108,7 +108,7 @@ def init_and_log_wrapper(module, cfg):
     )
 
     input_example = mlflow_wrapper._get_input_data_example()
-    mlflow.log_artifacts("data", artifact_path="data")
+
     mlflow.pyfunc.log_model(
         artifact_path="pyfunc_model",
         python_model=mlflow_wrapper,
