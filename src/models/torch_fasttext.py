@@ -1,8 +1,25 @@
+import logging
+
 import torch
-from torch_uncertainty.metrics import CalibrationError
 from torchFastText.model import FastTextModule
 
 from mappings import mappings
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler()],
+)
+try:
+    from torch_uncertainty.metrics import CalibrationError
+
+    HAS_TORCH_UNCERTAINTY = True
+except ImportError:
+    HAS_TORCH_UNCERTAINTY = False
+    logger.warning("torch_uncertainty not installed. ECE will not be computed.")
 
 APE_NIV5_MAPPING = mappings["APE_NIV5"]
 INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}
@@ -17,13 +34,16 @@ class torchFastTextClassifier(FastTextModule):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.ece = CalibrationError(task="multiclass", num_classes=self.model.num_classes)
+        if HAS_TORCH_UNCERTAINTY:
+            self.ece = CalibrationError(task="multiclass", num_classes=self.model.num_classes)
 
     def on_predict_start(self):
         """
         Called at the beginning of the predict epoch.
         """
-        self.ece.reset()
+
+        if HAS_TORCH_UNCERTAINTY:
+            self.ece.reset()
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """
@@ -98,7 +118,9 @@ class torchFastTextClassifier(FastTextModule):
         else:
             targets_class = targets.argmax(dim=1)
 
-        self.ece.update(outputs, targets_class)
+        if HAS_TORCH_UNCERTAINTY:
+            self.ece.update(outputs, targets_class)
+
         return outputs
 
     def configure_optimizers(self):
