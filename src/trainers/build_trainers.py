@@ -43,7 +43,6 @@ def build_lightning_trainer(patience_early_stopping, num_epochs, **kwargs):
         strategy=strategy,
         log_every_n_steps=5,
         enable_progress_bar=True,
-        profiler="simple",
     )
     return trainer
 
