@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 
@@ -9,6 +8,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from mappings import mappings
 from utils.evaluation import run_evaluation
+from utils.logger import get_logger
 from utils.mlflow import (
     create_or_restore_experiment,
     init_and_log_wrapper,
@@ -16,15 +16,7 @@ from utils.mlflow import (
     log_hydra_config,
 )
 
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler()],
-)
-
+logger = get_logger()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
