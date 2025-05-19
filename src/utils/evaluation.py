@@ -188,7 +188,7 @@ def get_inv_mapping(revision):
     """
 
     ape_niv5_mapping = get_label_mapping(revision)
-    inv_ape_niv5_mapping = {v: k for k, v in ape_niv5_mapping.items()}
+    inv_ape_niv5_mapping = {v: k.upper() for k, v in ape_niv5_mapping.items()}
 
     return inv_ape_niv5_mapping
 
