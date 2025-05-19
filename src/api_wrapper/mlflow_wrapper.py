@@ -47,9 +47,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         # Set default parameters if not provided
         nb_echos_max = params.get("nb_echos_max", 5)
         prob_min = params.get("prob_min", 0.01)
-        # text_feature = params.get('text_feature', "description_activity")
-        # categorical_features = params.get('categorical_features', ["type_form", "nature", "surface", "cj", "activity_permanence_status"])
-        # textual_features = params.get('textual_features', ["other_nature_activity", "precision_act_sec_agricole"])
+        dataloader_params = params.get("dataloader_params", {})
 
         query = preprocess_inputs(
             model_input,
@@ -68,8 +66,8 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             categorical_variables=categorical_variables,
             tokenizer=self.module.model.tokenizer,
         )
-        batch_size = len(text) if len(text) < 256 else 256
-        dataloader = dataset.create_dataloader(batch_size=batch_size, shuffle=False, num_workers=4)
+
+        dataloader = dataset.create_dataloader(shuffle=False, **dataloader_params)
 
         all_scores = []
         for batch_idx, batch in enumerate(dataloader):
@@ -116,6 +114,12 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         params_dict = {
             "nb_echos_max": 5,
             "prob_min": 0.01,
+            "dataloader_params": {
+                "pin_memory": False,
+                "persistent_workers": False,
+                "num_workers": 1,
+                "batch_size": 1,
+            },
         }
 
         return (input_data, params_dict)
