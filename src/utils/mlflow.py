@@ -6,7 +6,7 @@ from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
-from api.mlflow_wrapper import MLFlowPyTorchWrapper
+from api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
 
 from .data import get_df_naf
 from .evaluation import get_inv_mapping
@@ -113,7 +113,7 @@ def init_and_log_wrapper(module, cfg):
         artifact_path="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
-        code_paths=["src/api/", "src/preprocessors/", "src/mappings/", "src/models/"],
+        code_paths=["src/api_wrapper/", "src/preprocessors/", "src/mappings/", "src/models/"],
     )
 
     return
