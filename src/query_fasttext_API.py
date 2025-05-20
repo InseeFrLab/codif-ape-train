@@ -80,15 +80,18 @@ def loadAndPreprocessTestData(fs, revision):
                 "CJ": "cj",
                 "evenement_type": "event",
                 "CRT": "activity_permanence_status",
+                "nace2025": "APE_NIV5",
             },
             axis=1,
         )
+        df_test_raw = df_test_raw.replace(np.nan, "")
 
+        print(len(df_test_raw.columns))
         print(df_test_raw.head())
     else:
         raise ValueError(f"Unknown revision: {revision}")
 
-    return df_test_raw
+    return df_test_raw.head()
 
 
 def process_response(response):
@@ -116,7 +119,7 @@ def fasttext_preds_from_API(df, revision):
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
-def predict_and_compare(cfg: DictConfig):
+def query_fasttext_API(cfg: DictConfig):
     """
     Make predictions on test data and save aggregated tables on S3
     """
@@ -146,4 +149,4 @@ def predict_and_compare(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    predict_and_compare()
+    query_fasttext_API()
