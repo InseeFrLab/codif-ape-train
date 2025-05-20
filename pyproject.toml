@@ -42,3 +42,8 @@ extend-include = ["*.ipynb"]
 
 [tool.uv.sources]
 torchfasttext = { git = "https://github.com/InseeFrLab/torch-fastText.git", branch = "main" }
+
+[dependency-groups]
+dev = [
+    "giskard>=2.16.2",
+]
