@@ -31,7 +31,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
         pth_uri = context.artifacts["torch_model_path"]
         local_path = mlflow.artifacts.download_artifacts(pth_uri)
-        self.module = torch.load(local_path, weights_only=False)
+        self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
         self.module.eval()
 
     def predict(self, model_input: list[SingleForm], params=None) -> list[PredictionResponse]:
