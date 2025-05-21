@@ -100,30 +100,24 @@ def plot_automatic_coding_accuracy_curve(torchft_plot, ft_plot, thresholds):
 
     """
 
-    # Create masks for the plots
-    mask_torchft = torchft_plot[0] > 0
-    mask_ft = ft_plot[0] > 0
-
-    # Create the matplotlib figure and axis
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot torchft data
+    mask_torchft = torchft_plot[0] > 0
     ax.scatter(torchft_plot[0][mask_torchft], torchft_plot[1][mask_torchft], label="torchft")
 
     # Plot ft data
-    ax.scatter(ft_plot[0][mask_ft], ft_plot[1][mask_ft], label="ft")
+    if ft_plot is not None:
+        mask_ft = ft_plot[0] > 0
+        ax.scatter(ft_plot[0][mask_ft], ft_plot[1][mask_ft], label="ft")
 
-    # Set labels and title
     ax.set_xlabel("Pourcentage de codif automatique")
     ax.set_ylabel("Accuracy")
 
-    # Add legend
     ax.legend(loc="upper right", fancybox=True, shadow=True)
 
-    # Set grid
     ax.grid(True, linestyle="--", alpha=0.7)
 
-    # Adjust layout
     plt.tight_layout()
 
     return fig
