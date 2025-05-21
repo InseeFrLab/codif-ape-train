@@ -35,6 +35,7 @@ def run_evaluation(trainer, module, revision, Y, zipped_data):
     fasttext_preds_labels, fasttext_preds_scores = get_fasttext_preds(revision=revision)
     for df, dataloader, suffix in zipped_data:
         predictions = trainer.predict(module, dataloader)  # accumulates predictions over batches
+        predictions_tensor = torch.cat(predictions).cpu()  # (num_test_samples, num_classes)
 
         mlflow.log_metric("ece_" + suffix, module.ece.compute())
         fig, ax = module.ece.plot()
@@ -42,8 +43,6 @@ def run_evaluation(trainer, module, revision, Y, zipped_data):
             fig,
             "calibration_curve_" + suffix + ".png",
         )
-
-        predictions_tensor = torch.cat(predictions).cpu()  # (num_test_samples, num_classes)
 
         run_eval(
             df=df,
@@ -110,12 +109,16 @@ def run_eval(
             predicted_class.numpy(),
             true_values,
         )
-        ft_plot = get_automatic_accuracy(
-            thresholds,
-            np.clip(fasttext_preds_scores.values.reshape(-1), 0, 1),
-            fasttext_preds_labels.values.reshape(-1),
-            true_values,
-        )
+
+        if fasttext_preds_labels is not None:
+            ft_plot = get_automatic_accuracy(
+                thresholds,
+                np.clip(fasttext_preds_scores.values.reshape(-1), 0, 1),
+                fasttext_preds_labels.values.reshape(-1),
+                true_values,
+            )
+        else:
+            ft_plot = None
 
         fig = plot_automatic_coding_accuracy_curve(torchft_plot, ft_plot, thresholds)
         mlflow.log_figure(fig, "automatic_coding_accuracy_curve.png")
@@ -140,6 +143,11 @@ def get_fasttext_preds(revision):
 
 
     """
+
+    # As of 05/21/2025, NAF2025 API is broken so no fasttext preds / labels
+    if revision == "NAF2025":
+        return None, None
+
     fs = get_file_system()
 
     # take the path of "df_test.parquet", remove the extension...
@@ -190,7 +198,7 @@ def get_inv_mapping(revision):
     """
 
     ape_niv5_mapping = get_label_mapping(revision)
-    inv_ape_niv5_mapping = {v: k.upper() for k, v in ape_niv5_mapping.items()}
+    inv_ape_niv5_mapping = {v: k.upper() for k, v in ape_niv5_mapping.items() if k != "4689Y"}
 
     return inv_ape_niv5_mapping
 
