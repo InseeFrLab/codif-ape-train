@@ -141,7 +141,9 @@ def get_fasttext_preds(revision):
 
     """
     fs = get_file_system()
-    df_res_ft = pd.read_parquet(PATHS[revision][-1][:-8] + "_predictions_ft.parquet", filesystem=fs)
+
+    # take the path of "df_test.parquet", remove the extension...
+    df_res_ft = pd.read_parquet(PATHS[revision][-2][:-8] + "_predictions_ft.parquet", filesystem=fs)
     mapping = get_label_mapping(revision)
 
     fasttext_preds_labels = df_res_ft[["APE_NIV5_pred_k1"]]
