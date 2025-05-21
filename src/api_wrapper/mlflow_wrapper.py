@@ -8,9 +8,7 @@ from .utils import preprocess_inputs, process_response
 
 
 class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
-    def __init__(
-        self, module, libs, inv_mapping, text_feature, categorical_features, textual_features
-    ):
+    def __init__(self, libs, inv_mapping, text_feature, categorical_features, textual_features):
         """
         Initialize the wrapper with model, preprocessing components...
 
@@ -23,13 +21,18 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             textual_features: List of textual features in the input data.
 
         """
-        self.module = module
-        self.module.eval()  # Set model to evaluation mode
+        self.module = None
         self.libs = libs
         self.inv_mapping = inv_mapping
         self.text_feature = text_feature
         self.categorical_features = categorical_features
         self.textual_features = textual_features
+
+    def load_context(self, context):
+        pth_uri = context.artifacts["torch_model_path"]
+        local_path = mlflow.artifacts.download_artifacts(pth_uri)
+        self.module = torch.load(local_path, weights_only=False)
+        self.module.eval()
 
     def predict(self, model_input: list[SingleForm], params=None) -> list[PredictionResponse]:
         """
@@ -117,7 +120,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             "dataloader_params": {
                 "pin_memory": False,
                 "persistent_workers": False,
-                "num_workers": 1,
+                "num_workers": 0,
                 "batch_size": 1,
             },
         }
