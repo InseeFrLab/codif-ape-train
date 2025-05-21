@@ -16,7 +16,7 @@ from utils.mlflow import (
     log_hydra_config,
 )
 
-logger = get_logger()
+logger = get_logger(name=__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -117,7 +117,9 @@ def train(cfg: DictConfig):
         module.load_state_dict(checkpoint["state_dict"])
 
         # Log wrapper
-        init_and_log_wrapper(module, cfg)
+        run_id = mlflow.active_run().info.run_id
+        logged_pth_path = f"runs:/{run_id}/model/data/model.pth"
+        init_and_log_wrapper(cfg, logged_pth_path)
 
         ########## Evaluation ##########
 
