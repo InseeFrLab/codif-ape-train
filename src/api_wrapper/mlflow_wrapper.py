@@ -80,7 +80,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         all_scores = torch.cat(all_scores)
 
         # Process predictions
-        probs = torch.nn.functional.softmax(scores, dim=1)
+        probs = torch.nn.functional.softmax(all_scores, dim=1)
         sorted_probs, sorted_probs_indices = probs.sort(descending=True, axis=1)
         predicted_class = sorted_probs_indices[:, :nb_echos_max].numpy()
         predicted_probs = sorted_probs[:, :nb_echos_max].numpy()
@@ -91,7 +91,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         predictions = (predicted_class, predicted_probs)
 
         responses = []
-        for i in range(len(predictions[0])):
+        for i in range(predictions[0].shape[0]):
             response = process_response(predictions, i, nb_echos_max, prob_min, self.libs)
             responses.append(response)
 
