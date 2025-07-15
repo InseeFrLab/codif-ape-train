@@ -1,7 +1,6 @@
 #!/bin/bash
 pip install uv
 uv sync
-uv run -m nltk.downloader stopwords
 uv run pre-commit install
 
 export PYTHONPATH="$PWD:$PYTHONPATH"

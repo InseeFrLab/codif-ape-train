@@ -15,10 +15,13 @@ from .base import Preprocessor
 
 try:
     import nltk
+
+    nltk.data.path.append("nltk_data/")
     from nltk.corpus import stopwords as ntlk_stopwords
     from nltk.stem.snowball import SnowballStemmer
 
     HAS_NLTK = True
+
 except ImportError:
     HAS_NLTK = False
 
@@ -126,8 +129,6 @@ class PytorchPreprocessor(Preprocessor):
             )
 
         # Define stopwords and stemmer
-
-        nltk.download("stopwords", quiet=True)
         stopwords = tuple(ntlk_stopwords.words("french")) + tuple(string.ascii_lowercase)
         stemmer = SnowballStemmer(language="french")
 
