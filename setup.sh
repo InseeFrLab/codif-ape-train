@@ -1,5 +1,5 @@
 #!/bin/bash
-pip install uv
+
 uv sync
 uv run pre-commit install
 
