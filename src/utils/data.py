@@ -17,6 +17,12 @@ PATH_SIRENE_4_NAF2025 = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4
 PATH_TRAIN_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_train.parquet"
 PATH_VAL_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_val.parquet"
 PATH_TEST_NAF2008 = "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_test.parquet"
+PATH_TRAIN_RAW_NAF_2008 = (
+    "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_train_raw.parquet"
+)
+PATH_VAL_RAW_NAF_2008 = (
+    "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_val_raw.parquet"
+)
 PATH_TEST_RAW_NAF_2008 = (
     "projet-ape/model_comparison_splits/sirene4_20230101_20250211/df_test_raw.parquet"
 )
@@ -24,15 +30,30 @@ PATH_TEST_RAW_NAF_2008 = (
 PATH_TRAIN_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_train.parquet"
 PATH_VAL_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_val.parquet"
 PATH_TEST_NAF2025 = "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_test.parquet"
-PATH_TEST_RAW_NAF_2025 = (
+PATH_TRAIN_RAW_NAF2025 = (
+    "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_train_raw.parquet"
+)
+PATH_TEST_RAW_NAF2025 = (
     "projet-ape/model_comparison_splits/sirene_4_NAF2025_20241027/df_test_raw.parquet"
 )
 
 PATHS = {
-    "NAF2008": (PATH_TRAIN_NAF2008, PATH_VAL_NAF2008, PATH_TEST_NAF2008, PATH_TEST_RAW_NAF_2008),
-    "NAF2025": (PATH_TRAIN_NAF2025, PATH_VAL_NAF2025, PATH_TEST_NAF2025, PATH_TEST_RAW_NAF_2025),
+    "NAF2008": {
+        "processed_train": PATH_TRAIN_NAF2008,
+        "processed_val": PATH_VAL_NAF2008,
+        "processed_test": PATH_TEST_NAF2008,
+        "train_raw": PATH_TRAIN_RAW_NAF_2008,
+        "val_raw": PATH_VAL_RAW_NAF_2008,
+        "test_raw": PATH_TEST_RAW_NAF_2008,
+    },
+    "NAF2025": {
+        "processed_train": PATH_TRAIN_NAF2025,
+        "val": PATH_VAL_NAF2025,
+        "test": PATH_TEST_NAF2025,
+        "train_raw": PATH_TRAIN_RAW_NAF2025,
+        "test_raw": PATH_TEST_RAW_NAF2025,
+    },
 }
-
 
 COL_RENAMING = {
     "cj": "CJ",  # specific to sirene 4
@@ -248,7 +269,10 @@ def get_processed_data(revision):
     """
     fs = get_file_system()
 
-    PATH_TRAIN, PATH_VAL, PATH_TEST, _ = PATHS[revision]
+    paths = PATHS[revision]
+    PATH_TRAIN = paths["processed_train"]
+    PATH_VAL = paths["processed_val"]
+    PATH_TEST = paths["processed_test"]
 
     df_train = pd.read_parquet(PATH_TRAIN, filesystem=fs)
     df_val = pd.read_parquet(PATH_VAL, filesystem=fs)
@@ -259,11 +283,20 @@ def get_processed_data(revision):
 
 def get_test_raw_data(revision):
     fs = get_file_system()
-    _, _, _, PATH_TEST_RAW = PATHS[revision]
+    PATH_TEST_RAW = PATHS[revision]["test_raw"]
 
     df_test_raw = pd.read_parquet(PATH_TEST_RAW, filesystem=fs)
 
     return df_test_raw
+
+
+def get_train_raw_data(revision):
+    fs = get_file_system()
+    PATH_TRAIN_RAW = PATHS[revision]["train_raw"]
+
+    df_train_raw = pd.read_parquet(PATH_TRAIN_RAW, filesystem=fs)
+
+    return df_train_raw
 
 
 def get_df_naf(

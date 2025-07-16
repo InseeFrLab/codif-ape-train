@@ -231,3 +231,4 @@ cache_dir/
 *.ckpt
 
 hydra_config.yaml
+tokenizers/
