@@ -26,6 +26,7 @@ dependencies = [
     "scikit-learn>=1.4.0",
     "seaborn>=0.13.2",
     "sentencepiece>=0.2.0",
+    "tokenizers>=0.21.1",
     "torch>=2.2.0",
     "torch-uncertainty>=0.4.3",
     "torchfasttext",
