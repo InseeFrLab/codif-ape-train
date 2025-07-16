@@ -9,7 +9,7 @@ model_params:
   direct_bagging: False
 
 trainer:
-  _target_: trainers.build_trainers.build_lightning_trainer
+  _target_: utils.build_trainers.build_lightning_trainer
   num_epochs: 35
   patience_early_stopping: 5
 

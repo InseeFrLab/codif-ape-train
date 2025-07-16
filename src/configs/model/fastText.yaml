@@ -1,2 +1,0 @@
-_target_: src.models.fasttext_classifier.FastTextWrapper
-preprocessor: "fastText"
