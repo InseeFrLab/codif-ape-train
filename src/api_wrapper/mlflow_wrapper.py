@@ -29,8 +29,10 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         self.textual_features = textual_features
 
     def load_context(self, context):
+        run_id = context.artifacts["run_id"]
         pth_uri = context.artifacts["torch_model_path"]
         local_path = mlflow.artifacts.download_artifacts(pth_uri)
+        self.run_id = run_id
         self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
         self.module.eval()
 
@@ -92,7 +94,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
 
         responses = []
         for i in range(len(predictions[0])):
-            response = process_response(predictions, i, nb_echos_max, prob_min, self.libs)
+            response = process_response(predictions, i, nb_echos_max, prob_min, self.libs, self.run_id)
             responses.append(response)
 
         return responses
