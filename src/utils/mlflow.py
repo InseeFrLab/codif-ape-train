@@ -93,7 +93,7 @@ def load_module_and_config(run_id):
     return module, config
 
 
-def init_and_log_wrapper(cfg, run_id, logged_pth_path):
+def init_and_log_wrapper(cfg, logged_pth_path):
     df_naf = get_df_naf(revision=cfg.data.revision)
     ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
     inv_mapping = get_inv_mapping(cfg.data.revision)
@@ -112,7 +112,7 @@ def init_and_log_wrapper(cfg, run_id, logged_pth_path):
         artifact_path="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
-        artifacts={"torch_model_path": logged_pth_path, "run_id": run_id, "nltk_data": "nltk_data"},
+        artifacts={"torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
         code_paths=["src/api_wrapper/", "src/preprocessors/", "src/mappings/", "src/models/"],
     )
 
