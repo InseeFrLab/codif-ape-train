@@ -119,7 +119,7 @@ def train(cfg: DictConfig):
         # Log wrapper
         run_id = mlflow.active_run().info.run_id
         logged_pth_path = f"runs:/{run_id}/model/data/model.pth"
-        init_and_log_wrapper(cfg, run_id, logged_pth_path)
+        init_and_log_wrapper(cfg, logged_pth_path)
 
         ########## Evaluation ##########
 
