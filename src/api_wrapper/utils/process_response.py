@@ -9,7 +9,7 @@ def process_response(
     nb_echos_max: int,
     prob_min: float,
     libs: dict,
-    run_id: Optional[str] = None,
+    run_id: str,
 ) -> PredictionResponse:
     """
     Process model
