@@ -112,7 +112,7 @@ def init_and_log_wrapper(cfg, run_id, logged_pth_path):
         artifact_path="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
-        artifacts={"run_id": run_id, "torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
+        artifacts={"torch_model_path": logged_pth_path, "run_id": run_id, "nltk_data": "nltk_data"},
         code_paths=["src/api_wrapper/", "src/preprocessors/", "src/mappings/", "src/models/"],
     )
 
