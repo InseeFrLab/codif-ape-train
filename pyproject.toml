@@ -24,7 +24,7 @@ dependencies = [
     "ruff>=0.7.1",
     "s3fs>=2024.2.0",
     "scikit-learn>=1.4.0",
-    "scipy>=1.11.4",
+    "scipy>=1.16.1",
     "seaborn>=0.13.2",
     "sentencepiece>=0.2.1",
     "tokenizers>=0.21.1",
@@ -46,5 +46,5 @@ torchfasttext = { git = "https://github.com/InseeFrLab/torch-fastText.git", bran
 
 [dependency-groups]
 dev = [
-    "giskard>=2.16.2",
+    "giskard>=2.18.0",
 ]
