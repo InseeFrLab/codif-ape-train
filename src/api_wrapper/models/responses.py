@@ -9,5 +9,5 @@ class Prediction(BaseModel):
     libelle: str
 
 
-class PredictionResponse(RootModel[Dict[str, Union[Prediction, float]]]):
+class PredictionResponse(RootModel[Dict[str, Union[Prediction, float, str]]]):
     pass
