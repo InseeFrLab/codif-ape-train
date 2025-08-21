@@ -10,6 +10,7 @@ class Prediction(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    predictions: Dict[str, Union[Prediction, float]]
+    predictions: List[Prediction]
+    IC: float
     MLversion: Optional[str] = None
     pass
