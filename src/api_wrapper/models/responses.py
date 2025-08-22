@@ -46,7 +46,7 @@ class PredictionResponse(RootModel[Dict[str, Any]]):
 
         # MLversion (required)
         try:
-            ic = float(data["MLversion"])
+            ic = str(data["MLversion"])
         except KeyError:
             raise ValueError("PredictionResponse: missing required key 'MLversion'")
         except Exception as e:
