@@ -19,7 +19,7 @@ class PredictionResponse(RootModel[Dict[str, Any]]):
         "2": Prediction,
         ...,
         "IC": float,           # required confidence score
-        "MLversion": str|null  # optional model version
+        "MLversion": str  # required run_id as model version
       }
 
     Notes:
