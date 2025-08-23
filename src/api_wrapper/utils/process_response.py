@@ -42,6 +42,6 @@ def process_response(
 
     confidence_score = pred_probs[0] - pred_probs[1]
     response_data["IC"] = float(confidence_score)
-    # response_data["MLversion"] = str(run_id)
+    response_data["MLversion"] = str(run_id)
 
     return PredictionResponse(response_data)
