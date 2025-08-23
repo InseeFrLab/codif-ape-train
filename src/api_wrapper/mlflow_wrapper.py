@@ -37,7 +37,8 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             path_parts = pth_uri.split('/')
             self.run_id = path_parts[1]
         else:
-            mlmodel_path = os.path.join(local_path, "MLmodel")
+            local_model_directory = os.path.dirname(os.path.abspath(local_path))
+            mlmodel_path = os.path.join(local_model_directory, "MLmodel")
             if os.path.exists(mlmodel_path):
                 with open(mlmodel_path, 'r') as f:
                     mlmodel_content = yaml.safe_load(f)
