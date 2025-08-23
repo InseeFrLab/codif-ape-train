@@ -1,4 +1,5 @@
 import mlflow
+import yaml
 import numpy as np
 import torch
 from torchFastText.datasets import FastTextModelDataset
@@ -30,9 +31,19 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
 
     def load_context(self, context):
         pth_uri = context.artifacts["torch_model_path"]
-        run_id = pth_uri.split('/')[1]
         local_path = mlflow.artifacts.download_artifacts(pth_uri)
-        self.run_id = run_id
+        
+        if pth_uri.startswith("runs:/"):
+            path_parts = pth_uri.split('/')
+            self.run_id = path_parts[1]
+        else:
+            mlmodel_path = os.path.join(local_path, "MLmodel")
+            if os.path.exists(mlmodel_path):
+                with open(mlmodel_path, 'r') as f:
+                    mlmodel_content = yaml.safe_load(f)
+                    if 'run_id' in mlmodel_content:
+                        self.run_id = mlmodel_content['run_id']
+
         self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
         self.module.eval()
 
