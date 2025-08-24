@@ -44,4 +44,4 @@ def process_response(
     response_data["IC"] = float(confidence_score)
     response_data["MLversion"] = str(run_id)
 
-    return PredictionResponse(response_data)
+    return PredictionResponse.model_validate(response_data)
