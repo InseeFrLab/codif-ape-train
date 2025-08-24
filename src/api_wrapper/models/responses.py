@@ -1,4 +1,4 @@
-from typing import Any, Dict, Mapping
+from typing import Dict, Union
 
 from pydantic import BaseModel, RootModel, model_validator
 
