@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Any, Dict, Mapping, Union
 
 from pydantic import BaseModel, RootModel, model_validator
 
@@ -33,29 +33,42 @@ class PredictionResponse(RootModel[Dict[str, Union[Prediction, float, str]]]):
     @model_validator(mode="before")
     @classmethod
     def _normalize(cls, data: Any) -> Dict[str, Any]:
+        # input must be mapping/dict-like
         if not isinstance(data, Mapping):
             raise TypeError("PredictionResponse: expected a dict/mapping")
 
-        # IC (required)
+        # IC (required) - accept numbers or numeric strings
         try:
             ic = float(data["IC"])
         except KeyError:
             raise ValueError("PredictionResponse: missing required key 'IC'")
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             raise ValueError(f"PredictionResponse: 'IC' not convertible to float: {e}") from e
 
-        # MLversion (required)
+        # MLversion (required) - cast to str
         try:
-            MLversion = str(data["MLversion"])
+            ml_version = str(data["MLversion"])
         except KeyError:
             raise ValueError("PredictionResponse: missing required key 'MLversion'")
         except Exception as e:
-            raise ValueError(f"PredictionResponse: 'MLversion' not convertible to float: {e}") from e
+            # message corrected: MLversion -> str
+            raise ValueError(f"PredictionResponse: 'MLversion' not convertible to str: {e}") from e
 
-        allowed = {*(k for k in data if k.isdigit()), "IC", "MLversion"}
+        # allow only digit keys + IC + MLversion
+        allowed = {k for k in data.keys() if k.isdigit()} | {"IC", "MLversion"}
         extra = set(data.keys()) - allowed
         if extra:
-            raise ValueError(f"Unexpected keys: {sorted(extra)}")
+            raise ValueError(f"PredictionResponse: unexpected keys: {sorted(extra)}")
 
-        # return flat dict matching the historic JSON shape
-        return data
+        # Optionally: ensure digit keys map to Prediction instances (pydantic will coerce)
+        # But to provide clearer errors early, we can attempt minimal validation:
+        for k in (k for k in data.keys() if k.isdigit()):
+            val = data[k]
+            if not isinstance(val, (Mapping, Prediction)):
+                raise ValueError(f"PredictionResponse: value for key '{k}' must be a mapping or Prediction")
+
+        # return original (or transformed) flat dict matching expected JSON shape
+        # ensure normalized types in-place (optional)
+        data["IC"] = ic
+        data["MLversion"] = ml_version
+        return dict(data)
