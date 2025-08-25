@@ -14,7 +14,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "embedding_dim":"80", "num_tokens": "10000"}
+          { "embedding_dim":"80", "num_tokens": "10000", "data": "NAF2008_sirene4" },
+          { "embedding_dim":"80", "num_tokens": "10000", "data": "NAF2025_sirene4" }
             ]'
   templates:
     - name: main
