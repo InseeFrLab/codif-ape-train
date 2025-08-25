@@ -44,7 +44,7 @@ def get_sirene_4_data(
     fs = get_file_system()
 
     if revision == "NAF2008":
-        path = "projet-ape/extractions/20241027_sirene4.parquet"
+        path = "projet-ape/extractions/domain_specific_cleaned/full_dataset_20241027_sirene4_nacerev2_fuzzy_regex_similarity.parquet"
     elif revision == "NAF2025":
         path = "projet-ape/extractions/domain_specific_cleaned/full_dataset_20241027_sirene4_nace2025_fuzzy_regex_similarity.parquet"
     else:
