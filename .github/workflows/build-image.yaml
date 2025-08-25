@@ -3,7 +3,7 @@ name: Image Build
 on:
   push:
     branches:
-      - naf2008
+      - fasttext-meta
     tags:
       - "*"
     paths:

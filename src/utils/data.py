@@ -46,7 +46,7 @@ def get_sirene_4_data(
     if revision == "NAF2008":
         path = "projet-ape/extractions/20241027_sirene4.parquet"
     elif revision == "NAF2025":
-        path = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+        path = "projet-ape/extractions/domain_specific_cleaned/full_dataset_20241027_sirene4_nace2025_fuzzy_regex_similarity.parquet"
     else:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 

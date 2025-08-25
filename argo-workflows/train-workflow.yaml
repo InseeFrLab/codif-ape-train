@@ -75,7 +75,7 @@ spec:
         image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
-        args: ["git clone -b naf2008 https://github.com/InseeFrLab/codif-ape-train.git &&\
+        args: ["git clone -b fasttext-meta https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
                 export MLFLOW_EXPERIMENT_NAME={{inputs.parameters.EXPERIMENT_NAME}} &&\
                 mlflow run ~/work/codif-ape-train/ \
