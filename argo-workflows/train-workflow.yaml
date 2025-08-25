@@ -72,7 +72,7 @@ spec:
           - name: MODEL_CLASS
           - name: EXPERIMENT_NAME
       container:
-        image: inseefrlab/codif-ape-train:naf2008
+        image: inseefrlab/codif-ape-train:fasttext-meta
         imagePullPolicy: Always
         command: ["/bin/bash", -c]
         args: ["git clone -b fasttext-meta https://github.com/InseeFrLab/codif-ape-train.git &&\
