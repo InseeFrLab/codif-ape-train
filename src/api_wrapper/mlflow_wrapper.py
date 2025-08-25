@@ -1,4 +1,6 @@
+import os
 import mlflow
+import yaml
 import numpy as np
 import torch
 from torchFastText.datasets import FastTextModelDataset
@@ -31,6 +33,19 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
         pth_uri = context.artifacts["torch_model_path"]
         local_path = mlflow.artifacts.download_artifacts(pth_uri)
+        
+        if pth_uri.startswith("runs:/"):
+            path_parts = pth_uri.split('/')
+            self.run_id = path_parts[1]
+        else:
+            local_model_directory = os.path.dirname(os.path.abspath(local_path))
+            mlmodel_path = os.path.join(local_model_directory, "MLmodel")
+            if os.path.exists(mlmodel_path):
+                with open(mlmodel_path, 'r') as f:
+                    mlmodel_content = yaml.safe_load(f)
+                    if 'run_id' in mlmodel_content:
+                        self.run_id = mlmodel_content['run_id']
+
         self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
         self.module.eval()
 
@@ -92,7 +107,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
 
         responses = []
         for i in range(len(predictions[0])):
-            response = process_response(predictions, i, nb_echos_max, prob_min, self.libs)
+            response = process_response(predictions, i, nb_echos_max, prob_min, self.libs, self.run_id)
             responses.append(response)
 
         return responses

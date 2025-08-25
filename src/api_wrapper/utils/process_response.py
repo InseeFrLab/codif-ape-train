@@ -9,6 +9,7 @@ def process_response(
     nb_echos_max: int,
     prob_min: float,
     libs: dict,
+    run_id: str,
 ) -> PredictionResponse:
     """
     Process model
@@ -40,6 +41,7 @@ def process_response(
     }
 
     confidence_score = pred_probs[0] - pred_probs[1]
-    response_data["IC"] = confidence_score
+    response_data["IC"] = float(confidence_score)
+    response_data["MLversion"] = str(run_id)
 
-    return PredictionResponse(response_data)
+    return PredictionResponse.model_validate(response_data)
