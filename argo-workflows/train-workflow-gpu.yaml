@@ -14,7 +14,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "embedding_dim":"80", "num_tokens": "10000"}
+          {"embedding_dim":"80", "num_tokens": "10000", "revision":"NAF2008"},
+          {"embedding_dim":"80", "num_tokens": "10000", "revision":"NAF2025"}
             ]'
   templates:
     - name: main
@@ -29,6 +30,8 @@ spec:
                   value: "{{item.embedding_dim}}"
                 - name: num_tokens
                   value: "{{item.num_tokens}}"
+                - name: revision
+                  value: "{{item.revision}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -39,6 +42,7 @@ spec:
         parameters:
           - name: embedding_dim
           - name: num_tokens
+          - name: revision
       nodeSelector:
         nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
       container:
@@ -66,7 +70,7 @@ spec:
             . setup.sh
 
             # Run MLflow experiment
-            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}}
+            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}} data.revision={{inputs.parameters.revision}}
 
         volumeMounts:
           - mountPath: /dev/shm
