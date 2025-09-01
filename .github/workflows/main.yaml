@@ -10,6 +10,7 @@ on:
       - requirements.txt
       - Dockerfile
   # Allows you to run this workflow manually from the Actions tab
+  pull_request:
   workflow_dispatch:
 
 jobs:
