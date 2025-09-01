@@ -154,7 +154,8 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 
     df = pq.read_table(test_data_path, filesystem=fs).to_pandas()
-
+    # Option 1: Remplacer les valeurs nulles par ""
+df['colonne_str_vide'] = df['colonne_float'].fillna('').astype(str)
     # Reformat dataframe to have column names consistent
     # with Sirene 4 data
     df = df.rename(
@@ -181,8 +182,9 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
     # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
     df["NAT"] = df["NAT"].replace("", "NaN")
     df["CJ"] = df["CJ"].replace("", "NaN")
-    # df["CRT"] = df["CRT"].replace("", "NaN")
-    df["SRF"] = df["SRF"].str.replace("", "NaN")  # TODO: What if we use srf as float?
+    df["CRT"] = df["CRT"].replace("", "NaN")
+    # df["SRF"] = df["SRF"].str.replace("", "NaN")  # TODO: What if we use srf as float?
+    df['SRF'] = df['SRF'].fillna('').astype(str)
 
     # TODO: need to add activ_sec_agri_et in data next time
     if "activ_sec_agri_et" not in df:
