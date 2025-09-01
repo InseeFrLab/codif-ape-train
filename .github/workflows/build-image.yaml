@@ -1,9 +1,9 @@
-name: Image Build
+name: Image Build to run FastText Meta
 
 on:
   push:
     branches:
-      - naf2008
+      - run-fasttext-meta
     tags:
       - "*"
     paths:

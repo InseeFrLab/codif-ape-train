@@ -147,9 +147,9 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
     # Get test DataFrame
     fs = get_file_system()
     if revision == "NAF2008":
-        test_data_path = "projet-ape/label-studio/annotation-campaign-2024/NAF2008/preprocessed/test_data_NAF2008.parquet"
+        test_data_path = "projet-ape/data/25032024_26082025/nafrev2/raw_cleansed.parquet"
     elif revision == "NAF2025":
-        test_data_path = "projet-ape/label-studio/annotation-campaign-2024/rev-NAF2025/preprocessed/training_data_NAF2025.parquet"
+        test_data_path = "projet-ape/data/25032024_26082025/naf2025/raw.parquet"
     else:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 
