@@ -154,8 +154,6 @@ def get_test_data(revision: str, y: str) -> pd.DataFrame:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 
     df = pq.read_table(test_data_path, filesystem=fs).to_pandas()
-    # Option 1: Remplacer les valeurs nulles par ""
-df['colonne_str_vide'] = df['colonne_float'].fillna('').astype(str)
     # Reformat dataframe to have column names consistent
     # with Sirene 4 data
     df = df.rename(
