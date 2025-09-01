@@ -3,7 +3,7 @@ name: Image Build
 on:
   push:
     branches:
-      - fasttext-meta
+      - run-fasttext-meta
     tags:
       - "*"
     paths:
