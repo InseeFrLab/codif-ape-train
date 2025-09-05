@@ -1,7 +1,7 @@
 defaults:
 # Keys should exactly match the folders in src/configs. Each value corresponds to yaml files within the folder.
-  - data: NAF2008_sirene4
-  - dataset: soft_classif
+  - pre_tokenizer: ngram
+  - dataset: torchft_dataset
   - datamodule: text_classification
   - loss: cross_entropy
   - model: torchFastText
@@ -10,7 +10,7 @@ defaults:
   - tokenizer: NGramTokenizer
   - override hydra/job_logging: default
   - _self_
-
+revision: "NAF2008"
 mlflow:
   experiment_name: "model_improvement"
 batch_size: 256

@@ -3,12 +3,22 @@ import numpy as np
 import torch
 from torchFastText.datasets import FastTextModelDataset
 
+from pre_tokenizers import PreTokenizer
+
 from .models import PredictionResponse, SingleForm
 from .utils import preprocess_inputs, process_response
 
 
 class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
-    def __init__(self, libs, inv_mapping, text_feature, categorical_features, textual_features):
+    def __init__(
+        self,
+        libs,
+        inv_mapping,
+        text_feature,
+        categorical_features,
+        textual_features,
+        pre_tokenizer: PreTokenizer,
+    ):
         """
         Initialize the wrapper with model, preprocessing components...
 
@@ -27,6 +37,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         self.text_feature = text_feature
         self.categorical_features = categorical_features
         self.textual_features = textual_features
+        self.pre_tokenizer = pre_tokenizer
 
     def load_context(self, context):
         pth_uri = context.artifacts["torch_model_path"]
@@ -57,6 +68,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             text_feature=self.text_feature,
             textual_features=self.textual_features,
             categorical_features=self.categorical_features,
+            pre_tokenizer=self.pre_tokenizer,
         )
 
         # Preprocess inputs

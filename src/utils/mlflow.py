@@ -7,6 +7,7 @@ from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
 from api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
+from pre_tokenizers import PreTokenizer
 
 from .data import get_df_naf
 from .evaluation import get_inv_mapping
@@ -93,7 +94,7 @@ def load_module_and_config(run_id):
     return module, config
 
 
-def init_and_log_wrapper(cfg, logged_pth_path):
+def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
     df_naf = get_df_naf(revision=cfg.data.revision)
     ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
     inv_mapping = get_inv_mapping(cfg.data.revision)
@@ -104,6 +105,7 @@ def init_and_log_wrapper(cfg, logged_pth_path):
         text_feature=cfg.data.text_feature,
         categorical_features=cfg.data.categorical_features,
         textual_features=cfg.data.textual_features,
+        pre_tokenizer=pre_tokenizer,
     )
 
     input_example = mlflow_wrapper._get_input_data_example()
@@ -113,7 +115,7 @@ def init_and_log_wrapper(cfg, logged_pth_path):
         python_model=mlflow_wrapper,
         input_example=input_example,
         artifacts={"torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
-        code_paths=["src/api_wrapper/", "src/preprocessors/", "src/mappings/", "src/models/"],
+        code_paths=["src/api_wrapper/", "src/pre_tokenizers/", "src/models/"],
     )
 
     return

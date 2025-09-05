@@ -4,13 +4,14 @@ from typing import Optional
 import hydra
 from pytorch_lightning import LightningDataModule
 
-from ..utils.data import get_processed_data, get_Y, TEXT_FEATURE, CATEGORICAL_FEATURES
+from ..utils.data import CATEGORICAL_FEATURES, TEXT_FEATURE, get_processed_data, get_Y
 
 
 class TextClassificationDataModule(LightningDataModule):
     def __init__(
         self,
-        data_cfg,
+        revision,
+        pre_tokenizer_cfg,
         tokenizer_cfg,
         dataset_cfg,
         batch_size: int,
@@ -18,7 +19,8 @@ class TextClassificationDataModule(LightningDataModule):
         num_val_samples=None,
     ):
         super().__init__()
-        self.data_cfg = data_cfg
+        self.revision = revision
+        self.pre_tokenizer_cfg = pre_tokenizer_cfg
         self.tokenizer_cfg = tokenizer_cfg
         self.dataset_cfg = dataset_cfg
         self.batch_size = batch_size
@@ -27,23 +29,23 @@ class TextClassificationDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         self.df_train, self.df_val, self.df_test = get_processed_data(
-            revision=self.data_cfg.revision
+            revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
         )
 
-        self.Y = get_Y(revision=self.data_cfg.revision)
+        self.Y = get_Y(revision=self.revision)
 
         self.tokenizer = hydra.utils.instantiate(
-            self.tokenizer_cfg, training_text=self.df_train[self.data_cfg.text_feature].values
+            self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values
         )
 
         def make_dataset(df):
             return hydra.utils.instantiate(
                 self.dataset_cfg,
-                texts=df[self.data_cfg.text_feature].values,
-                categorical_variables=df[self.data_cfg.categorical_features].values,
+                texts=df[TEXT_FEATURE].values,
+                categorical_variables=df[CATEGORICAL_FEATURES].values,
                 outputs=df[self.Y].values,
                 tokenizer=self.tokenizer,
-                revision=self.data_cfg.revision,
+                revision=self.revision,
                 similarity_coefficients=self.dataset_cfg.get("similarity_coefficients", None),
             )
 

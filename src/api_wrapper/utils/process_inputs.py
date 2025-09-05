@@ -1,12 +1,16 @@
 import pandas as pd
 
-from preprocessors import PytorchPreprocessor
+from pre_tokenizers import PreTokenizer
 
 from ..models.forms import SingleForm
 
 
 def preprocess_inputs(
-    inputs: list[SingleForm], text_feature, textual_features, categorical_features
+    inputs: list[SingleForm],
+    text_feature,
+    textual_features,
+    categorical_features,
+    pre_tokenizer: PreTokenizer,
 ) -> dict:
     """
     Preprocess both single and batch inputs using shared logic.
@@ -33,16 +37,12 @@ def preprocess_inputs(
     for feature in categorical_features:
         df[feature] = df[feature].fillna(value="NaN")
 
-    df[text_feature] = PytorchPreprocessor.clean_text_feature(
-        df[text_feature], remove_stop_words=True
-    )
-    df = PytorchPreprocessor.clean_textual_features(df, textual_features)
+    df[text_feature] = pre_tokenizer.clean_text_feature(df[text_feature])
+    df = pre_tokenizer.clean_textual_features(df, textual_features)
     df[text_feature] = df[text_feature] + df[textual_features].apply(lambda x: "".join(x), axis=1)
 
     # Clean categorical features
-    df = PytorchPreprocessor.clean_categorical_features(
-        df, categorical_features=categorical_features
-    )
+    df = pre_tokenizer.clean_categorical_features(df, categorical_features=categorical_features)
     df = df.drop(columns=textual_features)
 
     return df
