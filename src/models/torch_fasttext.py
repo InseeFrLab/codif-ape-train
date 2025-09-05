@@ -3,8 +3,6 @@ import logging
 import torch
 from torchFastText.model import FastTextModule
 
-from mappings import mappings
-
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(
@@ -20,9 +18,6 @@ try:
 except ImportError:
     HAS_TORCH_UNCERTAINTY = False
     logger.warning("torch_uncertainty not installed. ECE will not be computed.")
-
-APE_NIV5_MAPPING = mappings["APE_NIV5"]
-INV_APE_NIV5_MAPPING = {v: k for k, v in APE_NIV5_MAPPING.items()}
 
 
 class torchFastTextClassifier(FastTextModule):

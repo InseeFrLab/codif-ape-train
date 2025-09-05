@@ -6,7 +6,7 @@ import mlflow
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from mappings import mappings
+from utils.data import CATEGORICAL_FEATURES, mappings
 from utils.evaluation import run_evaluation
 from utils.logger import get_logger
 from utils.mlflow import (
@@ -48,7 +48,7 @@ def train(cfg: DictConfig):
         num_classes = max(mappings[Y].values()) + 1
 
         categorical_vocab_sizes = []
-        for feature in cfg.data.categorical_features:
+        for feature in CATEGORICAL_FEATURES:
             if feature == "SRF":
                 categorical_vocab_sizes.append(5)
             else:

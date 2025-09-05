@@ -4,7 +4,7 @@ from typing import Optional
 import hydra
 from pytorch_lightning import LightningDataModule
 
-from ..utils.data import get_processed_data, get_Y
+from ..utils.data import get_processed_data, get_Y, TEXT_FEATURE, CATEGORICAL_FEATURES
 
 
 class TextClassificationDataModule(LightningDataModule):
