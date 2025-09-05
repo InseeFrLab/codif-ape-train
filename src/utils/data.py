@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -13,13 +13,9 @@ logging.getLogger("botocore.httpchecksum").setLevel(logging.ERROR)
 
 fs = get_file_system()
 
-constants = json.load(
-    fs.open("s3://projet-ape/data/shared_constants.json", "r")
-)
+constants = json.load(fs.open("s3://projet-ape/data/shared_constants.json", "r"))
 
-mappings = json.load(
-    fs.open(constants["URL_MAPPINGS"], "r")
-)
+mappings = json.load(fs.open(constants["URL_MAPPINGS"], "r"))
 
 CATEGORICAL_FEATURES = constants["CATEGORICAL_FEATURES"]
 TEXT_FEATURE = constants["TEXT_FEATURE"]
@@ -29,67 +25,68 @@ NAF2008_TARGET = constants["NAF2008_TARGET"]
 NAF2025_TARGET = constants["NAF2025_TARGET"]
 
 
-    else:
-        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
-
-    df = pq.read_table(test_data_path, filesystem=fs).to_pandas()
-
-    # Reformat dataframe to have column names consistent
-    # with Sirene 4 data
-    rename_col = {
-        "apet_manual": y,
-        "text_description": "libelle",
-        "event": "EVT",
-        "evenement_type": "EVT",
-        "surface": "SRF",
-        "nature": "NAT",
-        "liasse_type": "TYP",
-        "type_": "TYP",
-        "permanence": "CRT",
-        "activ_perm_et": "CRT",
-        "other_nature_text": "NAT_LIB",
-    }
-    df = df.rename(columns=COL_RENAMING | rename_col)
-
-    # Drop rows with no APE code
-    df = df[df[y] != ""]
-
-    # activ_nat_et, cj, activ_nat_lib_et, activ_perm_et: "" to "NaN"
-    df["NAT"] = df["NAT"].replace("", "NaN")
-    df["CJ"] = df["CJ"].replace("", "NaN")
-    df["CRT"] = df["CRT"].replace("", "NaN")
-
-    # SRF float, as a surface column
-    df["SRF"] = df["SRF"].replace("", "0").astype(float)
-
-    # Align schema to sirene4 (adding AGRI column for instance, full of NaN)
-    df_s4 = get_sirene_4_data(revision=revision, **kwargs)[1].sample(frac=0.01)
-    df, right = df.align(df_s4, axis=1, join="outer")
-
-    # Return test data
-    return df
-
-
-def get_processed_data(revision):
+def get_processed_data(revision, cfg_pre_tokenizer):
     """
     Get processed data.
     """
-    fs = get_file_system()
 
-    paths = PATHS[revision]
-    PATH_TRAIN = paths["processed_train"]
-    PATH_VAL = paths["processed_val"]
-    PATH_TEST = paths["processed_test"]
+    data_path = constants[revision][-1]
+    preprocessed_folder_path = (
+        data_path
+        + f"preprocessed/{cfg_pre_tokenizer.name}/"
+        + f"remove_stop_words_{cfg_pre_tokenizer.remove_stop_words}_stem_{cfg_pre_tokenizer.stem}/"
+    )
+    if fs.exists(preprocessed_folder_path + "df_train.parquet") is False:
+        logger.info(
+            f"❌ Preprocessed data not found for revision {revision} and preprocessor {cfg_pre_tokenizer.name} at {preprocessed_folder_path}. Running preprocessing..."
+        )
+        import hydra
 
-    df_train = pd.read_parquet(PATH_TRAIN, filesystem=fs)
-    df_val = pd.read_parquet(PATH_VAL, filesystem=fs)
-    df_test = pd.read_parquet(PATH_TEST, filesystem=fs)
+        split_path = constants[revision][-1] + "split/"
+
+        df_train = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
+        df_val = pd.read_parquet(split_path + "df_val.parquet", filesystem=fs)
+        df_test = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
+
+        Y = NAF2008_TARGET if revision == "NAF2008" else NAF2025_TARGET
+        pre_tokenizer = hydra.utils.instantiate(
+            cfg_pre_tokenizer,
+            mappings=mappings,
+            SURFACE_COLS=SURFACE_COLS,
+            TEXT_FEATURE=TEXT_FEATURE,
+            CATEGORICAL_FEATURES=CATEGORICAL_FEATURES,
+            Y=Y,
+        )
+        df_train, df_val, df_test = pre_tokenizer.pre_tokenize_splits(
+            revision=revision,
+            df_train=df_train,
+            df_val=df_val,
+            df_test=df_test,
+        )
+
+        save_path_preprocessed = (
+            data_path
+            + "preprocessed/"
+            + f"{cfg_pre_tokenizer.name}/"
+            + f"remove_stop_words_{cfg_pre_tokenizer.remove_stop_words}_stem_{cfg_pre_tokenizer.stem}/"
+        )
+        logger.info(f"💾 Saving pre-tokenized datasets to {save_path_preprocessed}")
+        df_train.to_parquet(save_path_preprocessed + "df_train.parquet", index=False, filesystem=fs)
+        df_val.to_parquet(save_path_preprocessed + "df_val.parquet", index=False, filesystem=fs)
+        df_test.to_parquet(save_path_preprocessed + "df_test.parquet", index=False, filesystem=fs)
+    else:
+        logger.info(
+            f"🔎 Found processed data for revision {revision} and preprocessor {cfg_pre_tokenizer.name}..."
+        )
+
+        df_train = pd.read_parquet(preprocessed_folder_path + "df_train.parquet", filesystem=fs)
+        df_val = pd.read_parquet(preprocessed_folder_path + "df_val.parquet", filesystem=fs)
+        df_test = pd.read_parquet(preprocessed_folder_path + "df_test.parquet", filesystem=fs)
 
     return df_train, df_val, df_test
 
 
 def get_test_raw_data(revision):
-
     split_path = constants[revision][-1] + "split/"
     df_test_raw = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
 
@@ -97,7 +94,6 @@ def get_test_raw_data(revision):
 
 
 def get_train_raw_data(revision):
-
     split_path = constants[revision][-1] + "split/"
     df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
 
@@ -143,11 +139,6 @@ def get_Y(
         str: output variable name in dataset.
     """
 
-    if revision == "NAF2008":
-        Y = "apet_finale"
-    elif revision == "NAF2025":
-        Y = "nace2025"
-    else:
-        raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
+    Y = constants[f"{revision.upper()}_TARGET"]
 
     return Y
