@@ -44,9 +44,9 @@ def get_sirene_4_data(
     fs = get_file_system()
 
     if revision == "NAF2008":
-        path = "projet-ape/extractions/20241027_sirene4.parquet"
+        path = "projet-ape/data/08112022_27102024/naf2008/raw_cleansed.parquet"
     elif revision == "NAF2025":
-        path = "projet-ape/NAF-revision/relabeled-data/20241027_sirene4_nace2025.parquet"
+        path = "projet-ape/data/08112022_27102024/naf2025/raw_cleansed.parquet"
     else:
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
 
