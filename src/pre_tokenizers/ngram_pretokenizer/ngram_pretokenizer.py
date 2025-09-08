@@ -1,3 +1,4 @@
+import logging
 import re
 import string
 
@@ -8,13 +9,19 @@ from nltk.corpus import stopwords as ntlk_stopwords
 from nltk.stem.snowball import SnowballStemmer
 from tqdm import tqdm
 
-from src.utils.logger import get_logger
-
 from ..base import PreTokenizer
 
 nltk.data.path.append("nltk_data/")
 
-logger = get_logger(name=__name__)
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler()],
+)
+
 FRENCH_STOPWORDS = set(ntlk_stopwords.words("french")) | set(string.ascii_lowercase)
 
 
