@@ -70,7 +70,7 @@ spec:
             . setup.sh
 
             # Run MLflow experiment
-            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}} data.revision={{inputs.parameters.revision}}
+            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}} revision={{inputs.parameters.revision}}
 
         volumeMounts:
           - mountPath: /dev/shm
