@@ -119,7 +119,9 @@ def train(cfg: DictConfig):
         # Log wrapper
         run_id = mlflow.active_run().info.run_id
         logged_pth_path = f"runs:/{run_id}/model/data/model.pth"
-        init_and_log_wrapper(cfg, logged_pth_path)
+        init_and_log_wrapper(
+            cfg=cfg, logged_pth_path=logged_pth_path, pre_tokenizer=data_module.pre_tokenizer
+        )
 
         ########## Evaluation ##########
 
@@ -134,7 +136,7 @@ def train(cfg: DictConfig):
         run_evaluation(
             trainer=trainer,
             module=module,
-            revision=cfg_dict["data"]["revision"],
+            revision=cfg.revision,
             Y=Y,
             zipped_data=zipped,
         )

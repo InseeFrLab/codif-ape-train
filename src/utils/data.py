@@ -1,6 +1,7 @@
 import json
 import logging
 
+import hydra
 import pandas as pd
 import pyarrow.parquet as pq
 
@@ -17,10 +18,11 @@ constants = json.load(fs.open("s3://projet-ape/data/shared_constants.json", "r")
 
 mappings = json.load(fs.open(constants["URL_MAPPINGS"], "r"))
 
-CATEGORICAL_FEATURES = constants["CATEGORICAL_FEATURES"]
 TEXT_FEATURE = constants["TEXT_FEATURE"]
+CATEGORICAL_FEATURES = constants["CATEGORICAL_FEATURES"]
 TEXTUAL_FEATURES = constants["TEXTUAL_FEATURES"]
 SURFACE_COLS = constants["SURFACE_COLS"]
+COL_RENAMING = constants["COL_RENAMING"]
 NAF2008_TARGET = constants["NAF2008_TARGET"]
 NAF2025_TARGET = constants["NAF2025_TARGET"]
 
@@ -36,11 +38,22 @@ def get_processed_data(revision, cfg_pre_tokenizer):
         + f"preprocessed/{cfg_pre_tokenizer.name}/"
         + f"remove_stop_words_{cfg_pre_tokenizer.remove_stop_words}_stem_{cfg_pre_tokenizer.stem}/"
     )
+
+    Y = NAF2008_TARGET if revision == "NAF2008" else NAF2025_TARGET
+
+    pre_tokenizer = hydra.utils.instantiate(
+        cfg_pre_tokenizer,
+        mappings=mappings,
+        SURFACE_COLS=SURFACE_COLS,
+        TEXT_FEATURE=TEXT_FEATURE,
+        CATEGORICAL_FEATURES=CATEGORICAL_FEATURES,
+        Y=Y,
+    )
+
     if fs.exists(preprocessed_folder_path + "df_train.parquet") is False:
         logger.info(
             f"❌ Preprocessed data not found for revision {revision} and preprocessor {cfg_pre_tokenizer.name} at {preprocessed_folder_path}. Running preprocessing..."
         )
-        import hydra
 
         split_path = constants[revision][-1] + "split/"
 
@@ -48,15 +61,6 @@ def get_processed_data(revision, cfg_pre_tokenizer):
         df_val = pd.read_parquet(split_path + "df_val.parquet", filesystem=fs)
         df_test = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
 
-        Y = NAF2008_TARGET if revision == "NAF2008" else NAF2025_TARGET
-        pre_tokenizer = hydra.utils.instantiate(
-            cfg_pre_tokenizer,
-            mappings=mappings,
-            SURFACE_COLS=SURFACE_COLS,
-            TEXT_FEATURE=TEXT_FEATURE,
-            CATEGORICAL_FEATURES=CATEGORICAL_FEATURES,
-            Y=Y,
-        )
         df_train, df_val, df_test = pre_tokenizer.pre_tokenize_splits(
             revision=revision,
             df_train=df_train,
@@ -83,7 +87,7 @@ def get_processed_data(revision, cfg_pre_tokenizer):
         df_val = pd.read_parquet(preprocessed_folder_path + "df_val.parquet", filesystem=fs)
         df_test = pd.read_parquet(preprocessed_folder_path + "df_test.parquet", filesystem=fs)
 
-    return df_train, df_val, df_test
+    return df_train, df_val, df_test, pre_tokenizer
 
 
 def get_test_raw_data(revision):

@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 from api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
 from pre_tokenizers import PreTokenizer
 
-from .data import get_df_naf
+from .data import CATEGORICAL_FEATURES, COL_RENAMING, TEXT_FEATURE, TEXTUAL_FEATURES, get_df_naf
 from .evaluation import get_inv_mapping
 
 
@@ -95,16 +95,17 @@ def load_module_and_config(run_id):
 
 
 def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
-    df_naf = get_df_naf(revision=cfg.data.revision)
+    df_naf = get_df_naf(revision=cfg.revision)
     ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
-    inv_mapping = get_inv_mapping(cfg.data.revision)
+    inv_mapping = get_inv_mapping(cfg.revision)
 
     mlflow_wrapper = MLFlowPyTorchWrapper(
         libs=ape_to_lib,
         inv_mapping=inv_mapping,
-        text_feature=cfg.data.text_feature,
-        categorical_features=cfg.data.categorical_features,
-        textual_features=cfg.data.textual_features,
+        text_feature=TEXT_FEATURE,
+        categorical_features=CATEGORICAL_FEATURES,
+        textual_features=TEXTUAL_FEATURES,
+        col_renaming=COL_RENAMING,
         pre_tokenizer=pre_tokenizer,
     )
 

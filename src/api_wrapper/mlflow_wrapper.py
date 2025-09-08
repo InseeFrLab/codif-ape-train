@@ -1,12 +1,13 @@
 import mlflow
 import numpy as np
+import pandas as pd
 import torch
 from torchFastText.datasets import FastTextModelDataset
 
 from pre_tokenizers import PreTokenizer
 
 from .models import PredictionResponse, SingleForm
-from .utils import preprocess_inputs, process_response
+from .utils import process_response
 
 
 class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
@@ -17,6 +18,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         text_feature,
         categorical_features,
         textual_features,
+        col_renaming,
         pre_tokenizer: PreTokenizer,
     ):
         """
@@ -37,6 +39,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         self.text_feature = text_feature
         self.categorical_features = categorical_features
         self.textual_features = textual_features
+        self.col_renaming = col_renaming
         self.pre_tokenizer = pre_tokenizer
 
     def load_context(self, context):
@@ -44,6 +47,49 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         local_path = mlflow.artifacts.download_artifacts(pth_uri)
         self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
         self.module.eval()
+
+    def preprocess_inputs(
+        self,
+        inputs: list[SingleForm],
+    ) -> dict:
+        """
+        Preprocess both single and batch inputs using shared logic.
+        """
+
+        df = pd.DataFrame([form.model_dump() for form in inputs])
+
+        df = df.rename(
+            {
+                "description_activity": self.text_feature,
+                "other_nature_activity": self.col_renaming["activ_nat_lib_et_clean"],  # NAT_LIB
+                "precision_act_sec_agricole": self.col_renaming["activ_sec_agri_et_clean"],  # AGRI
+                "type_form": self.col_renaming["liasse_type"],  # TYP
+                "nature": self.col_renaming["activ_nat_et"],  # NAT
+                "surface": self.col_renaming["activ_surf_et"],  # SRF
+                "cj": self.col_renaming["cj"],  # CJ
+                "activity_permanence_status": self.col_renaming["activ_perm_et"],  # CRT
+            },
+            axis=1,
+        )
+
+        for feature in self.textual_features:
+            df[feature] = df[feature].fillna(value="")
+        for feature in self.categorical_features:
+            df[feature] = df[feature].fillna(value="NaN")
+
+        # Put all the text in text_feature and drop all textual_features
+        df[self.text_feature] = df[self.text_feature] + df[self.textual_features].apply(
+            lambda x: "".join(x), axis=1
+        )
+        df = df.drop(columns=self.textual_features)
+
+        # Clean text and categorical features
+        df[self.text_feature] = self.pre_tokenizer.clean_text_feature(df[self.text_feature])
+        df = self.pre_tokenizer.clean_categorical_features(
+            df, categorical_features=self.categorical_features
+        )
+
+        return df
 
     def predict(self, model_input: list[SingleForm], params=None) -> list[PredictionResponse]:
         """
@@ -63,12 +109,8 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         prob_min = params.get("prob_min", 0.01)
         dataloader_params = params.get("dataloader_params", {})
 
-        query = preprocess_inputs(
-            model_input,
-            text_feature=self.text_feature,
-            textual_features=self.textual_features,
-            categorical_features=self.categorical_features,
-            pre_tokenizer=self.pre_tokenizer,
+        query = self.preprocess_inputs(
+            inputs=model_input,
         )
 
         # Preprocess inputs
@@ -119,7 +161,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
                     "type_form": "A",
                     "nature": None,
                     "surface": None,
-                    "cj": None,
+                    "cj": "5710",
                     "activity_permanence_status": None,
                 }
             )

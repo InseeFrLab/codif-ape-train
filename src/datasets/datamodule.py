@@ -40,7 +40,7 @@ class TextClassificationDataModule(LightningDataModule):
         self.tokenizer = hydra.utils.instantiate(
             self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values
         )
-    
+
     def make_dataset(self, df):
         return hydra.utils.instantiate(
             self.dataset_cfg,
@@ -51,14 +51,9 @@ class TextClassificationDataModule(LightningDataModule):
             revision=self.revision,
             similarity_coefficients=self.dataset_cfg.get("similarity_coefficients", None),
         )
-    
+
     def setup(self, stage: Optional[str] = None):
-
         # Called on every process, safe to split datasets etc.
-        self.df_train = self.df_train.sample(frac=0.01)
-        self.df_val = self.df_val.sample(frac=0.01)
-        self.df_test = self.df_test.sample(frac=0.01)
-
         if self.num_val_samples is not None:
             self.df_val = self.df_val.iloc[: self.num_val_samples]
 
