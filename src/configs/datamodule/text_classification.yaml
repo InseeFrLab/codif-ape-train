@@ -1,4 +1,4 @@
-_target_: src.datasets.TextClassificationDataModule
+_target_: datasets.TextClassificationDataModule
 
 revision: ${revision}
 pre_tokenizer_cfg: ${pre_tokenizer}
