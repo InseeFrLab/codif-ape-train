@@ -37,11 +37,9 @@ def train(cfg: DictConfig):
         logger.info("Starting data preparation...")
 
         data_module = hydra.utils.instantiate(cfg.datamodule, _recursive_=False)
-        data_module.setup()
+        data_module.prepare_data()
         tokenizer = data_module.tokenizer
         Y = data_module.Y
-
-        mlflow.log_param("number_of_training_observations", len(data_module.train_dataset))
 
         ###### Model #####
 
@@ -110,6 +108,8 @@ def train(cfg: DictConfig):
             torch.set_float32_matmul_precision("medium")
 
         trainer.fit(module, datamodule=data_module)
+
+        mlflow.log_param("number_of_training_observations", len(data_module.train_dataset))
 
         # Load the "best" weights (minimizing the val_loss)
         best_ckpt_path = trainer.checkpoint_callback.best_model_path
