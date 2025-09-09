@@ -74,6 +74,9 @@ spec:
       container:
         image: inseefrlab/codif-ape-train:naf2008
         imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "30" 
         command: ["/bin/bash", -c]
         args: ["git clone -b run-fasttext-meta https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
