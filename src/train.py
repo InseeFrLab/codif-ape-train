@@ -114,13 +114,13 @@ parser.add_argument(
     help="Additional description of company's agricultural activities",
     required=True,
 )
-parser.add_argument(
-    "--categorical_features_1",
-    type=str,
-    default="AUTO",
-    help="Type of observation",
-    required=True,
-)
+# parser.add_argument(
+#     "--categorical_features_1",
+#     type=str,
+#     default="AUTO",
+#     help="Type of observation",
+#     required=True,
+# )
 parser.add_argument(
     "--categorical_features_2",
     type=str,

@@ -139,8 +139,6 @@ spec:
             value: activ_nat_lib_et
           - name: TEXTUAL_FEATURE2
             value: activ_sec_agri_et
-          - name: FEATURE1
-            value: TYP
           - name: FEATURE2
             value: NAT
           - name: FEATURE3
