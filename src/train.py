@@ -256,7 +256,6 @@ def main(
     text_feature: str,
     textual_features_1: str,
     textual_features_2: str,
-    categorical_features_1: str,
     categorical_features_2: str,
     categorical_features_3: str,
     categorical_features_5: str,
