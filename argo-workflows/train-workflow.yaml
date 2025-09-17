@@ -100,7 +100,6 @@ spec:
                           -P text_feature=$TEXT_FEATURE \
                           -P textual_features_1=$TEXTUAL_FEATURE1 \
                           -P textual_features_2=$TEXTUAL_FEATURE2 \
-                          -P categorical_features_1=$FEATURE1 \
                           -P categorical_features_2=$FEATURE2 \
                           -P categorical_features_3=$FEATURE3 \
                           -P categorical_features_5=$FEATURE5 \

@@ -58,7 +58,6 @@ entry_points:
             --text_feature {text_feature} \
             --textual_features_1 {textual_features_1} \
             --textual_features_2 {textual_features_2} \
-            --categorical_features_1 {categorical_features_1} \
             --categorical_features_2 {categorical_features_2} \
             --categorical_features_3 {categorical_features_3} \
             --categorical_features_5 {categorical_features_5} \
