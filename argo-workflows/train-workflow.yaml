@@ -9,8 +9,18 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          { "EXPERIMENT_NAME": "NACE2008", "MODEL_CLASS": "fasttext", "REVISION": "NAF2008", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 150, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 140, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 130, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 120, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 110, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 100, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 90, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 80, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 70, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
+          { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 60, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" },
           { "EXPERIMENT_NAME": "NACE2025", "MODEL_CLASS": "fasttext", "REVISION": "NAF2025", "START_YEAR": 2025, "DIM": 180, "WS": 5, "LR": 0.2, "EPOCHS": 50, "WORDNGRAMS": 3, "MINN": 3, "MAXN": 4, "MINCOUNT": 3, "BUCKET": 2000000, "LOSS": "ova" }
+         
             ]'
   templates:
     - name: main
@@ -76,7 +86,7 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            cpu: "30" 
+            cpu: "20" 
         command: ["/bin/bash", -c]
         args: ["git clone -b run-fasttext-meta https://github.com/InseeFrLab/codif-ape-train.git &&\
                 cd codif-ape-train/ &&\
