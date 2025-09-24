@@ -14,8 +14,8 @@ spec:
     parameters:
       - name: training-conf-list
         value: '[
-          {"embedding_dim":"80", "num_tokens": "10000", "revision":"NAF2008"},
-          {"embedding_dim":"80", "num_tokens": "10000", "revision":"NAF2025"}
+          {"revision":"NAF2008", "exp":"torch_naf2008"},
+          {"revision":"NAF2025", "exp":"torch_naf2025"}
             ]'
   templates:
     - name: main
@@ -26,12 +26,10 @@ spec:
             template: run-training-wt
             arguments:
               parameters:
-                - name: embedding_dim
-                  value: "{{item.embedding_dim}}"
-                - name: num_tokens
-                  value: "{{item.num_tokens}}"
                 - name: revision
                   value: "{{item.revision}}"
+                - name: exp
+                  value: "{{item.exp}}"
 
             # Pass the inputs to the task using "withParam"
             withParam: "{{workflow.parameters.training-conf-list}}"
@@ -40,11 +38,8 @@ spec:
     - name: run-training-wt
       inputs:
         parameters:
-          - name: embedding_dim
-          - name: num_tokens
           - name: revision
-      nodeSelector:
-        nvidia.com/gpu.product: "NVIDIA-H100-PCIe"
+          - name: exp
       container:
         image: inseefrlab/onyxia-vscode-pytorch:py3.13.5-gpu
         imagePullPolicy: Always
@@ -54,8 +49,9 @@ spec:
             cpu: 30000m
             memory: 50Gi
           requests:
-              cpu: 100m
-              memory: 2Gi
+              nvidia.com/gpu: 1  # Add GPU to requests too
+              cpu: 50m
+              memory: 1Gi
         command: ["/bin/bash", -c]
         args:
           - |
@@ -70,7 +66,7 @@ spec:
             . setup.sh
 
             # Run MLflow experiment
-            uv run src/train.py -m model.model_params.embedding_dim={{inputs.parameters.embedding_dim}} tokenizer.num_tokens={{inputs.parameters.num_tokens}} revision={{inputs.parameters.revision}}
+            uv run src/train.py -m revision={{inputs.parameters.revision}} mlflow.experiment_name={{inputs.parameters.exp}}
 
         volumeMounts:
           - mountPath: /dev/shm
