@@ -32,36 +32,38 @@ class NgramPreTokenizer(PreTokenizer):
         self.remove_stop_words = remove_stop_words
         self.stem = stem
 
-    @staticmethod
-    def _build_text_preprocessor(text, remove_stop_words=False, stem=False, n_jobs=None):
-        stemmer = SnowballStemmer("french") if stem else None
-        if remove_stop_words:
-            stopwords = FRENCH_STOPWORDS
+        # Initialize stemmer once if needed
+        self.stemmer = SnowballStemmer("french") if self.stem else None
+
+        # Initialize stopwords once if needed
+        if self.remove_stop_words:
+            self.stopwords = FRENCH_STOPWORDS
         else:
-            stopwords = set()
+            self.stopwords = set()
 
-        def preprocess(doc: str) -> str:
-            # 1. Remove accents (é -> e, ç -> c, etc.)
-            doc = unidecode.unidecode(doc)
-            # 2. Lowercase
-            doc = doc.lower()
-            # 3. Remove punctuation, keep letters (a-z), numbers (0-9), and French chars (àâçéèêëîïôûùüÿñæœ), plus spaces
-            doc = re.sub(r"[^a-z0-9àâçéèêëîïôûùüÿñæœ\s]", " ", doc)
-            # 4. Collapse multiple spaces into one and strip leading/trailing spaces
-            doc = re.sub(r"\s+", " ", doc).strip()
-            # 5. Tokenize
-            words = doc.split()
-            # 6. Remove one-letter tokens (e.g., stray letters)
-            words = [w for w in words if len(w) > 1]
-            # 7. Stopword removal
-            if remove_stop_words:
-                words = [w for w in words if w not in stopwords]
-            # 8. Stemming
-            if stem:
-                words = [stemmer.stem(w) for w in words]
-            return " ".join(words)
-
-        return preprocess
+    def _preprocess_text(self, doc: str) -> str:
+        """
+        Preprocess a single document. This method is pickleable for multiprocessing.
+        """
+        # 1. Remove accents (é -> e, ç -> c, etc.)
+        doc = unidecode.unidecode(doc)
+        # 2. Lowercase
+        doc = doc.lower()
+        # 3. Remove punctuation, keep letters (a-z), numbers (0-9), and French chars (àâçéèêëîïôûùüÿñæœ), plus spaces
+        doc = re.sub(r"[^a-z0-9àâçéèêëîïôûùüÿñæœ\s]", " ", doc)
+        # 4. Collapse multiple spaces into one and strip leading/trailing spaces
+        doc = re.sub(r"\s+", " ", doc).strip()
+        # 5. Tokenize
+        words = doc.split()
+        # 6. Remove one-letter tokens (e.g., stray letters)
+        words = [w for w in words if len(w) > 1]
+        # 7. Stopword removal
+        if self.remove_stop_words:
+            words = [w for w in words if w not in self.stopwords]
+        # 8. Stemming
+        if self.stem:
+            words = [self.stemmer.stem(w) for w in words]
+        return " ".join(words)
 
     def clean_text_feature(
         self,
@@ -84,13 +86,12 @@ class NgramPreTokenizer(PreTokenizer):
         Returns:
             list[str]: Cleaned text.
         """
-        preprocess = self._build_text_preprocessor(self.remove_stop_words, self.stem)
 
         if len(text) < threshold:
             # Small corpus → fastest with list comprehension
-            return [preprocess(doc) for doc in text]
+            return [self._preprocess_text(doc) for doc in text]
         else:
             # Large corpus → parallelize across CPUs
             return Parallel(n_jobs=n_jobs)(
-                delayed(preprocess)(doc) for doc in tqdm(text, desc="Preprocessing")
+                delayed(self._preprocess_text)(doc) for doc in tqdm(text, desc="Preprocessing")
             )
