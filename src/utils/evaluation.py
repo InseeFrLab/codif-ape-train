@@ -4,9 +4,7 @@ import pandas as pd
 import sklearn
 import torch
 
-
 from .data import get_df_naf, mappings
-from .io import get_file_system
 from .validation_viz import (
     confidence_histogram,
     get_automatic_accuracy,
@@ -199,7 +197,7 @@ def get_inv_mapping(revision):
     """
 
     ape_niv5_mapping = get_label_mapping(revision)
-    inv_ape_niv5_mapping = {v: k.upper() for k, v in ape_niv5_mapping.items() if k != "4689Y"}
+    inv_ape_niv5_mapping = {v: k.upper() for k, v in ape_niv5_mapping.items()}
 
     return inv_ape_niv5_mapping
 
