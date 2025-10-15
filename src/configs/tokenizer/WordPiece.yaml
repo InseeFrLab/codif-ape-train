@@ -1,5 +1,6 @@
 defaults:
   - override /dataset@_global_.dataset: hf_tokenizer
+  - override /pre_tokenizer@_global_.pre_tokenizer: bert
 
 tokenizer_type: "WordPiece"
 hugging_face: true

@@ -8,7 +8,6 @@ from src.utils.data import (
     CATEGORICAL_FEATURES,
     TEXT_FEATURE,
     get_processed_data,
-    get_raw_data,
     get_Y,
 )
 from src.utils.logger import get_logger
@@ -40,12 +39,9 @@ class TextClassificationDataModule(LightningDataModule):
         # Heavy / one-time preprocessing
         # (called once per node, not on every GPU worker)
 
-        if hasattr(self.dataset_cfg, "raw_text") and self.dataset_cfg.raw_text:
-            self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
-        else:
-            self.df_train, self.df_val, self.df_test, self.pre_tokenizer = get_processed_data(
-                revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
-            )
+        self.df_train, self.df_val, self.df_test, self.pre_tokenizer = get_processed_data(
+            revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
+        )
 
         self.Y = get_Y(revision=self.revision)
 

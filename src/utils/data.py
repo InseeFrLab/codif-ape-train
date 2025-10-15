@@ -33,11 +33,13 @@ def get_processed_data(revision, cfg_pre_tokenizer):
     """
 
     data_path = constants[revision][-1]
-    preprocessed_folder_path = (
-        data_path
-        + f"preprocessed/{cfg_pre_tokenizer.name}/"
-        + f"remove_stop_words_{cfg_pre_tokenizer.remove_stop_words}_stem_{cfg_pre_tokenizer.stem}/"
-    )
+    preprocessed_folder_path = data_path + f"preprocessed/{cfg_pre_tokenizer.name}/"
+
+    for attr in dir(cfg_pre_tokenizer):
+        if attr not in ["name", "_target_"] and not attr.startswith("__"):
+            value = getattr(cfg_pre_tokenizer, attr)
+            preprocessed_folder_path += f"{attr}_{value}_"
+    preprocessed_folder_path = preprocessed_folder_path.rstrip("_") + "/"
 
     Y = NAF2008_TARGET if revision == "NAF2008" else NAF2025_TARGET
 

@@ -1,3 +1,6 @@
+defaults:
+  - override /pre_tokenizer@_global_.pre_tokenizer: ngram
+
 tokenizer_type: "NGramTokenizer"
 hugging_face: false
 _target_: torchFastText.datasets.NGramTokenizer
