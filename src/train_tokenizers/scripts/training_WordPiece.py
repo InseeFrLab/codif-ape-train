@@ -1,6 +1,8 @@
+"""uv run src/train_tokenizers/scripts/training_WordPiece.py"""
+
 import os
 
-from src.utils.data import get_file_system, get_train_raw_data
+from src.utils.data import constants, get_file_system, get_train_raw_data
 from tokenizers import (
     Tokenizer,
     decoders,
@@ -40,7 +42,8 @@ def train_WordPiece(n_vocab=10000, revision="NAF2025"):
 
     # Dump on S3
     fs = get_file_system()
-    s3_path = f"projet-ape/tokenizers/{revision}/WordPiece_{n_vocab}.json"
+    data_path = constants[revision][-1]
+    s3_path = data_path + f"tokenizers/WordPiece_{n_vocab}.json"
     parent_dir = os.path.dirname(s3_path)
     if not fs.exists(parent_dir):
         fs.makedirs(parent_dir)
