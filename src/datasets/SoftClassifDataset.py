@@ -22,8 +22,6 @@ class SoftClassifDataset(FastTextModelDataset):
         self.similarity_matrix = self.generate_similarity_matrix()
 
     def generate_similarity_matrix(self):
-        ## WARNING : not usable for NAF2025 as of May 2025 because the notice given by get_df_naf is not up-to-date
-
         df = get_df_naf(self.revision)
         Y = get_Y(revision=self.revision)
         levels_matrix = df[["APE_NIV1", "APE_NIV2", "APE_NIV3", "APE_NIV4", "APE_NIV5"]].values
