@@ -90,8 +90,18 @@ def get_processed_data(revision, cfg_pre_tokenizer):
     return df_train, df_val, df_test, pre_tokenizer
 
 
+def get_raw_data(revision):
+    split_path = constants[revision][-1] + "split/"
+    df_test_raw = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
+    df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
+    df_val_raw = pd.read_parquet(split_path + "df_val.parquet", filesystem=fs)
+
+    return df_train_raw, df_val_raw, df_test_raw
+
+
 def get_test_raw_data(revision):
     split_path = constants[revision][-1] + "split/"
+    logger.info(f"🔎 Fetching raw test data from {split_path}...")
     df_test_raw = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
 
     return df_test_raw
@@ -99,6 +109,7 @@ def get_test_raw_data(revision):
 
 def get_train_raw_data(revision):
     split_path = constants[revision][-1] + "split/"
+    logger.info(f"🔎 Fetching raw training data from {split_path}...")
     df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
 
     return df_train_raw

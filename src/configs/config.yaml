@@ -2,14 +2,14 @@ defaults:
 # Keys should exactly match the folders in src/configs. Each value corresponds to yaml files within the folder.
   - pre_tokenizer: ngram
   - dataset: torchft_dataset
+  - tokenizer: NGramTokenizer # tokenizer should be after dataset
   - datamodule: text_classification
   - loss: cross_entropy
   - model: torchFastText
   - optimizer: adam
   - scheduler: plateau
-  - tokenizer: NGramTokenizer
-  - override hydra/job_logging: default
   - _self_
+  - override hydra/job_logging: default
 revision: "NAF2008"
 mlflow:
   experiment_name: "model_improvement"

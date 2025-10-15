@@ -1,2 +1,3 @@
 from .datamodule import TextClassificationDataModule as TextClassificationDataModule
+from .HFTokenizerDataset import HFTokenizerDataset as HFTokenizerDataset
 from .SoftClassifDataset import SoftClassifDataset as SoftClassifDataset

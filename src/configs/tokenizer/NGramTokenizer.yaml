@@ -1,4 +1,5 @@
-tokenizer_name: "NGramTokenizer"
+tokenizer_type: "NGramTokenizer"
+hugging_face: false
 _target_: torchFastText.datasets.NGramTokenizer
 min_count: 100
 min_n: 3

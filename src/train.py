@@ -22,6 +22,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def train(cfg: DictConfig):
+    if not cfg.tokenizer.hugging_face and cfg.dataset.dataset_name == "HFTokenizerDataset":
+        raise ValueError("HFTokenizerDataset requires a Hugging Face tokenizer.")
+
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     create_or_restore_experiment(cfg.mlflow.experiment_name)
@@ -55,11 +58,14 @@ def train(cfg: DictConfig):
         logger.info("Number of classes: " + str(num_classes))
         logger.info("categorical_vocab_sizes " + str(categorical_vocab_sizes))
 
-        if cfg.model.model_name == "torchFastText":
-            # for torchFastText only, we add the number of words in the vocabulary
+        if cfg.tokenizer.tokenizer_type == "NGramTokenizer":
+            # for NGRamTokenizer only, we add the number of words in the vocabulary
             # In general, tokenizer.num_tokens == num_rows is a invariant
             num_rows = tokenizer.num_tokens + tokenizer.get_nwords() + 1
             padding_idx = num_rows - 1
+        if cfg.tokenizer.tokenizer_type == "WordPiece":
+            num_rows = tokenizer.num_tokens
+            padding_idx = tokenizer.pad_token_id
 
         # PyTorch model
         model_params = OmegaConf.to_container(cfg.model.model_params, resolve=True)

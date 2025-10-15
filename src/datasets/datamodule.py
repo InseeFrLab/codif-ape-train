@@ -4,7 +4,16 @@ from typing import Optional
 import hydra
 from pytorch_lightning import LightningDataModule
 
-from src.utils.data import CATEGORICAL_FEATURES, TEXT_FEATURE, get_processed_data, get_Y
+from src.utils.data import (
+    CATEGORICAL_FEATURES,
+    TEXT_FEATURE,
+    get_processed_data,
+    get_raw_data,
+    get_Y,
+)
+from src.utils.logger import get_logger
+
+logger = get_logger(name=__name__)
 
 
 class TextClassificationDataModule(LightningDataModule):
@@ -30,16 +39,22 @@ class TextClassificationDataModule(LightningDataModule):
     def prepare_data(self):
         # Heavy / one-time preprocessing
         # (called once per node, not on every GPU worker)
-        self.df_train, self.df_val, self.df_test, self.pre_tokenizer = get_processed_data(
-            revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
-        )
+
+        if hasattr(self.dataset_cfg, "raw_text") and self.dataset_cfg.raw_text:
+            self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
+        else:
+            self.df_train, self.df_val, self.df_test, self.pre_tokenizer = get_processed_data(
+                revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
+            )
 
         self.Y = get_Y(revision=self.revision)
 
         # Fit tokenizer once on training data
         self.tokenizer = hydra.utils.instantiate(
-            self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values
+            self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values, _recursive_=False
         )
+
+        logger.info(f"Initialized tokenizer for {self.revision}")
 
     def make_dataset(self, df):
         return hydra.utils.instantiate(
@@ -47,6 +62,7 @@ class TextClassificationDataModule(LightningDataModule):
             texts=df[TEXT_FEATURE].values,
             categorical_variables=df[CATEGORICAL_FEATURES].values,
             outputs=df[self.Y].values,
+            labels=df[self.Y].values,
             tokenizer=self.tokenizer,
             revision=self.revision,
             similarity_coefficients=self.dataset_cfg.get("similarity_coefficients", None),
