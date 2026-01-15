@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torchFastText.datasets import FastTextModelDataset
 
-from pre_tokenizers import PreTokenizer
+from src.pre_tokenizers import PreTokenizer
 
 from .models import PredictionResponse, SingleForm
 from .utils import process_response

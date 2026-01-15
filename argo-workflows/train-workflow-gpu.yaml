@@ -66,7 +66,7 @@ spec:
             . setup.sh
 
             # Run MLflow experiment
-            uv run src/train.py -m revision={{inputs.parameters.revision}} mlflow.experiment_name={{inputs.parameters.exp}}
+            uv run train.py -m revision={{inputs.parameters.revision}} mlflow.experiment_name={{inputs.parameters.exp}}
 
         volumeMounts:
           - mountPath: /dev/shm

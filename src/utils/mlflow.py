@@ -6,8 +6,8 @@ from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
-from api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
-from pre_tokenizers import PreTokenizer
+from src.api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
+from src.pre_tokenizers import PreTokenizer
 
 from .data import CATEGORICAL_FEATURES, COL_RENAMING, TEXT_FEATURE, TEXTUAL_FEATURES, get_df_naf
 from .evaluation import get_inv_mapping

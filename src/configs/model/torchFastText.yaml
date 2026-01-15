@@ -9,9 +9,9 @@ model_params:
   direct_bagging: False
 
 trainer:
-  _target_: utils.build_trainers.build_lightning_trainer
-  num_epochs: 35
+  _target_: src.utils.build_trainers.build_lightning_trainer
+  num_epochs: 16
   patience_early_stopping: 5
 
 module:
-  _target_: models.torch_fasttext.torchFastTextClassifier
+  _target_: src.models.torch_fasttext.torchFastTextClassifier
