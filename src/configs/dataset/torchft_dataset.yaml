@@ -1,2 +1,0 @@
-dataset_name: "FastTextModelDataset"
-_target_: torchFastText.datasets.FastTextModelDataset

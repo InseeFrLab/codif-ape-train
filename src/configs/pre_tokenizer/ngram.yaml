@@ -1,4 +1,0 @@
-name: "ngram"
-_target_: src.pre_tokenizers.ngram_pretokenizer.NgramPreTokenizer
-remove_stop_words: True
-stem: True
