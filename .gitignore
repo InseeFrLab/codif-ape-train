@@ -232,3 +232,4 @@ cache_dir/
 
 hydra_config.yaml
 tokenizers/
+my_tokenizer/
