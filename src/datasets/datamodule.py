@@ -1,16 +1,19 @@
 import os
 from typing import Optional
 
-import hydra
 from pytorch_lightning import LightningDataModule
+from torchTextClassifiers.dataset import TextClassificationDataset
 
+from src.categorical_encoder import CatValueEncoder
 from src.utils.data import (
     CATEGORICAL_FEATURES,
+    SURFACE_COLS,
     TEXT_FEATURE,
-    get_processed_data,
     get_raw_data,
     get_Y,
+    mappings,
 )
+from src.utils.load_tokenizer import load_tokenizer
 from src.utils.logger import get_logger
 
 logger = get_logger(name=__name__)
@@ -20,18 +23,14 @@ class TextClassificationDataModule(LightningDataModule):
     def __init__(
         self,
         revision,
-        pre_tokenizer_cfg,
         tokenizer_cfg,
-        dataset_cfg,
         batch_size: int,
         num_workers: int = os.cpu_count() // 2,
         num_val_samples=None,
     ):
         super().__init__()
         self.revision = revision
-        self.pre_tokenizer_cfg = pre_tokenizer_cfg
         self.tokenizer_cfg = tokenizer_cfg
-        self.dataset_cfg = dataset_cfg
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.num_val_samples = num_val_samples
@@ -40,32 +39,41 @@ class TextClassificationDataModule(LightningDataModule):
         # Heavy / one-time preprocessing
         # (called once per node, not on every GPU worker)
 
-        if hasattr(self.dataset_cfg, "raw_text") and self.dataset_cfg.raw_text:
-            self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
-        else:
-            self.df_train, self.df_val, self.df_test, self.pre_tokenizer = get_processed_data(
-                revision=self.revision, cfg_pre_tokenizer=self.pre_tokenizer_cfg
-            )
+        self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
+
+        self.df_train = self.df_train.sample(frac=0.01)
+        self.df_val = self.df_val.sample(frac=0.01)
+        self.df_test = self.df_test.sample(frac=0.01)
 
         self.Y = get_Y(revision=self.revision)
 
-        # Fit tokenizer once on training data
-        self.tokenizer = hydra.utils.instantiate(
-            self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values, _recursive_=False
+        self.cat_encoder = CatValueEncoder(
+            mappings=mappings,
+            SURFACE_COLS=SURFACE_COLS,
+            TEXT_FEATURE=TEXT_FEATURE,
+            CATEGORICAL_FEATURES=CATEGORICAL_FEATURES,
+            Y=self.Y,
+        )
+
+        self.df_train, self.df_val, self.df_test = self.cat_encoder.encode_splits(
+            revision=self.revision,
+            df_train=self.df_train,
+            df_val=self.df_val,
+            df_test=self.df_test,
+        )
+
+        self.tokenizer = load_tokenizer(
+            **self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values
         )
 
         logger.info(f"Initialized tokenizer for {self.revision}")
 
     def make_dataset(self, df):
-        return hydra.utils.instantiate(
-            self.dataset_cfg,
+        return TextClassificationDataset(
             texts=df[TEXT_FEATURE].values,
             categorical_variables=df[CATEGORICAL_FEATURES].values,
-            outputs=df[self.Y].values,
             labels=df[self.Y].values,
             tokenizer=self.tokenizer,
-            revision=self.revision,
-            similarity_coefficients=self.dataset_cfg.get("similarity_coefficients", None),
         )
 
     def setup(self, stage: Optional[str] = None):
