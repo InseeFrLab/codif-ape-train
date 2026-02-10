@@ -20,6 +20,8 @@ from src.utils.logger import get_logger
 from src.utils.mlflow import (
     create_or_restore_experiment,
     init_and_log_wrapper,
+    log_dict,
+    log_hydra_config,
 )
 
 logger = get_logger(name=__name__)
@@ -29,15 +31,15 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def train(cfg: DictConfig):
     OmegaConf.set_struct(cfg, False)
-    # cfg_dict = OmegaConf.to_container(cfg, resolve=True)
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     create_or_restore_experiment(cfg.mlflow.experiment_name)
     mlflow.set_experiment(cfg.mlflow.experiment_name)
 
     with mlflow.start_run():
         # Log config
-        # log_dict(cfg_dict)
-        # log_hydra_config(cfg)
+        log_dict(cfg_dict)
+        log_hydra_config(cfg)
 
         ##### Data #########
 
