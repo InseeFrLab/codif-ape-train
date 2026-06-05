@@ -88,12 +88,12 @@ class PreTokenizer(ABC):
                     )
                 df[variable] = df[variable].apply(self.mappings[variable].get)
         if y is not None:
-            if len(set(df[y].unique()) - set(self.mappings[y].keys())) > 0:
+            if len(set(df[y].unique()) - set(self.mappings[y]["APE_NIV5"].keys())) > 0:
                 raise ValueError(
                     f"Missing values in mapping for {y}, ",
-                    set(df[y].unique()) - set(self.mappings[y].keys()),
+                    set(df[y].unique()) - set(self.mappings[y]["APE_NIV5"].keys()),
                 )
-            df[y] = df[y].apply(self.mappings[y].get)
+            df[y] = df[y].apply(self.mappings[y]["APE_NIV5"].get)
 
         return df
 
