@@ -180,7 +180,7 @@ def get_label_mapping(revision):
     else:
         key = "nace2025"
 
-    ape_niv5_mapping = mappings[key]
+    ape_niv5_mapping = mappings[key]["APE_NIV5"]
 
     return ape_niv5_mapping
 
