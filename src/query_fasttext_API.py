@@ -80,7 +80,7 @@ def loadAndPreprocessTestData(fs, revision):
                 "CJ": "cj",
                 "evenement_type": "event",
                 "CRT": "activity_permanence_status",
-                "nace2025": "APE_NIV5",
+                "apet2025": "APE_NIV5",
             },
             axis=1,
         )
