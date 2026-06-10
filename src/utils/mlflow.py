@@ -122,7 +122,7 @@ def mlflow_code_packaging(subfolders: List[str] = None) -> str:
         else:
             print(f"⚠️ Warning: Source folder '{source_path}' not found.")
 
-    return staging_dir
+    return target_src_dir
 
 
 def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
