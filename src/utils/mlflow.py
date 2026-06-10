@@ -112,7 +112,7 @@ def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
     input_example = mlflow_wrapper._get_input_data_example()
 
     mlflow.pyfunc.log_model(
-        artifact_path="pyfunc_model",
+        name="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
         artifacts={"torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
