@@ -11,13 +11,26 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler()],
 )
-try:
-    from torch_uncertainty.metrics import CalibrationError
 
-    HAS_TORCH_UNCERTAINTY = True
-except ImportError:
-    HAS_TORCH_UNCERTAINTY = False
-    logger.warning("torch_uncertainty not installed. ECE will not be computed.")
+_HAS_TORCH_UNCERTAINTY = None
+
+
+def check_torch_uncertainty() -> bool:
+    """
+    Check once if torch_uncertainty is available, without logging at global import.
+
+    Returns:
+        bool: True if torch_uncertainty is installed, False otherwise.
+    """
+    global _HAS_TORCH_UNCERTAINTY
+    if _HAS_TORCH_UNCERTAINTY is None:
+        try:
+            import torch_uncertainty  # noqa: F401
+            _HAS_TORCH_UNCERTAINTY = True
+        except ImportError:
+            _HAS_TORCH_UNCERTAINTY = False
+            logger.warning("torch_uncertainty not installed. ECE will not be computed.")
+    return _HAS_TORCH_UNCERTAINTY
 
 
 class torchFastTextClassifier(FastTextModule):
@@ -29,7 +42,8 @@ class torchFastTextClassifier(FastTextModule):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        if HAS_TORCH_UNCERTAINTY:
+        if check_torch_uncertainty():
+            from torch_uncertainty.metrics import CalibrationError
             self.ece = CalibrationError(task="multiclass", num_classes=self.model.num_classes)
 
     def on_predict_start(self):
@@ -37,7 +51,7 @@ class torchFastTextClassifier(FastTextModule):
         Called at the beginning of the predict epoch.
         """
 
-        if HAS_TORCH_UNCERTAINTY:
+        if check_torch_uncertainty():
             self.ece.reset()
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
@@ -113,7 +127,7 @@ class torchFastTextClassifier(FastTextModule):
         else:
             targets_class = targets.argmax(dim=1)
 
-        if HAS_TORCH_UNCERTAINTY:
+        if check_torch_uncertainty():
             self.ece.update(outputs, targets_class)
 
         return outputs
@@ -121,7 +135,8 @@ class torchFastTextClassifier(FastTextModule):
     def configure_optimizers(self):
         """
         Configure optimizers and schedulers.
-        Here, unlike in torchFastText, we can handle when optimizer and scheduler are already instantiated.
+        Here, unlike in torchFastText, we can handle when optimizer
+        and scheduler are already instantiated.
         """
         if self.optimizer_params is None:
             optimizer = self.optimizer
