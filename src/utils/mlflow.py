@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import mlflow
 import yaml
@@ -6,6 +7,7 @@ from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
+from typing import List
 from src.api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
 from src.pre_tokenizers import PreTokenizer
 
@@ -94,10 +96,41 @@ def load_module_and_config(run_id):
     return module, config
 
 
+def mlflow_code_packaging(subfolders: List[str] = None) -> str:
+    """
+    Prepares a 'src/' directory structure in 'mlflow_staging' for MLflow 3 artifact logging.
+    Fixes code_paths import flattening issues by preserving the parent 'src' folder.
+    The goal is to log only the minimum necessary and not all the elements from src/
+    """
+    if subfolders is None:
+        subfolders = ["api_wrapper", "models", "pre_tokenizers"]
+
+    staging_dir = "mlflow_staging"
+    target_src_dir = os.path.join(staging_dir, "src")
+
+    if os.path.exists(staging_dir):
+        shutil.rmtree(staging_dir)
+
+    os.makedirs(target_src_dir, exist_ok=True)
+
+    for folder in subfolders:
+        source_path = os.path.join("src", folder)
+        destination_path = os.path.join(target_src_dir, folder)
+
+        if os.path.exists(source_path):
+            shutil.copytree(source_path, destination_path)
+        else:
+            print(f"⚠️ Warning: Source folder '{source_path}' not found.")
+
+    return target_src_dir
+
+
 def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
     df_naf = get_df_naf(revision=cfg.revision)
     ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
     inv_mapping = get_inv_mapping(cfg.revision)
+
+    code_paths_mlflow_artifacts = mlflow_code_packaging(["api_wrapper", "models", "pre_tokenizers"])
 
     mlflow_wrapper = MLFlowPyTorchWrapper(
         libs=ape_to_lib,
@@ -112,11 +145,11 @@ def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
     input_example = mlflow_wrapper._get_input_data_example()
 
     mlflow.pyfunc.log_model(
-        artifact_path="pyfunc_model",
+        name="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
         artifacts={"torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
-        code_paths=["src/api_wrapper/", "src/pre_tokenizers/", "src/models/"],
+        code_paths=[code_paths_mlflow_artifacts],
     )
 
     return

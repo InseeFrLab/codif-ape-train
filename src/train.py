@@ -46,7 +46,7 @@ def train(cfg: DictConfig):
 
         ###### Model #####
 
-        num_classes = max(mappings[Y].values()) + 1
+        num_classes = max(mappings[Y]["APE_NIV5"].values()) + 1
 
         categorical_vocab_sizes = []
         for feature in CATEGORICAL_FEATURES:
