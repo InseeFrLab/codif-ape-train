@@ -3,8 +3,7 @@ from typing import Optional
 
 from pytorch_lightning import LightningDataModule
 from torchTextClassifiers.dataset import TextClassificationDataset
-from torchTextClassifiers.value_encoder import ValueEncoder, DictEncoder
-
+from torchTextClassifiers.value_encoder import DictEncoder, ValueEncoder
 
 from src.utils.data import (
     CATEGORICAL_FEATURES,
@@ -24,20 +23,19 @@ class TextClassificationDataModule(LightningDataModule):
     def __init__(
         self,
         revision,
-        multilevel=False,
-        value_encoder: ValueEncoder,
         tokenizer_cfg,
         batch_size: int,
+        multilevel=False,
         num_workers: int = os.cpu_count() // 2,
         num_val_samples=None,
     ):
         super().__init__()
         self.revision = revision
-        self.value_encoder = value_encoder
         self.tokenizer_cfg = tokenizer_cfg
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.num_val_samples = num_val_samples
+        self.multilevel = multilevel
 
     def prepare_data(self):
         # Heavy / one-time preprocessing
@@ -49,23 +47,51 @@ class TextClassificationDataModule(LightningDataModule):
         self.df_val = self.df_val.sample(frac=0.01)
         self.df_test = self.df_test.sample(frac=0.01)
 
-        self.Y = self.revision.lower()
-        if multilevel:
-            label_columns = [f"APE_NIV{i}" for i in range(1,5)] + [Y]
+        self.Y = get_Y(revision=self.revision)
+        if self.multilevel:
+            self.label_columns = [f"APE_NIV{i}" for i in range(1, 5)] + [self.Y]
         else:
-            label_columns = [Y]
+            self.label_columns = [self.Y]
 
         self.tokenizer = load_tokenizer(
             **self.tokenizer_cfg, training_text=self.df_train[TEXT_FEATURE].values
         )
 
+        categorical_encoders = {}
+        for col in CATEGORICAL_FEATURES:
+            if col in SURFACE_COLS:
+                # SRF is encoded as integers 0-4; transform() casts to str before lookup
+                categorical_encoders[col] = DictEncoder({str(k): k for k in range(5)})
+            else:
+                # astype(str) produces lowercase "nan"/"None" but mappings use "NaN";
+                # add lowercase aliases so dic.get() never returns None
+                mapping = dict(mappings[col])
+                # nan_val = mapping.get("NaN", 0)
+                # mapping.setdefault("nan", nan_val)
+                # mapping.setdefault("None", nan_val)
+                categorical_encoders[col] = DictEncoder(mapping)
+
+        if self.multilevel:
+            label_enc = [DictEncoder(mappings[self.Y][f"APE_NIV{i}"]) for i in range(1, 6)]
+        else:
+            label_enc = DictEncoder(mappings[self.Y]["APE_NIV5"])
+
+        self.value_encoder = ValueEncoder(
+            categorical_encoders=categorical_encoders,
+            label_encoder=label_enc,
+        )
+
         logger.info(f"Initialized tokenizer for {self.revision}")
 
     def make_dataset(self, df):
+        if self.multilevel:
+            labels = self.value_encoder.transform_labels(df[self.label_columns].values)
+        else:
+            labels = self.value_encoder.transform_labels(df[self.Y].values)
         return TextClassificationDataset(
             texts=df[TEXT_FEATURE].values,
             categorical_variables=self.value_encoder.transform(df[CATEGORICAL_FEATURES].values),
-            labels=self.value_encoder.transform_labels(df[self.Y].values),
+            labels=labels,
             tokenizer=self.tokenizer,
         )
 
