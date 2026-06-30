@@ -1,0 +1,10 @@
+embedding_dim: 80
+categorical_embedding_dims: 5
+n_heads_label_attention: 2
+attention_config:
+  n_layers: 2
+  n_head: 4
+  n_kv_head: 4
+  positional_encoding: true
+  sequence_len: 100
+  aggregation_method: "mean"

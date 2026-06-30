@@ -23,7 +23,7 @@ def run_test_CP(run_id, conformal_predictor_class):
     predictions = trainer.predict(module, val_loader)
     predictions_tensor = torch.cat(predictions)
 
-    true_values = torch.tensor(datamodule.df_val.apet2008.values)
+    true_values = torch.tensor(datamodule.df_val.naf2008.values)
 
     conformal_predictor = conformal_predictor_class(
         module=module,

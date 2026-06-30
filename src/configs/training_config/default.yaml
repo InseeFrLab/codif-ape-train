@@ -1,0 +1,8 @@
+num_epochs: 50
+batch_size: 256
+lr: 1e-3
+patience_early_stopping: 5
+defaults:
+  - loss: cross_entropy
+  - optimizer: adam
+  - scheduler: plateau

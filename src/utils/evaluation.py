@@ -175,12 +175,7 @@ def get_label_mapping(revision):
         "NAF2008",
         "NAF2025",
     ], f"Invalid revision: {revision} - must be NAF2008 or NAF2025."
-    if revision == "NAF2008":
-        key = "apet2008"
-    else:
-        key = "apet2025"
-
-    ape_niv5_mapping = mappings[key]["APE_NIV5"]
+    ape_niv5_mapping = mappings[revision.lower()]["APE_NIV5"]
 
     return ape_niv5_mapping
 
