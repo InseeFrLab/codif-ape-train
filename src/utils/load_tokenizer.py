@@ -1,8 +1,7 @@
+import os
 from typing import List
 
-from tokenizers import Tokenizer
 from torchTextClassifiers.tokenizers import NGramTokenizer, WordPieceTokenizer
-from transformers import PreTrainedTokenizerFast
 
 from src.utils.data import constants
 from src.utils.io import get_file_system
@@ -18,37 +17,38 @@ TOKENIZER_CLASSES = {
 
 def load_tokenizer(revision, tokenizer_type, vocab_size, training_text: List[str] = None, **kwargs):
     data_path = constants[revision][-1]
-    tokenizer_bucket = "tokenizers/"
-    tokenizer_path = data_path + tokenizer_bucket + f"{tokenizer_type}_{vocab_size}.json"
+    tokenizer_path = data_path + "tokenizers/" + f"{tokenizer_type}_{vocab_size}.json"
+
+    tokenizer_class = TOKENIZER_CLASSES.get(tokenizer_type)
+    if tokenizer_class is None:
+        raise ValueError(f"Unsupported tokenizer type: {tokenizer_type}")
 
     fs = get_file_system()
-    if fs.exists(tokenizer_path) is False:
-        logger.info(
-            f"Tokenizer {tokenizer_type} with {vocab_size} tokens not found at {tokenizer_path}."
-        )
-        tokenizer_class = TOKENIZER_CLASSES.get(tokenizer_type)
-        if tokenizer_class is None:
-            raise ValueError(f"Unsupported tokenizer type: {tokenizer_type}")
-        tokenizer_instance = tokenizer_class(vocab_size=vocab_size, **kwargs)
-        if hasattr(tokenizer_instance, "train"):
-            logger.info(f"Training {tokenizer_type} tokenizer with {vocab_size} tokens.")
-            if training_text is None:
-                raise ValueError("training_text must be provided to train the tokenizer.")
+    if fs.exists(tokenizer_path):
+        logger.info("Loading tokenizer from %s", tokenizer_path)
+        return tokenizer_class.load_from_s3(tokenizer_path, fs)
 
-            tokenizer_instance.train(
-                training_text, save_path="my_tokenizer", s3_save_path=tokenizer_path, filesystem=fs
-            )
-        return tokenizer_instance
+    logger.info(
+        "Tokenizer %s with %s tokens not found at %s.", tokenizer_type, vocab_size, tokenizer_path
+    )
+    if training_text is None:
+        raise ValueError("training_text must be provided to train the tokenizer.")
+
+    logger.info("Training %s tokenizer with %s tokens.", tokenizer_type, vocab_size)
+    tokenizer_instance = tokenizer_class(vocab_size=vocab_size, **kwargs)
+    if hasattr(tokenizer_instance, "train"):
+        tokenizer_instance.train(training_text)
+
+    local_dir = "my_tokenizer"
+    if hasattr(tokenizer_instance, "save_pretrained"):
+        tokenizer_instance.save_pretrained(local_dir)
     else:
-        with fs.open(tokenizer_path, "rb") as f:
-            json_str = f.read().decode("utf-8")
+        tokenizer_instance.tokenizer.save_pretrained(local_dir)
 
-        tokenizer_obj = Tokenizer.from_str(json_str)
+    parent_dir = os.path.dirname(tokenizer_path)
+    if not fs.exists(parent_dir):
+        fs.mkdirs(parent_dir)
+    fs.put(f"{local_dir}/tokenizer.json", tokenizer_path)
+    logger.info("Tokenizer uploaded to S3 at %s", tokenizer_path)
 
-        tokenizer = PreTrainedTokenizerFast(tokenizer_object=tokenizer_obj)
-
-    tokenizer.vocab_size = len(tokenizer)
-
-    logger.info("Loaded tokenizer from %s", tokenizer_path)
-
-    return tokenizer
+    return tokenizer_instance
