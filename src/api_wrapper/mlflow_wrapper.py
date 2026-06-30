@@ -2,9 +2,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 import torch
-from torchFastText.datasets import FastTextModelDataset
-
-from src.pre_tokenizers import PreTokenizer
+from typing import Union
 
 from .models import PredictionResponse, SingleForm
 from .utils import process_response
@@ -19,7 +17,6 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         categorical_features,
         textual_features,
         col_renaming,
-        pre_tokenizer: PreTokenizer,
     ):
         """
         Initialize the wrapper with model, preprocessing components...
@@ -41,6 +38,28 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         self.textual_features = textual_features
         self.col_renaming = col_renaming
         self.pre_tokenizer = pre_tokenizer
+
+    @staticmethod
+    def categorize_surface(
+        values: Union[list, np.ndarray]
+    ) -> np.ndarray:
+        """
+        Categorize the surface of the activity.
+
+        Args:
+            values: Surface values as a list or numpy array (floats).
+            like_sirene_3 (bool): Use SIRENE 3 binning if True, log-scale binning otherwise.
+
+        Returns:
+            np.ndarray: Integer category array (1–4, or 0 for NaN/out-of-range).
+        """
+        arr = np.asarray(values, dtype=float)
+        bins = [0.0, 1, 30, 50, 96]
+        cats = np.digitize(arr, bins[1:]) + 1
+        in_range = (arr > bins[0]) & ~np.isnan(arr)
+
+        return np.where(in_range & ~np.isnan(arr), cats, 0).astype(int)
+
 
     def load_context(self, context):
         pth_uri = context.artifacts["torch_model_path"]

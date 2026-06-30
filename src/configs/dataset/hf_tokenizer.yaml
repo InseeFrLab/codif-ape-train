@@ -1,3 +1,0 @@
-dataset_name: "HFTokenizerDataset"
-raw_text: true
-_target_: src.datasets.HFTokenizerDataset

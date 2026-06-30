@@ -1,8 +1,0 @@
-tokenizer_type: "NGramTokenizer"
-hugging_face: false
-_target_: torchFastText.datasets.NGramTokenizer
-min_count: 100
-min_n: 3
-max_n: 6
-len_word_ngrams: 3
-num_tokens: 10000
