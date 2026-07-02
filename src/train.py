@@ -154,6 +154,7 @@ def train(cfg: DictConfig):
             revision=cfg.revision,
             Y=Y,
             eval_splits=eval_splits,
+            value_encoder=data_module.value_encoder,
         )
 
 

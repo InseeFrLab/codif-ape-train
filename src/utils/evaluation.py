@@ -3,8 +3,9 @@ import numpy as np
 import pandas as pd
 import sklearn
 import torch
+from torchmetrics.classification import MulticlassCalibrationError
 
-from .data import get_df_naf, mappings
+from .data import get_df_naf, get_Y, mappings
 from .validation_viz import (
     confidence_histogram,
     get_automatic_accuracy,
@@ -12,7 +13,7 @@ from .validation_viz import (
 )
 
 
-def run_evaluation(trainer, module, revision, Y, eval_splits):
+def run_evaluation(trainer, module, revision, Y, eval_splits, value_encoder):
     """
         Higher-level overload of the run_eval function, running the predictions beforehand.
         Main method of this file.
@@ -35,13 +36,16 @@ def run_evaluation(trainer, module, revision, Y, eval_splits):
     for df, dataloader, suffix in eval_splits:
         predictions = trainer.predict(module, dataloader)  # accumulates predictions over batches
         predictions_tensor = torch.cat(predictions).cpu()  # (num_test_samples, num_classes)
+        predictions_tensor = torch.softmax(predictions_tensor, dim=1)  # logits -> probabilities
 
-        mlflow.log_metric("ece_" + suffix, module.ece.compute())
-        fig, ax = module.ece.plot()
-        mlflow.log_figure(
-            fig,
-            "calibration_curve_" + suffix + ".png",
+        true_values = get_ground_truth(df, Y)
+        if true_values.dtype == object:
+            true_values = value_encoder.transform_labels(true_values)
+        ece_metric = MulticlassCalibrationError(
+            num_classes=predictions_tensor.shape[1], n_bins=15, norm="l1"
         )
+        ece = ece_metric(predictions_tensor, torch.as_tensor(true_values))
+        mlflow.log_metric("ece_" + suffix, ece.item())
 
         run_eval(
             df=df,
@@ -51,6 +55,7 @@ def run_evaluation(trainer, module, revision, Y, eval_splits):
             fasttext_preds_scores=fasttext_preds_scores,
             revision=revision,
             Y=Y,
+            value_encoder=value_encoder,
             suffix=suffix,
         )
 
@@ -66,6 +71,7 @@ def run_eval(
     fasttext_preds_scores,
     revision,
     Y,
+    value_encoder,
     suffix="val",
     n_bins=100,
 ):
@@ -73,13 +79,17 @@ def run_eval(
     Evaluation method independent from the model (requires to have computed the predictions beforehand).
     """
     true_values = get_ground_truth(df, Y)
+    if true_values.dtype == object:
+        encoded_true_values = value_encoder.transform_labels(true_values)
+    else:
+        encoded_true_values = true_values
 
     (
         sorted_confidence,
         predicted_confidence,
         predicted_class,
-    ) = sort_and_get_pred(predictions=predictions_tensor, true_values=true_values)
-    well_predicted = get_well_predicted_mask(predicted_class, true_values)
+    ) = sort_and_get_pred(predictions=predictions_tensor, true_values=encoded_true_values)
+    well_predicted = get_well_predicted_mask(predicted_class, encoded_true_values)
 
     fig1 = confidence_histogram(sorted_confidence, well_predicted, df=df)
     mlflow.log_figure(fig1, "confidence_histogram_" + suffix + ".png")
@@ -106,7 +116,7 @@ def run_eval(
             thresholds,
             torch.clamp(torchft_scores, 0, 1).numpy(),
             predicted_class.numpy(),
-            true_values,
+            encoded_true_values,
         )
 
         if fasttext_preds_labels is not None:
@@ -114,7 +124,7 @@ def run_eval(
                 thresholds,
                 np.clip(fasttext_preds_scores.values.reshape(-1), 0, 1),
                 fasttext_preds_labels.values.reshape(-1),
-                true_values,
+                encoded_true_values,
             )
         else:
             ft_plot = None
@@ -175,7 +185,7 @@ def get_label_mapping(revision):
         "NAF2008",
         "NAF2025",
     ], f"Invalid revision: {revision} - must be NAF2008 or NAF2025."
-    ape_niv5_mapping = mappings[revision.lower()]["APE_NIV5"]
+    ape_niv5_mapping = mappings[get_Y(revision)]["APE_NIV5"]
 
     return ape_niv5_mapping
 
