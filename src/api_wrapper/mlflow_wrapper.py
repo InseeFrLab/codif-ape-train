@@ -2,7 +2,8 @@ import mlflow
 import numpy as np
 import pandas as pd
 import torch
-from typing import Union
+import yaml
+from torchTextClassifiers import torchTextClassifiers
 
 from .models import PredictionResponse, SingleForm
 from .utils import process_response
@@ -12,65 +13,66 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
     def __init__(
         self,
         libs,
-        inv_mapping,
         text_feature,
         categorical_features,
         textual_features,
+        surface_cols,
         col_renaming,
     ):
         """
         Initialize the wrapper with model, preprocessing components...
 
         Args:
-            module: The model to be wrapped.
             libs: Mapping from APE codes to their descriptions.
-            inv_mapping: Inverse mapping for class labels.
             text_feature: Name of the text feature in the input data.
             categorical_features: List of categorical features in the input data.
             textual_features: List of textual features in the input data.
+            surface_cols: List of categorical features holding a raw surface value
+                that must be bucketed via `categorize_surface` before use.
 
         """
-        self.module = None
+        self.ttc = None
         self.libs = libs
-        self.inv_mapping = inv_mapping
         self.text_feature = text_feature
         self.categorical_features = categorical_features
         self.textual_features = textual_features
+        self.surface_cols = surface_cols
+        self.surface_bins = None
         self.col_renaming = col_renaming
-        self.pre_tokenizer = pre_tokenizer
 
     @staticmethod
-    def categorize_surface(
-        values: Union[list, np.ndarray]
-    ) -> np.ndarray:
+    def categorize_surface(values, bins: list) -> np.ndarray:
         """
         Categorize the surface of the activity.
 
         Args:
             values: Surface values as a list or numpy array (floats).
-            like_sirene_3 (bool): Use SIRENE 3 binning if True, log-scale binning otherwise.
+            bins: Bin edges, e.g. [0.0, 1, 30, 50, 96]. The first edge is the
+                lower (exclusive) bound; values outside (bins[0], bins[-1]] or NaN are category 0.
 
         Returns:
-            np.ndarray: Integer category array (1–4, or 0 for NaN/out-of-range).
+            np.ndarray: Integer category array (1-len(bins)-1, or 0 for NaN/out-of-range).
         """
         arr = np.asarray(values, dtype=float)
-        bins = [0.0, 1, 30, 50, 96]
-        cats = np.digitize(arr, bins[1:]) + 1
-        in_range = (arr > bins[0]) & ~np.isnan(arr)
+        cats = np.digitize(arr, bins[1:-1]) + 1
+        in_range = (arr > bins[0]) & (arr <= bins[-1]) & ~np.isnan(arr)
 
-        return np.where(in_range & ~np.isnan(arr), cats, 0).astype(int)
-
+        return np.where(in_range, cats, 0).astype(int)
 
     def load_context(self, context):
-        pth_uri = context.artifacts["torch_model_path"]
-        local_path = mlflow.artifacts.download_artifacts(pth_uri)
-        self.module = torch.load(local_path, weights_only=False, map_location=torch.device("cpu"))
-        self.module.eval()
+        ttc_dir = mlflow.artifacts.download_artifacts(context.artifacts["ttc_model_path"])
+        self.ttc = torchTextClassifiers.load(ttc_dir, device="cpu")
+        self.ttc.pytorch_model.eval()
+
+        hydra_config_path = mlflow.artifacts.download_artifacts(context.artifacts["hydra_config"])
+        with open(hydra_config_path, "r") as f:
+            run_config = yaml.safe_load(f)
+        self.surface_bins = run_config["surface_bins"]
 
     def preprocess_inputs(
         self,
         inputs: list[SingleForm],
-    ) -> dict:
+    ) -> pd.DataFrame:
         """
         Preprocess both single and batch inputs using shared logic.
         """
@@ -91,9 +93,14 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             axis=1,
         )
 
+        for col in self.surface_cols:
+            df[col] = self.categorize_surface(values=df[col].values, bins=self.surface_bins)
+
         for feature in self.textual_features:
             df[feature] = df[feature].fillna(value="")
         for feature in self.categorical_features:
+            if feature in self.surface_cols:
+                continue
             df[feature] = df[feature].fillna(value="NaN")
 
         # Put all the text in text_feature and drop all textual_features
@@ -101,12 +108,6 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
             lambda x: "".join(x), axis=1
         )
         df = df.drop(columns=self.textual_features)
-
-        # Clean text and categorical features
-        df[self.text_feature] = self.pre_tokenizer.clean_text_feature(df[self.text_feature])
-        df = self.pre_tokenizer.clean_categorical_features(
-            df, categorical_features=self.categorical_features
-        )
 
         return df
 
@@ -124,42 +125,31 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         """
 
         # Set default parameters if not provided
+        params = params or {}
         nb_echos_max = params.get("nb_echos_max", 5)
         prob_min = params.get("prob_min", 0.01)
-        dataloader_params = params.get("dataloader_params", {})
+        # torch.topk errors out if k exceeds the number of classes, unlike the
+        # sort-and-slice approach this used to use.
+        nb_echos_max = min(nb_echos_max, self.ttc.num_classes)
 
         query = self.preprocess_inputs(
             inputs=model_input,
         )
 
-        # Preprocess inputs
-        text = query[self.text_feature].values
-        categorical_variables = query[self.categorical_features].values
-
-        # Create dataset and dataloader (implement based on your specific preprocessing)
-        dataset = FastTextModelDataset(
-            texts=text,
-            categorical_variables=categorical_variables,
-            tokenizer=self.module.model.tokenizer,
+        # First column is raw text, the rest are raw (unencoded) categorical
+        # values; ttc.predict() tokenizes the text and runs the categorical
+        # values through the trained value_encoder itself.
+        X = np.column_stack(
+            (query[self.text_feature].values, query[self.categorical_features].values)
         )
 
-        dataloader = dataset.create_dataloader(shuffle=False, **dataloader_params)
+        with torch.no_grad():
+            output = self.ttc.predict(
+                X, raw_categorical_inputs=True, top_k=nb_echos_max, device="cpu"
+            )
 
-        all_scores = []
-        for batch_idx, batch in enumerate(dataloader):
-            with torch.no_grad():
-                scores = self.module(batch).detach()
-                all_scores.append(scores)
-        all_scores = torch.cat(all_scores)
-
-        # Process predictions
-        probs = torch.nn.functional.softmax(all_scores, dim=1)
-        sorted_probs, sorted_probs_indices = probs.sort(descending=True, axis=1)
-        predicted_class = sorted_probs_indices[:, :nb_echos_max].numpy()
-        predicted_probs = sorted_probs[:, :nb_echos_max].numpy()
-
-        # Map classes back to original labels
-        predicted_class = np.vectorize(self.inv_mapping.get)(predicted_class)
+        predicted_class = output["prediction"]
+        predicted_probs = output["confidence"].numpy()
 
         predictions = (predicted_class, predicted_probs)
 
@@ -190,12 +180,6 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         params_dict = {
             "nb_echos_max": 5,
             "prob_min": 0.01,
-            "dataloader_params": {
-                "pin_memory": False,
-                "persistent_workers": False,
-                "num_workers": 0,
-                "batch_size": 1,
-            },
         }
 
         return (input_data, params_dict)

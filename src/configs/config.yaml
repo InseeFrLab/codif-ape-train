@@ -6,6 +6,7 @@ defaults:
   - _self_
   # - override hydra/job_logging: default
 revision: "NAF2008"
+surface_bins: [0.0, 120, 400, 2499]
 mlflow:
   experiment_name: "model_improvement"
 output_dir: ./hydra_outputs
