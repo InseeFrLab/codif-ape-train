@@ -14,7 +14,7 @@ from torchTextClassifiers.model import TextClassificationModule
 
 from src.datasets import TextClassificationDataModule
 from src.utils.build_trainers import build_lightning_trainer
-from src.utils.data import CATEGORICAL_FEATURES, mappings
+from src.utils.data import CATEGORICAL_FEATURES, SURFACE_COLS, mappings
 from src.utils.evaluation import run_evaluation
 from src.utils.logger import get_logger
 from src.utils.mlflow import (
@@ -49,6 +49,7 @@ def train(cfg: DictConfig):
             revision=cfg.revision,
             batch_size=cfg.training_config.batch_size,
             tokenizer_cfg=cfg.tokenizer,
+            surface_bins=cfg.surface_bins,
         )
         data_module.prepare_data()
         tokenizer = data_module.tokenizer
@@ -56,12 +57,12 @@ def train(cfg: DictConfig):
 
         ###### Model #####
 
-        cfg.model_config.num_classes = max(mappings[Y].values()) + 1
+        cfg.model_config.num_classes = data_module.value_encoder.num_classes
 
         categorical_vocab_sizes = []
         for feature in CATEGORICAL_FEATURES:
-            if feature == "SRF":
-                categorical_vocab_sizes.append(5)
+            if feature in SURFACE_COLS:
+                categorical_vocab_sizes.append(len(cfg.surface_bins))
             else:
                 categorical_vocab_sizes.append(max(mappings[feature].values()) + 1)
         cfg.model_config.categorical_vocabulary_sizes = categorical_vocab_sizes
@@ -74,6 +75,7 @@ def train(cfg: DictConfig):
             model_config=ModelConfig.from_dict(
                 OmegaConf.to_container(cfg.model_config, resolve=True)
             ),
+            value_encoder=data_module.value_encoder,
         )
         model = ttc.pytorch_model
 
@@ -127,30 +129,31 @@ def train(cfg: DictConfig):
         best_ckpt_path = trainer.checkpoint_callback.best_model_path
         checkpoint = torch.load(best_ckpt_path, weights_only=False)
         module.load_state_dict(checkpoint["state_dict"])
+        ttc.lightning_module = module
 
-        # Log wrapper
-        run_id = mlflow.active_run().info.run_id
-        logged_pth_path = f"runs:/{run_id}/model/data/model.pth"
-        init_and_log_wrapper(
-            cfg=cfg, logged_pth_path=logged_pth_path, pre_tokenizer=data_module.pre_tokenizer
-        )
+        # Log wrapper: bundle tokenizer + value_encoder + trained weights into a
+        # single self-contained artifact the serving wrapper can load without
+        # any dependency on src.utils/S3 mappings at inference time.
+        ttc_local_dir = "ttc_model"
+        ttc.save(ttc_local_dir)
+        mlflow.log_artifacts(ttc_local_dir, artifact_path="ttc_model")
+        init_and_log_wrapper(cfg=cfg)
 
         ########## Evaluation ##########
 
         logger.info("Starting evaluation...")
 
-        zipped = zip(
-            [data_module.df_val, data_module.df_test],
-            [data_module.val_dataloader(), data_module.test_dataloader()],
-            ["val", "test"],
-        )
+        eval_splits = [
+            (data_module.df_val, data_module.val_dataloader(), "val"),
+            (data_module.df_test, data_module.test_dataloader(), "test"),
+        ]
 
         run_evaluation(
             trainer=trainer,
             module=module,
             revision=cfg.revision,
             Y=Y,
-            zipped_data=zipped,
+            eval_splits=eval_splits,
         )
 
 

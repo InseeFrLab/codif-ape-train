@@ -12,7 +12,7 @@ from .validation_viz import (
 )
 
 
-def run_evaluation(trainer, module, revision, Y, zipped_data):
+def run_evaluation(trainer, module, revision, Y, eval_splits):
     """
         Higher-level overload of the run_eval function, running the predictions beforehand.
         Main method of this file.
@@ -25,14 +25,14 @@ def run_evaluation(trainer, module, revision, Y, zipped_data):
         revision (str): Revision of the NAF code.
         Y (str): Column name of the target variable.
         ____
-        zipped_data (iterable): Iterable of tuples containing the dataframes + dataloaders + suffixes (tags for logging).
-            Ex: zipped_data = zip([df_val, df_test], [val_dataloader, test_dataloader], ["val", "test"])
+        eval_splits (iterable): Iterable of (df, dataloader, suffix) tuples, one per split to evaluate.
+            Ex: eval_splits = [(df_val, val_dataloader, "val"), (df_test, test_dataloader, "test")]
         ____
     """
     df_naf = get_df_naf(revision=revision)
     # fasttext_preds_labels, fasttext_preds_scores = get_fasttext_preds(revision=revision)
     fasttext_preds_labels, fasttext_preds_scores = None, None
-    for df, dataloader, suffix in zipped_data:
+    for df, dataloader, suffix in eval_splits:
         predictions = trainer.predict(module, dataloader)  # accumulates predictions over batches
         predictions_tensor = torch.cat(predictions).cpu()  # (num_test_samples, num_classes)
 

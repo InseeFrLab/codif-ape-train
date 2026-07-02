@@ -5,6 +5,7 @@ from pytorch_lightning import LightningDataModule
 from torchTextClassifiers.dataset import TextClassificationDataset
 from torchTextClassifiers.value_encoder import DictEncoder, ValueEncoder
 
+from src.api_wrapper import MLFlowPyTorchWrapper
 from src.utils.data import (
     CATEGORICAL_FEATURES,
     SURFACE_COLS,
@@ -25,6 +26,7 @@ class TextClassificationDataModule(LightningDataModule):
         revision,
         tokenizer_cfg,
         batch_size: int,
+        surface_bins: list,
         multilevel=False,
         num_workers: int = os.cpu_count() // 2,
         num_val_samples=None,
@@ -33,6 +35,7 @@ class TextClassificationDataModule(LightningDataModule):
         self.revision = revision
         self.tokenizer_cfg = tokenizer_cfg
         self.batch_size = batch_size
+        self.surface_bins = surface_bins
         self.num_workers = num_workers
         self.num_val_samples = num_val_samples
         self.multilevel = multilevel
@@ -43,9 +46,15 @@ class TextClassificationDataModule(LightningDataModule):
 
         self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
 
-        self.df_train = self.df_train.sample(frac=0.01)
-        self.df_val = self.df_val.sample(frac=0.01)
-        self.df_test = self.df_test.sample(frac=0.01)
+        self.df_train = self.df_train.sample(frac=0.001)
+        self.df_val = self.df_val.sample(frac=0.001)
+        self.df_test = self.df_test.sample(frac=0.001)
+
+        for df in (self.df_train, self.df_val, self.df_test):
+            for col in SURFACE_COLS:
+                df[col] = MLFlowPyTorchWrapper.categorize_surface(
+                    values=df[col].values, bins=self.surface_bins
+                )
 
         self.Y = get_Y(revision=self.revision)
         if self.multilevel:
@@ -60,15 +69,22 @@ class TextClassificationDataModule(LightningDataModule):
         categorical_encoders = {}
         for col in CATEGORICAL_FEATURES:
             if col in SURFACE_COLS:
-                # SRF is encoded as integers 0-4; transform() casts to str before lookup
-                categorical_encoders[col] = DictEncoder({str(k): k for k in range(5)})
+                # categorize_surface produces integer categories 0..len(surface_bins)-1;
+                # transform() casts to str before lookup
+                categorical_encoders[col] = DictEncoder(
+                    {str(k): k for k in range(len(self.surface_bins))}
+                )
             else:
                 # astype(str) produces lowercase "nan"/"None" but mappings use "NaN";
                 # add lowercase aliases so dic.get() never returns None
                 mapping = dict(mappings[col])
-                # nan_val = mapping.get("NaN", 0)
-                # mapping.setdefault("nan", nan_val)
-                # mapping.setdefault("None", nan_val)
+                # torchTextClassifiers sizes the embedding as len(mapping), but the
+                # raw mapping's indices can be non-contiguous (gaps from filtered
+                # categories), so max(mapping.values()) can exceed len(mapping) - 1
+                # and blow past the embedding's vocabulary size. Re-index densely.
+                if mapping and max(mapping.values()) + 1 != len(mapping):
+                    ordered_keys = sorted(mapping, key=mapping.get)
+                    mapping = {k: i for i, k in enumerate(ordered_keys)}
                 categorical_encoders[col] = DictEncoder(mapping)
 
         if self.multilevel:

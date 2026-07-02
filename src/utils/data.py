@@ -6,7 +6,6 @@ import pyarrow.parquet as pq
 
 from src.utils.io import get_file_system
 from src.utils.logger import get_logger
-from src.api_wrapper import MLFlowPyTorchWrapper
 
 logger = get_logger(name=__name__)
 
@@ -33,8 +32,6 @@ def get_raw_data(revision):
     df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
     df_val_raw = pd.read_parquet(split_path + "df_val.parquet", filesystem=fs)
 
-    for df in [df_train_raw, df_val_raw, df_test_raw]:
-        df["SRF"] = MLFlowPyTorchWrapper.categorize_surface(values=df["SRF"].values)
     return df_train_raw, df_val_raw, df_test_raw
 
 
@@ -94,4 +91,4 @@ def get_Y(
     """
     if revision not in ("NAF2008", "NAF2025"):
         raise ValueError("Revision must be either 'NAF2008' or 'NAF2025'.")
-    return revision.lower()
+    return "apet2008" if revision == "NAF2008" else "apet2025"

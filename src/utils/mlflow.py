@@ -1,5 +1,6 @@
 import os
 import shutil
+from typing import List
 
 import mlflow
 import yaml
@@ -7,12 +8,16 @@ from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
 
-from typing import List
 from src.api_wrapper.mlflow_wrapper import MLFlowPyTorchWrapper
-from src.pre_tokenizers import PreTokenizer
 
-from .data import CATEGORICAL_FEATURES, COL_RENAMING, TEXT_FEATURE, TEXTUAL_FEATURES, get_df_naf
-from .evaluation import get_inv_mapping
+from .data import (
+    CATEGORICAL_FEATURES,
+    COL_RENAMING,
+    SURFACE_COLS,
+    TEXT_FEATURE,
+    TEXTUAL_FEATURES,
+    get_df_naf,
+)
 
 
 def create_or_restore_experiment(experiment_name):
@@ -103,7 +108,7 @@ def mlflow_code_packaging(subfolders: List[str] = None) -> str:
     The goal is to log only the minimum necessary and not all the elements from src/
     """
     if subfolders is None:
-        subfolders = ["api_wrapper", "models", "pre_tokenizers"]
+        subfolders = ["api_wrapper"]
 
     staging_dir = "mlflow_staging"
     target_src_dir = os.path.join(staging_dir, "src")
@@ -125,30 +130,35 @@ def mlflow_code_packaging(subfolders: List[str] = None) -> str:
     return target_src_dir
 
 
-def init_and_log_wrapper(cfg, logged_pth_path, pre_tokenizer: PreTokenizer):
+def init_and_log_wrapper(cfg):
     df_naf = get_df_naf(revision=cfg.revision)
     ape_to_lib = dict(df_naf[["APE_NIV5", "LIB_NIV5"]].drop_duplicates().values)
-    inv_mapping = get_inv_mapping(cfg.revision)
 
-    code_paths_mlflow_artifacts = mlflow_code_packaging(["api_wrapper", "models", "pre_tokenizers"])
+    code_paths_mlflow_artifacts = mlflow_code_packaging(["api_wrapper"])
 
     mlflow_wrapper = MLFlowPyTorchWrapper(
         libs=ape_to_lib,
-        inv_mapping=inv_mapping,
         text_feature=TEXT_FEATURE,
         categorical_features=CATEGORICAL_FEATURES,
         textual_features=TEXTUAL_FEATURES,
+        surface_cols=SURFACE_COLS,
         col_renaming=COL_RENAMING,
-        pre_tokenizer=pre_tokenizer,
     )
 
     input_example = mlflow_wrapper._get_input_data_example()
+
+    run_id = mlflow.active_run().info.run_id
+    hydra_config_path = f"runs:/{run_id}/hydra_config.yaml"
+    ttc_model_path = f"runs:/{run_id}/ttc_model"
 
     mlflow.pyfunc.log_model(
         name="pyfunc_model",
         python_model=mlflow_wrapper,
         input_example=input_example,
-        artifacts={"torch_model_path": logged_pth_path, "nltk_data": "nltk_data"},
+        artifacts={
+            "ttc_model_path": ttc_model_path,
+            "hydra_config": hydra_config_path,
+        },
         code_paths=[code_paths_mlflow_artifacts],
     )
 
