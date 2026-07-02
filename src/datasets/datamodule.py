@@ -104,11 +104,13 @@ class TextClassificationDataModule(LightningDataModule):
             labels = self.value_encoder.transform_labels(df[self.label_columns].values)
         else:
             labels = self.value_encoder.transform_labels(df[self.Y].values)
+        sample_weights = df["sample_weight"].values if "sample_weight" in df.columns else None
         return TextClassificationDataset(
             texts=df[TEXT_FEATURE].values,
             categorical_variables=self.value_encoder.transform(df[CATEGORICAL_FEATURES].values),
             labels=labels,
             tokenizer=self.tokenizer,
+            sample_weights=sample_weights,
         )
 
     def setup(self, stage: Optional[str] = None):
