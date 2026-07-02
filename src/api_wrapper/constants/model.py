@@ -17,5 +17,4 @@ VALID_TYPE_FORM = {
     "Z",
     "NaN",
 }
-VALID_SURFACE = {"1", "2", "3", "4", "NaN"}
 VALID_ACTIV_PERM = {"P", "S", "NaN"}

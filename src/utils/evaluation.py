@@ -139,37 +139,6 @@ def get_confidence_score(sorted_confidence):
     return sorted_confidence[:, 0] - sorted_confidence[:, 1:5].sum(axis=1)
 
 
-# def get_fasttext_preds(revision):
-#     """
-#     Get the fastText (production API) predictions for the given revision.
-
-#     Args:
-#         revision (str): The revision of the NAF code.
-#             Must be either "NAF2008" or "NAF2025".
-#     Returns:
-#         fasttext_preds_labels (pd.DataFrame): DataFrame with the predicted labels, tokenized (int)
-#         fasttext_preds_scores (pd.DataFrame): DataFrame with the predicted scores (float).
-
-
-#     """
-
-#     # As of 05/21/2025, NAF2025 API is broken so no fasttext preds / labels
-#     if revision == "NAF2025":
-#         return None, None
-
-#     fs = get_file_system()
-
-#     # take the path of "df_test.parquet", remove the extension...
-#     df_res_ft = pd.read_parquet(PATHS[revision][-2][:-8] + "_predictions_ft.parquet", filesystem=fs)
-#     mapping = get_label_mapping(revision)
-
-#     fasttext_preds_labels = df_res_ft[["APE_NIV5_pred_k1"]]
-#     fasttext_preds_scores = df_res_ft[["proba_k1"]]
-#     fasttext_preds_labels_int = fasttext_preds_labels.map(mapping.get)
-
-#     return fasttext_preds_labels_int, fasttext_preds_scores
-
-
 def get_label_mapping(revision):
     """
     Get the label mapping for the given revision.
