@@ -31,6 +31,7 @@ dependencies = [
     "tokenizers>=0.22.2",
     "torch>=2.12.1",
     "torchfasttext",
+    "torchtextclassifiers",
     "torch-uncertainty>=0.12.1",
     "torchvision>=0.27.1",
     "tqdm>=4.68.3",
