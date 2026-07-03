@@ -46,10 +46,6 @@ class TextClassificationDataModule(LightningDataModule):
 
         self.df_train, self.df_val, self.df_test = get_raw_data(revision=self.revision)
 
-        self.df_train = self.df_train.sample(frac=0.001)
-        self.df_val = self.df_val.sample(frac=0.001)
-        self.df_test = self.df_test.sample(frac=0.001)
-
         for df in (self.df_train, self.df_val, self.df_test):
             for col in SURFACE_COLS:
                 df[col] = MLFlowPyTorchWrapper.categorize_surface(
@@ -104,6 +100,9 @@ class TextClassificationDataModule(LightningDataModule):
             labels = self.value_encoder.transform_labels(df[self.label_columns].values)
         else:
             labels = self.value_encoder.transform_labels(df[self.Y].values)
+
+        # "sample_weight" exists in split/ 
+        # (see codif-ape-preprocess/src/preprocessing/split/split.py, L53)
         sample_weights = df["sample_weight"].values if "sample_weight" in df.columns else None
         return TextClassificationDataset(
             texts=df[TEXT_FEATURE].values,
