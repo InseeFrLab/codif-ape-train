@@ -101,9 +101,13 @@ class TextClassificationDataModule(LightningDataModule):
         else:
             labels = self.value_encoder.transform_labels(df[self.Y].values)
 
-        # "sample_weight" exists in split/ 
+        # "sample_weight" exists in split/
         # (see codif-ape-preprocess/src/preprocessing/split/split.py, L53)
-        sample_weights = df["sample_weight"].values if "sample_weight" in df.columns else None
+        # Some rows have NaN weight (unweighted rows); NaN propagates through
+        # the weighted-mean loss and poisons the whole batch, so default to 1.0.
+        sample_weights = (
+            df["sample_weight"].fillna(1.0).values if "sample_weight" in df.columns else None
+        )
         return TextClassificationDataset(
             texts=df[TEXT_FEATURE].values,
             categorical_variables=self.value_encoder.transform(df[CATEGORICAL_FEATURES].values),
