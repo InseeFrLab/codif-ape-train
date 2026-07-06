@@ -120,7 +120,7 @@ def train(cfg: DictConfig):
             num_epochs=cfg.training_config.num_epochs,
         )
 
-        mlflow.pytorch.autolog(log_every_n_step=5)
+        mlflow.pytorch.autolog()
         torch.cuda.empty_cache()
         torch.set_float32_matmul_precision("medium")
 
