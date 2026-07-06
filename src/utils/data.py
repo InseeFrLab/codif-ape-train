@@ -26,8 +26,12 @@ NAF2008_TARGET = constants["NAF2008_TARGET"]
 NAF2025_TARGET = constants["NAF2025_TARGET"]
 
 
+def get_split_path(revision):
+    return constants[revision][-1] + "split/"
+
+
 def get_raw_data(revision):
-    split_path = constants[revision][-1] + "split/"
+    split_path = get_split_path(revision)
     df_test_raw = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
     df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
     df_val_raw = pd.read_parquet(split_path + "df_val.parquet", filesystem=fs)
@@ -36,7 +40,7 @@ def get_raw_data(revision):
 
 
 def get_test_raw_data(revision):
-    split_path = constants[revision][-1] + "split/"
+    split_path = get_split_path(revision)
     logger.info(f"🔎 Fetching raw test data from {split_path}...")
     df_test_raw = pd.read_parquet(split_path + "df_test.parquet", filesystem=fs)
 
@@ -44,7 +48,7 @@ def get_test_raw_data(revision):
 
 
 def get_train_raw_data(revision):
-    split_path = constants[revision][-1] + "split/"
+    split_path = get_split_path(revision)
     logger.info(f"🔎 Fetching raw training data from {split_path}...")
     df_train_raw = pd.read_parquet(split_path + "df_train.parquet", filesystem=fs)
 

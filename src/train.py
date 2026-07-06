@@ -20,6 +20,7 @@ from src.utils.logger import get_logger
 from src.utils.mlflow import (
     create_or_restore_experiment,
     init_and_log_wrapper,
+    log_dataset_inputs,
     log_dict,
     log_hydra_config,
 )
@@ -54,6 +55,8 @@ def train(cfg: DictConfig):
         data_module.prepare_data()
         tokenizer = data_module.tokenizer
         Y = data_module.Y
+
+        log_dataset_inputs(data_module, revision=cfg.revision)
 
         ###### Model #####
 
@@ -117,7 +120,7 @@ def train(cfg: DictConfig):
             num_epochs=cfg.training_config.num_epochs,
         )
 
-        mlflow.pytorch.autolog()
+        mlflow.pytorch.autolog(log_every_n_step=5)
         torch.cuda.empty_cache()
         torch.set_float32_matmul_precision("medium")
 

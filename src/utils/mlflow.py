@@ -3,6 +3,7 @@ import shutil
 from typing import List
 
 import mlflow
+import mlflow.data
 import yaml
 from mlflow.exceptions import RestException
 from mlflow.tracking import MlflowClient
@@ -17,6 +18,7 @@ from .data import (
     TEXT_FEATURE,
     TEXTUAL_FEATURES,
     get_df_naf,
+    get_split_path,
 )
 
 
@@ -86,6 +88,31 @@ def log_hydra_config(cfg, filename="hydra_config.yaml", save_dir=None):
 
     OmegaConf.save(config=cfg, f=config_save_path)
     mlflow.log_artifact(config_save_path)
+
+
+def log_dataset_inputs(data_module, revision):
+    """
+    Log train/val/test splits as MLflow dataset inputs on the active run.
+
+    This gives each run a versioned reference (schema + content digest + S3
+    source path) to the exact data it was trained/evaluated on, visible in
+    the MLflow UI's "Datasets" tab and searchable via `dataset.digest`.
+    """
+    split_path = get_split_path(revision)
+    splits = {
+        "df_train.parquet": (data_module.df_train, "train"),
+        "df_val.parquet": (data_module.df_val, "eval"),
+        "df_test.parquet": (data_module.df_test, "eval"),
+    }
+
+    for filename, (df, context) in splits.items():
+        dataset = mlflow.data.from_pandas(
+            df,
+            source=split_path + filename,
+            name=f"{revision}-{filename.removesuffix('.parquet')}",
+            targets=data_module.Y,
+        )
+        mlflow.log_input(dataset, context=context)
 
 
 def load_module_and_config(run_id):
