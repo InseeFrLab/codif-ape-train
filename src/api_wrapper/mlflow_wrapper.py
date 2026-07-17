@@ -128,6 +128,7 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         params = params or {}
         nb_echos_max = params.get("nb_echos_max", 5)
         prob_min = params.get("prob_min", 0.01)
+        dataloader_params = params.get("dataloader_params", {})
         # torch.topk errors out if k exceeds the number of classes, unlike the
         # sort-and-slice approach this used to use.
         nb_echos_max = min(nb_echos_max, self.ttc.num_classes)
@@ -180,6 +181,12 @@ class MLFlowPyTorchWrapper(mlflow.pyfunc.PythonModel):
         params_dict = {
             "nb_echos_max": 5,
             "prob_min": 0.01,
+            "dataloader_params": {
+                "pin_memory": False,
+                "persistent_workers": False,
+                "num_workers": 0,
+                "batch_size": 1,
+            },
         }
 
         return (input_data, params_dict)
